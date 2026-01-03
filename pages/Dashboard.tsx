@@ -20,7 +20,7 @@ export const Dashboard: React.FC = () => {
               <Clock size={18} className="text-indigo-400" />
               <h2 className="text-sm font-bold uppercase tracking-wider">Active Side Quests</h2>
             </div>
-            <Link to="/quests" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase flex items-center">
+            <Link to="/app" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase flex items-center">
               View All <ArrowRight size={10} className="ml-1" />
             </Link>
           </div>
@@ -28,7 +28,7 @@ export const Dashboard: React.FC = () => {
             {dailyTasks.length > 0 ? dailyTasks.map(task => (
               <div key={task.id} className="p-4 flex items-center justify-between hover:bg-slate-800/30 transition-colors group">
                 <div className="flex items-center space-x-3">
-                  <button 
+                  <button
                     onClick={() => completeTask(task.id)}
                     className="text-slate-600 hover:text-indigo-400 transition-colors"
                   >
@@ -78,7 +78,7 @@ export const Dashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-purple-600 to-indigo-500 h-full transition-all duration-700 shadow-[0_0_10px_rgba(168,85,247,0.3)]"
                       style={{ width: `${progress}%` }}
                     />

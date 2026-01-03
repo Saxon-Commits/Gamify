@@ -18,7 +18,7 @@ export const PrivacyPolicy: React.FC = () => {
                 <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
                     <h2 className="text-xl font-bold text-white mb-4">1. Data Storage & Account</h2>
                     <p className="mb-4">
-                        To ensure your progress is never lost, PARA RPG provides cloud synchronization features.
+                        To ensure your progress is never lost, ParaXP provides cloud synchronization features.
                     </p>
                     <ul className="list-disc pl-6 space-y-2 text-slate-400">
                         <li><strong>Game Save Data:</strong> We store your game progress (quests, stats, inventory) in our secure database to allow for cross-device play and backup.</li>

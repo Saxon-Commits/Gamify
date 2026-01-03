@@ -19,13 +19,33 @@ import { Grindstone } from './pages/tools/Grindstone';
 import { MindWipe } from './pages/tools/MindWipe';
 
 
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { LandingPage } from './pages/LandingPage';
+
 const App: React.FC = () => {
   return (
     <HashRouter>
+      {/* Background Music Player should persist across all pages? Or only in App?
+          Design choice: Only in App to keep Landing Page clean. move inside Layout? 
+          Actually, let's keep it global but maybe mute on landing. For simplicity, keep global. 
+      */}
       <BackgroundMusicPlayer />
 
       <Routes>
-        <Route path="/" element={<Layout />}>
+        {/* Public Landing Page */}
+        <Route path="/" element={
+          <>
+            <SignedIn>
+              <Navigate to="/app" replace />
+            </SignedIn>
+            <SignedOut>
+              <LandingPage />
+            </SignedOut>
+          </>
+        } />
+
+        {/* Protected App Routes */}
+        <Route path="/app" element={<Layout />}>
           <Route index element={<QuestLog />} />
           <Route path="skills" element={<SkillTree />} />
           <Route path="shop" element={<Shop />} />
@@ -33,14 +53,19 @@ const App: React.FC = () => {
           <Route path="inventory" element={<Inventory />} />
           <Route path="character" element={<Character />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="privacy" element={<PrivacyPolicy />} />
-          <Route path="terms" element={<TermsOfService />} />
         </Route>
 
-        {/* Full Screen Tools */}
-        <Route path="tools/grindstone" element={<Grindstone />} />
-        <Route path="tools/mind-wipe" element={<MindWipe />} />
+        {/* Legal Pages - accessible to all */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
 
+        {/* Full Screen Tools - Nested under /app? Or separate? 
+            Let's keep them separate but protected if desired. For now, open.
+        */}
+        <Route path="/app/tools/grindstone" element={<Grindstone />} />
+        <Route path="/app/tools/mind-wipe" element={<MindWipe />} />
+
+        {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>

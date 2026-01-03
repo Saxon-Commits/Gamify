@@ -116,11 +116,11 @@ export const Layout: React.FC = () => {
   const location = useLocation();
 
   const NavLinks = [
-    { to: "/", icon: Sword, label: "Quests", variant: 'fantasy' as const },
-    { to: "/skills", icon: Network, label: "Skills" },
-    { to: "/shop", icon: ShoppingBag, label: "Shop" },
-    { to: "/inventory", icon: Package, label: "Inventory" },
-    { to: "/character", icon: User, label: "Character" },
+    { to: "/app", icon: Sword, label: "Quests", variant: 'fantasy' as const },
+    { to: "/app/skills", icon: Network, label: "Skills" },
+    { to: "/app/shop", icon: ShoppingBag, label: "Shop" },
+    { to: "/app/inventory", icon: Package, label: "Inventory" },
+    { to: "/app/character", icon: User, label: "Character" },
   ];
 
   return (
@@ -136,7 +136,7 @@ export const Layout: React.FC = () => {
             <Sword size={18} className="text-white" />
           </div>
           <h1 className="text-lg font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tighter hidden sm:block">
-            PARA RPG
+            ParaXP
           </h1>
         </div>
 
@@ -185,7 +185,7 @@ export const Layout: React.FC = () => {
           </button>
 
           {/* Settings Icon (Moved from main nav) */}
-          <Link to="/settings" className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+          <Link to="/app/settings" className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
             <Settings size={20} />
           </Link>
         </div>

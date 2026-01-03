@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGameStore } from '../store/useGameStore';
 import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen } from 'lucide-react';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
+import { CloudSyncControls } from '../components/CloudSyncControls';
 
 export const Settings: React.FC = () => {
   const settings = useGameStore(state => state.settings);
@@ -70,10 +71,12 @@ export const Settings: React.FC = () => {
         <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-4">
             <Database className="text-indigo-400" size={18} />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Data Management</h2>
+            <h2 className="text-sm font-bold uppercase tracking-widest">Cloud Sync (Beta)</h2>
           </div>
-          <p className="text-slate-500 text-[11px] mb-6 font-medium">Manage your progress and local persistence.</p>
 
+          <CloudSyncControls />
+
+          <p className="text-slate-500 text-[11px] mb-6 font-medium mt-6">Manage your local data.</p>
           <div className="flex flex-wrap gap-3">
             <button className="flex items-center space-x-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors">
               <Download size={14} />
@@ -127,10 +130,9 @@ export const Settings: React.FC = () => {
                   stats: {
                     ...currentState.stats,
                     gold: currentState.stats.gold + 100000,
-                    voidShards: currentState.stats.voidShards + 100000
                   }
                 });
-                alert('Added 100,000 Gold and Void Shards!');
+                alert('Added 100,000 Gold!');
               }}
               className="flex items-center space-x-2 px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
             >
