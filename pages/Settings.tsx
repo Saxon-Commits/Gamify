@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useClerk } from "@clerk/clerk-react";
 import { useGameStore } from '../store/useGameStore';
 import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen } from 'lucide-react';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
@@ -11,6 +12,7 @@ import { Shield, Zap, Info as InfoIcon } from 'lucide-react';
 const LIFETIME_PRICE_ID = 'price_1SlpqyLQXrapzCX8bubgyJ0C';
 
 export const Settings: React.FC = () => {
+  const { signOut } = useClerk();
   const settings = useGameStore(state => state.settings);
   const user = useQuery(api.users.getMe);
   const pay = useAction(api.pay.createCheckoutSession);
