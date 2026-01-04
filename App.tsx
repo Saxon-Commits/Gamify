@@ -19,10 +19,24 @@ import { Grindstone } from './pages/tools/Grindstone';
 import { MindWipe } from './pages/tools/MindWipe';
 
 
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 import { LandingPage } from './pages/LandingPage';
+import { useMutation, useConvexAuth } from "convex/react";
+import { api } from "./convex/_generated/api";
 
 const App: React.FC = () => {
+  // Sync User to Convex
+  const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
+  const storeUser = useMutation(api.storeUser.storeUser);
+
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      // Only attempt to store if we are truly authenticated with Convex
+      storeUser().catch(e => console.error("Sync failed:", e));
+    }
+  }, [user, isAuthenticated, storeUser]);
+
   return (
     <HashRouter>
       {/* Background Music Player should persist across all pages? Or only in App?

@@ -13,7 +13,7 @@ http.route({
         const body = await request.text();
 
         const stripe = new Stripe(process.env.STRIPE_KEY!, {
-            apiVersion: '2025-10-12.acacia',
+            apiVersion: '2025-12-15.clover',
         });
 
         // Verify webhook signature (using a specific webhook secret would be better for prod)

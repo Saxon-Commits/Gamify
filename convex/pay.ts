@@ -12,7 +12,7 @@ export const createCheckoutSession = action({
         }
 
         const stripe = new Stripe(process.env.STRIPE_KEY!, {
-            apiVersion: '2025-10-12.acacia', // Latest valid version
+            apiVersion: '2025-12-15.clover', // Use latest or pinned version
         });
 
         const domain = process.env.HOST_URL || 'http://localhost:5173';

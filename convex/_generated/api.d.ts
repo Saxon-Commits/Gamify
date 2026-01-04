@@ -11,6 +11,7 @@
 import type * as gameState from "../gameState.js";
 import type * as http from "../http.js";
 import type * as pay from "../pay.js";
+import type * as storeUser from "../storeUser.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,6 +24,7 @@ declare const fullApi: ApiFromModules<{
   gameState: typeof gameState;
   http: typeof http;
   pay: typeof pay;
+  storeUser: typeof storeUser;
   users: typeof users;
 }>;
 

@@ -68,7 +68,7 @@ export const Settings: React.FC = () => {
                   onClick={handleUpgrade}
                   className="px-8 py-4 bg-white text-indigo-950 rounded-xl font-black uppercase tracking-wider hover:bg-indigo-50 hover:scale-105 transition-all shadow-xl shadow-indigo-500/20"
                 >
-                  Get Access - $99
+                  Get Access - $49
                 </button>
               </div>
             </div>

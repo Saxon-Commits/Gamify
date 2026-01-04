@@ -9,6 +9,26 @@ This project is a React application built with Vite and Tailwind CSS. It is read
 - **Install Command**: `npm install`
 - **GitHub Repository**: [Saxon-Commits/Gamify](https://github.com/Saxon-Commits/Gamify)
 
+## The "Two-Track" Workflow 🛣️
+
+Since we use a separate Frontend (Vercel) and Backend (Convex), you have two distinct deployment pipelines.
+
+### 1. The Frontend (UI)
+*   **Where it lives:** Vercel (your website `paraxp.com`).
+*   **How to update:** Push to GitHub.
+*   **Command:** `git add .` -> `git commit` -> `git push`.
+*   **Effect:** Vercel detects the change and rebuilds the website automatically.
+
+### 2. The Backend (Database & Functions)
+*   **Where it lives:** Convex Cloud.
+*   **How to update:** Run the deploy command.
+*   **Command:** `npx convex deploy`.
+*   **Effect:** Updates your production database schema and API functions immediately.
+
+> **Summary:** To update your live site completely, you usually need to do **both**.
+> 1. `npx convex deploy` (Ready the backend).
+> 2. `git push` (Update the frontend).
+
 ## Environment Variables
 
 To deploy to production, you must set the following environment variables in your Vercel/Netlify dashboard:
