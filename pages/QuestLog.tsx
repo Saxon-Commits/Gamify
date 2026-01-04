@@ -7,7 +7,8 @@ import { QuestDifficulty, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MerchantCard, QuestModal } from '../components/MerchantCard';
+import { MerchantCard, MerchantModal } from '../components/MerchantCard';
+import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ProjectDetailView } from '../components/ProjectDetailView';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -229,7 +230,7 @@ export const BountyColumn: React.FC<{
 
 export const QuestLog: React.FC = () => {
   const navigate = useNavigate();
-  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks } = useGameStore();
+  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart } = useGameStore();
 
   // Robust wrapper to ensure delete functionality
   const handleDeleteTask = (taskId: string) => {
@@ -390,6 +391,21 @@ export const QuestLog: React.FC = () => {
     setIsQuestModalOpen(false);
   };
 
+  const handleAddItem = (item: any) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      type: item.type,
+      cost: item.cost,
+      acquiredAt: new Date().toISOString(),
+      quantity: 1
+    });
+  };
+
+  const realWorldItems = SHOP_ITEMS.filter(i => i.type === 'REAL_LIFE');
+  const systemItems = SHOP_ITEMS.filter(i => i.type === 'SYSTEM');
+
   useEffect(() => {
     // Migration: Check for Tycoon Update
     const hasTycoonUpdate = useGameStore.getState().projects.some(p => p.id === 'p-tycoon-2');
@@ -487,11 +503,14 @@ export const QuestLog: React.FC = () => {
       <div className="fixed inset-0 z-[-1] bg-slate-950/70 pointer-events-none" />
 
       {/* Quest Modal */}
-      <QuestModal
+      <MerchantModal
         isOpen={isQuestModalOpen}
         onClose={() => setIsQuestModalOpen(false)}
         onBuyQuest={handleBuyQuest}
         onCreateQuest={handleCreateQuest}
+        realWorldItems={realWorldItems}
+        systemItems={systemItems}
+        onAddItem={handleAddItem}
       />
 
       <div className={`flex flex-col lg:flex-row gap-8 mt-8 transition-opacity duration-300 ${isQuestModalOpen ? 'opacity-20 pointer-events-none' : ''}`}>

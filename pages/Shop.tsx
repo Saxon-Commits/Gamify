@@ -5,14 +5,28 @@ import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { COSMETIC_SHOP_ITEMS } from '../src/utils/CosmeticsData';
 import { Coins, ShoppingBag, Tv, Coffee, Sparkles, Zap, Gift, Dna, ShoppingCart, X, Plus, Minus, Trash2, Monitor, Shield, User, Sword, CreditCard, Palette, Ghost, Diamond, CheckCircle2 } from 'lucide-react';
 
-import { MerchantCard } from '../components/MerchantCard'; // Updated import
+import { MerchantCard, MerchantModal } from '../components/MerchantCard'; // Updated import
+
+import { useAction } from 'convex/react';
+import { api } from '../convex/_generated/api';
 
 export const Shop: React.FC = () => {
     const { stats, buyItem, cart, addToCart, removeFromCart, purchaseCart, setAvatar } = useGameStore();
     const [showCart, setShowCart] = useState(false);
-    const [activeTab, setActiveTab] = useState<'general' | 'cosmetics'>('general');
+    const [isMerchantModalOpen, setIsMerchantModalOpen] = useState(false);
     const [purchasedAvatar, setPurchasedAvatar] = useState<any>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const pay = useAction(api.pay.createCheckoutSession);
+
+    const handleGemPurchase = async (priceId: string) => {
+        try {
+            const url = await pay({ priceId });
+            if (url) window.location.href = url;
+        } catch (error) {
+            console.error("Payment Error:", error);
+            alert("Failed to initiate checkout");
+        }
+    };
 
     // Rarity Styling Helper
     const RARITY_STYLES: Record<string, {
@@ -119,414 +133,339 @@ export const Shop: React.FC = () => {
 
     return (
         <div className="max-w-[95%] mx-auto pb-32 space-y-8 relative">
-            {/* Header / Wallet */}
-            <div className="flex items-center justify-between">
-                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
-                    <button
-                        onClick={() => setActiveTab('general')}
-                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'general' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                        General Store
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('cosmetics')}
-                        className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'cosmetics' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:text-indigo-400'}`}
-                    >
-                        <Sparkles size={14} />
-                        Cosmetics
-                    </button>
+
+
+
+            {/* 2. GENERAL ITEMS & COSMETICS MERGED */}
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* LEFT SIDEBAR - MERCHANT CARD */}
+                <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
+                    <MerchantCard onNewQuestClick={() => setIsMerchantModalOpen(true)} isModalOpen={isMerchantModalOpen} />
+
+                    <MerchantModal
+                        isOpen={isMerchantModalOpen}
+                        onClose={() => setIsMerchantModalOpen(false)}
+                        onBuyQuest={() => console.log("Buy Quest")}
+                        onCreateQuest={() => console.log("Create Quest")}
+                        realWorldItems={realWorldItems}
+                        systemItems={systemItems}
+                        onAddItem={handleAddItem}
+                    />
+                </div>
+
+                {/* RIGHT CONTENT */}
+                <div className="flex-1 space-y-12">
+
+
+
+
+
+
+
+
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        {/* 1. GEM CURRENCY STORE (Replaces Black Market in Grid) */}
+                        <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                            <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
+                                <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Diamond size={16} /> Currency Store
+                                </h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+                                <div className="grid gap-3">
+                                    {[
+                                        { amount: 100, name: 'Pile of Gems', price: '$1.49', id: 'price_100_gems', color: 'cyan', popular: false, image: '/assets/gem assets/pile of gems (100).png' },
+                                        { amount: 500, name: 'Pouch of Gems', price: '$6.99', id: 'price_500_gems', color: 'blue', popular: true, image: '/assets/gem assets/pouch of gems (500).png' },
+                                        { amount: 1000, name: 'Chest of Gems', price: '$12.99', id: 'price_1000_gems', color: 'purple', popular: false, image: '/assets/gem assets/chest of gems (1000).png' },
+                                        { amount: 10000, name: 'Mountain of Gems', price: '$99.99', id: 'price_10000_gems', color: 'amber', popular: false, image: '/assets/gem assets/mountain of gems (10000).png' },
+                                    ].map((pack) => (
+                                        <div key={pack.amount} className={`relative bg-gradient-to-br from-slate-900 to-slate-950 border ${pack.popular ? 'border-cyan-500/50 shadow-cyan-500/20 shadow-lg' : 'border-slate-800 hover:border-slate-600'} rounded-2xl p-3 flex items-center justify-between gap-3 group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}>
+
+                                            {/* Background Flair Effects */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite] pointer-events-none" />
+                                            <div className={`absolute -right-12 -top-12 w-32 h-32 bg-${pack.color}-500/10 blur-3xl rounded-full group-hover:bg-${pack.color}-500/20 transition-colors pointer-events-none`} />
+
+                                            {pack.popular && (
+                                                <div className="absolute top-0 right-0 bg-gradient-to-bl from-cyan-600 to-blue-600 text-white text-[9px] font-black uppercase px-3 py-1 rounded-bl-xl shadow-lg z-10">
+                                                    Best Value
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center gap-3 relative z-10 flex-1 min-w-0">
+                                                {/* Image Container - Slightly Reduced for Space */}
+                                                <div className="relative shrink-0">
+                                                    <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                                                    <div className="w-16 h-16 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center shadow-inner relative z-10 group-hover:border-cyan-500/30 transition-colors">
+                                                        <img src={pack.image} alt={`${pack.amount} Gems`} className="w-12 h-12 object-contain pixelated drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] group-hover:scale-110 transition-transform duration-300" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-0.5 min-w-0">
+                                                    <div className="font-black text-white text-xl tracking-tight drop-shadow-sm">{pack.amount}</div>
+                                                    <div className="text-[9px] text-cyan-400 font-bold uppercase tracking-wide bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-900/50 w-fit whitespace-nowrap overflow-hidden text-ellipsis">
+                                                        {pack.name.replace(' Gems', '')} <span className="text-cyan-600 ml-0.5">GEMS</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleGemPurchase(pack.id)}
+                                                className={`
+                                                    shrink-0 px-4 py-2.5 rounded-lg font-black text-xs uppercase tracking-wider transition-all relative overflow-hidden group/btn
+                                                    bg-slate-900 text-slate-300 border border-slate-700
+                                                    hover:bg-cyan-500 hover:text-black hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)]
+                                                `}
+                                            >
+                                                <span className="relative z-10 whitespace-nowrap">{pack.price}</span>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. AVATARS (Moved to start or end? Index 5) */}
+                        <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                            <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
+                                <h3 className="text-sm font-bold text-pink-500 uppercase tracking-widest flex items-center gap-2">
+                                    <User size={16} /> Avatars
+                                </h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                    {SHOP_ITEMS.filter(i => i.type === 'AVATAR').map(item => {
+                                        const isVoidPrice = item.currency === 'VOID_SHARD';
+                                        const rarity = item.rarity || 'COMMON';
+
+                                        // Rarity Styles
+                                        const rarityStyles = {
+                                            COMMON: { border: 'border-slate-700', bg: 'bg-slate-900', text: 'text-slate-400', glow: 'from-slate-500/10' },
+                                            RARE: { border: 'border-blue-500/50', bg: 'bg-slate-900', text: 'text-blue-400', glow: 'from-blue-500/20' },
+                                            MYSTIC: { border: 'border-purple-500/60', bg: 'bg-[#1a0b2e]', text: 'text-purple-400', glow: 'from-purple-500/20' },
+                                            LEGENDARY: { border: 'border-amber-500/80', bg: 'bg-[#2e1a0b]', text: 'text-amber-400', glow: 'from-amber-500/20' }
+                                        };
+                                        const style = rarityStyles[rarity];
+
+                                        return (
+                                            <div key={item.id} className={`relative group overflow-hidden rounded-xl border-2 ${style.border} ${style.bg} transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}>
+                                                {/* Rarity Glow Background */}
+                                                <div className={`absolute inset-0 bg-gradient-to-br ${style.glow} to-transparent opacity-50 group-hover:opacity-100 transition-opacity`} />
+
+                                                {/* Content Container */}
+                                                <div className="relative z-10 p-3 space-y-3">
+
+                                                    {/* Header: Name & Rarity */}
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h4 className={`font-black uppercase tracking-wider text-xs ${style.text}`}>{item.name}</h4>
+                                                            <span className="text-[9px] font-mono opacity-70 tracking-widest">{rarity}</span>
+                                                        </div>
+                                                        {rarity === 'LEGENDARY' && <Sparkles size={14} className="text-amber-400 animate-pulse" />}
+                                                    </div>
+
+                                                    {/* Image Display - Compact */}
+                                                    <div className={`w-full aspect-square rounded-lg overflow-hidden border ${style.border} bg-black/50 relative group-hover:shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all`}>
+                                                        <img
+                                                            src={item.imageUrl}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover object-top pixelated hover:scale-110 transition-transform duration-700"
+                                                            style={{ imageRendering: 'pixelated' }}
+                                                        />
+                                                    </div>
+
+                                                    {/* Divider */}
+                                                    <div className={`h-px w-full bg-gradient-to-r from-transparent via-${style.text.split('-')[1]}-500/30 to-transparent`} />
+
+                                                    {/* Divider (Removed) */}
+                                                    {/* <div className={`h-px w-full bg-gradient-to-r from-transparent via-${style.text.split('-')[1]}-500/30 to-transparent`} /> */}
+
+                                                    {/* Stats & Slots Grid (Removed for compact view) */}
+                                                    {/* 
+                                                        <div className="grid grid-cols-2 gap-2 text-[9px]">
+                                                            ... perks and slots content ...
+                                                        </div>
+                                                    */}
+
+                                                    {/* Buy Button */}
+                                                    <button
+                                                        onClick={() => handleAddItem(item)}
+                                                        className={`w-full py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all group-hover:bg-white/10 ${style.border} border`}
+                                                    >
+                                                        {isVoidPrice ? <Sparkles size={10} className="text-purple-400" /> : <Coins size={10} className="text-amber-400" />}
+                                                        <span className={isVoidPrice ? 'text-purple-300' : 'text-amber-300'}>{item.cost} {isVoidPrice ? 'Shards' : 'Gold'}</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+                    {/* SECTION: AVATARS & COSMETICS */}
+                    <div className="space-y-8 pt-8 border-t border-slate-800">
+                        <div className="flex items-center gap-4 mb-6">
+                            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 uppercase tracking-tighter">
+                                Cosmetic Upgrades
+                            </h2>
+                            <div className="h-px flex-1 bg-gradient-to-r from-slate-800 to-transparent" />
+                        </div>
+
+                        {/* 1. PREMIUM AVATARS */}
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                <User className="text-pink-500" /> Premium Skins
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {COSMETIC_SHOP_ITEMS.filter(i => i.type === 'AVATAR').map((item) => (
+                                    <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group hover:border-pink-500/50 transition-all hover:shadow-[0_0_30px_rgba(236,72,153,0.15)] flex flex-col">
+                                        <div className="relative aspect-[4/5] overflow-hidden bg-black">
+                                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-bold text-white uppercase tracking-wider">
+                                                {item.rarity}
+                                            </div>
+                                        </div>
+                                        <div className="p-4 flex flex-col flex-1">
+                                            <h4 className="font-black text-lg text-white uppercase tracking-tight">{item.name}</h4>
+                                            <p className="text-xs text-slate-400 mt-1 line-clamp-2">{item.description}</p>
+
+                                            <div className="mt-auto pt-4 flex items-center gap-3">
+                                                <button className="flex-1 bg-slate-800 text-white font-black py-3 rounded-xl uppercase text-xs hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-700">
+                                                    <Diamond size={12} className="text-cyan-400" />
+                                                    <span>{item.premiumPrice}</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 2. THEMES & UI */}
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                <Monitor className="text-emerald-500" /> Avatar Backdrop
+                            </h3>
+                            {/* ... Keep existing theme mapping ... */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {COSMETIC_SHOP_ITEMS.filter(i => i.id.startsWith('theme-')).map(item => {
+                                    const isOwned = useGameStore.getState().inventory.some(owned => owned.id === item.id);
+
+                                    const handleBuy = () => {
+                                        if (isOwned) return;
+                                        if (confirm(`Purchase ${item.name} for ${item.premiumPrice} Gems?`)) {
+                                            const success = buyItem(item);
+                                            if (!success) alert("Not enough Gems!");
+                                        }
+                                    };
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            onClick={handleBuy}
+                                            className={`relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border transition-all cursor-pointer group ${isOwned ? 'border-emerald-500/50 opacity-80' : 'border-slate-800 hover:border-emerald-500/50'}`}
+                                        >
+                                            {item.imageUrl.endsWith('.mp4') ? (
+                                                <video
+                                                    src={item.imageUrl}
+                                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                                                    autoPlay
+                                                    loop
+                                                    muted
+                                                    playsInline
+                                                />
+                                            ) : (
+                                                <img src={item.imageUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                            )}
+
+                                            {/* OWNED BADGE */}
+                                            {isOwned && (
+                                                <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 box-border">
+                                                    Owned
+                                                </div>
+                                            )}
+
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex flex-col justify-end p-4">
+                                                <div className="flex justify-between items-end">
+                                                    <div>
+                                                        <h4 className="font-bold text-white">{item.name}</h4>
+                                                        <p className="text-xs text-slate-400">{item.description}</p>
+                                                    </div>
+                                                    <button
+                                                        className={`font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-colors ${isOwned ? 'bg-emerald-900/50 text-emerald-500 border border-emerald-500/30' : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30'}`}
+                                                    >
+                                                        {isOwned ? (
+                                                            <>
+                                                                <CheckCircle2 size={10} /> Owned
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Diamond size={10} /> {item.premiumPrice}
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* GEM WALLET (Visible on Cosmetics Tab) */}
-            {activeTab === 'cosmetics' && (
-                <div className="flex items-center gap-4 bg-slate-900 p-2 pr-6 rounded-xl border border-slate-800 animate-in fade-in slide-in-from-right-10">
-                    <div className="bg-cyan-500/20 p-2 rounded-lg">
-                        <Diamond size={16} className="text-cyan-400" />
-                    </div>
-                    <div>
-                        <div className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Gems</div>
-                        <div className="text-lg font-black text-cyan-500 leading-none">{stats.gems}</div>
-                    </div>
-                    <button className="ml-2 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-cyan-500/20">
-                        + Buy
-                    </button>
-                </div>
-            )}
-
-
-
-
-
-            {/* ITEMS INVENTORY */}
-            {/* MAIN LAYOUT: Sidebar + Content */}
-            <div className="flex flex-col lg:flex-row gap-8">
-
-                {/* LEFT SIDEBAR - MERCHANT CARD */}
-                <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                    <MerchantCard />
-
-                    {/* Could add other sidebar widgets here later (e.g. Special Offers) */}
+            {/* BLACK MARKET (Moved to Bottom) */}
+            <div className="space-y-6 pt-12 border-t border-slate-900/50">
+                <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500 uppercase tracking-tighter flex items-center gap-3">
+                        <Sparkles className="text-purple-500" /> The Black Market
+                    </h2>
+                    <div className="h-px flex-1 bg-gradient-to-r from-purple-900/50 to-transparent" />
                 </div>
 
-                {/* RIGHT CONTENT - ITEMS GRID */}
-                <div className="flex-1 space-y-6">
-                    {activeTab === 'general' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {blackMarketItems.map(item => {
+                        const Icon = icons[item.id] || Sparkles;
+                        return (
+                            <div key={item.id} className="bg-slate-950/80 border border-purple-900/30 rounded-2xl p-5 flex flex-col gap-4 group hover:border-purple-500/50 transition-all relative overflow-hidden">
+                                <div className="absolute inset-0 bg-purple-900/5 group-hover:bg-purple-900/10 transition-colors pointer-events-none"></div>
 
-                            {/* 5. AVATARS (Moved to start or end? Index 5) */}
-                            <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
-                                <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
-                                    <h3 className="text-sm font-bold text-pink-500 uppercase tracking-widest flex items-center gap-2">
-                                        <User size={16} /> Avatars
-                                    </h3>
-                                </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {SHOP_ITEMS.filter(i => i.type === 'AVATAR').map(item => {
-                                            const isVoidPrice = item.currency === 'VOID_SHARD';
-                                            const rarity = item.rarity || 'COMMON';
-
-                                            // Rarity Styles
-                                            const rarityStyles = {
-                                                COMMON: { border: 'border-slate-700', bg: 'bg-slate-900', text: 'text-slate-400', glow: 'from-slate-500/10' },
-                                                RARE: { border: 'border-blue-500/50', bg: 'bg-slate-900', text: 'text-blue-400', glow: 'from-blue-500/20' },
-                                                MYSTIC: { border: 'border-purple-500/60', bg: 'bg-[#1a0b2e]', text: 'text-purple-400', glow: 'from-purple-500/20' },
-                                                LEGENDARY: { border: 'border-amber-500/80', bg: 'bg-[#2e1a0b]', text: 'text-amber-400', glow: 'from-amber-500/20' }
-                                            };
-                                            const style = rarityStyles[rarity];
-
-                                            return (
-                                                <div key={item.id} className={`relative group overflow-hidden rounded-xl border-2 ${style.border} ${style.bg} transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl`}>
-                                                    {/* Rarity Glow Background */}
-                                                    <div className={`absolute inset-0 bg-gradient-to-br ${style.glow} to-transparent opacity-50 group-hover:opacity-100 transition-opacity`} />
-
-                                                    {/* Content Container */}
-                                                    <div className="relative z-10 p-3 space-y-3">
-
-                                                        {/* Header: Name & Rarity */}
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <h4 className={`font-black uppercase tracking-wider text-xs ${style.text}`}>{item.name}</h4>
-                                                                <span className="text-[9px] font-mono opacity-70 tracking-widest">{rarity}</span>
-                                                            </div>
-                                                            {rarity === 'LEGENDARY' && <Sparkles size={14} className="text-amber-400 animate-pulse" />}
-                                                        </div>
-
-                                                        {/* Image Display - Compact */}
-                                                        <div className={`w-full aspect-square rounded-lg overflow-hidden border ${style.border} bg-black/50 relative group-hover:shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all`}>
-                                                            <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover pixelated hover:scale-110 transition-transform duration-700" />
-                                                        </div>
-
-                                                        {/* Divider */}
-                                                        <div className={`h-px w-full bg-gradient-to-r from-transparent via-${style.text.split('-')[1]}-500/30 to-transparent`} />
-
-                                                        {/* Stats & Slots Grid */}
-                                                        <div className="grid grid-cols-2 gap-2 text-[9px]">
-                                                            {/* Perks */}
-                                                            <div className="space-y-1">
-                                                                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Perks</span>
-                                                                {item.perks?.xpModifier && <div className="text-green-400">+{(item.perks.xpModifier * 100).toFixed(0)}% XP</div>}
-                                                                {item.perks?.goldModifier && <div className="text-amber-400">+{(item.perks.goldModifier * 100).toFixed(0)}% Gold</div>}
-                                                                {item.perks?.luckModifier && <div className="text-purple-400">+{(item.perks.luckModifier * 100).toFixed(0)}% Luck</div>}
-                                                                {(item.perks as any)?.energyMaxBonus && <div className="text-blue-400">+{(item.perks as any).energyMaxBonus} Max NRG</div>}
-                                                                {item.perks?.shopDiscount && <div className="text-emerald-400">-{(item.perks.shopDiscount * 100).toFixed(0)}% Shop</div>}
-                                                            </div>
-
-                                                            {/* Slots */}
-                                                            <div className="space-y-1 text-right">
-                                                                <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Slots</span>
-                                                                <div className="flex flex-wrap justify-end gap-1">
-                                                                    {item.slots && item.slots.length > 0 ? (
-                                                                        item.slots.map(slot => (
-                                                                            <div key={slot} title={slot} className={`w-4 h-4 rounded border ${style.border} bg-black/30 flex items-center justify-center text-slate-300`}>
-                                                                                {slot === 'WEAPON' && <Sword size={8} />}
-                                                                                {slot === 'ARMOR' && <Shield size={8} />}
-                                                                                {slot === 'ACCESSORY' && <Sparkles size={8} />}
-                                                                            </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        <span className="text-slate-600 italic">None</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Buy Button */}
-                                                        <button
-                                                            onClick={() => handleAddItem(item)}
-                                                            className={`w-full py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all group-hover:bg-white/10 ${style.border} border`}
-                                                        >
-                                                            {isVoidPrice ? <Sparkles size={10} className="text-purple-400" /> : <Coins size={10} className="text-amber-400" />}
-                                                            <span className={isVoidPrice ? 'text-purple-300' : 'text-amber-300'}>{item.cost} {isVoidPrice ? 'Shards' : 'Gold'}</span>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-
+                                <div className="flex items-start justify-between relative z-10">
+                                    <div className="p-4 bg-purple-900/20 rounded-xl text-purple-400 group-hover:text-purple-300 transition-colors shrink-0">
+                                        {(item as any).imageUrl ? (
+                                            <img src={(item as any).imageUrl} alt={item.name} className="w-12 h-12 object-cover pixelated" />
+                                        ) : (
+                                            <Icon size={24} />
+                                        )}
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-sm font-black text-purple-200 uppercase tracking-tight">{item.name}</div>
+                                        <div className="text-[10px] font-mono text-purple-500 mt-1">{item.cost} Void Shards</div>
                                     </div>
                                 </div>
+
+                                <p className="text-xs text-slate-400 leading-relaxed relative z-10 min-h-[3em]">
+                                    {item.description}
+                                </p>
+
+                                <button
+                                    onClick={() => handleAddItem(item)}
+                                    className="w-full py-3 rounded-xl bg-purple-900/20 hover:bg-purple-600 hover:text-white text-purple-300 font-bold text-xs uppercase tracking-wider transition-all border border-purple-500/20 group-hover:border-purple-500/50 relative z-10 flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={14} /> Purchase
+                                </button>
                             </div>
-
-                            {/* 1. Real World Rewards */}
-                            <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
-                                <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
-                                    <h3 className="text-sm font-bold text-amber-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Gift size={16} /> Real Life Rewards
-                                    </h3>
-                                </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-                                    <div className="grid gap-3">
-                                        {realWorldItems.map(item => {
-                                            const Icon = icons[item.id] || Gift;
-                                            return (
-                                                <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between group hover:border-amber-500/30 transition-all">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="p-3 bg-slate-800 rounded-lg text-slate-400 group-hover:text-amber-400 transition-colors shrink-0 w-20 h-20 flex items-center justify-center overflow-hidden">
-                                                            {(item as any).imageUrl ? (
-                                                                <img src={(item as any).imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
-                                                            ) : (
-                                                                <Icon size={20} />
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-slate-200">{item.name}</h4>
-                                                            <div className="text-xs text-amber-500 font-mono flex items-center gap-1">
-                                                                <Coins size={10} />
-                                                                {item.cost}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAddItem(item)}
-                                                        className="w-10 h-10 flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors border border-slate-700"
-                                                    >
-                                                        <Plus size={18} />
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 2. System Upgrades */}
-                            <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
-                                <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
-                                    <h3 className="text-sm font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                                        <Zap size={16} /> System Upgrades
-                                    </h3>
-                                </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-                                    <div className="grid gap-3">
-                                        {systemItems.map(item => {
-                                            const Icon = icons[item.id] || Zap;
-                                            return (
-                                                <div key={item.id} className="bg-slate-900/50 border border-blue-900/30 p-4 rounded-xl flex items-center justify-between group hover:bg-slate-900/80 transition-all">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="p-3 bg-blue-900/20 rounded-lg text-blue-400 group-hover:text-blue-300 transition-colors shrink-0 w-20 h-20 flex items-center justify-center overflow-hidden">
-                                                            {(item as any).imageUrl ? (
-                                                                <img src={(item as any).imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
-                                                            ) : (
-                                                                <Icon size={20} />
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-slate-200">{item.name}</h4>
-                                                            <p className="text-[10px] text-slate-500 max-w-[150px] leading-tight">{item.description}</p>
-                                                            <div className="text-xs text-amber-500 font-mono flex items-center gap-1 mt-1">
-                                                                <Coins size={10} />
-                                                                {item.cost}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAddItem(item)}
-                                                        className="w-10 h-10 flex items-center justify-center bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 rounded-lg transition-colors border border-blue-500/30"
-                                                    >
-                                                        <Plus size={18} />
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* 3. Black Market */}
-                            <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
-                                <div className="bg-slate-900/80 p-4 border-b border-slate-800 backdrop-blur-sm shrink-0">
-                                    <h3 className="text-sm font-bold text-purple-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Sparkles size={16} /> Black Market
-                                    </h3>
-                                </div>
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-                                    <div className="grid gap-3">
-                                        {blackMarketItems.map(item => {
-                                            const Icon = icons[item.id] || Sparkles;
-                                            return (
-                                                <div key={item.id} className="bg-slate-950 border border-purple-900/30 p-4 rounded-xl flex items-center justify-between group hover:border-purple-500/50 transition-all relative overflow-hidden">
-                                                    <div className="absolute inset-0 bg-purple-900/5 pointer-events-none"></div>
-                                                    <div className="flex items-center gap-4 relative z-10">
-                                                        <div className="p-3 bg-purple-900/20 rounded-lg text-purple-400 group-hover:text-purple-300 transition-colors shrink-0 w-20 h-20 flex items-center justify-center overflow-hidden">
-                                                            {(item as any).imageUrl ? (
-                                                                <img src={(item as any).imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
-                                                            ) : (
-                                                                <Icon size={20} />
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-bold text-purple-200">{item.name}</h4>
-                                                            <p className="text-[10px] text-purple-400/60 max-w-[150px] leading-tight">{item.description}</p>
-                                                            <div className="text-xs text-purple-400 font-mono flex items-center gap-1 mt-1">
-                                                                <Sparkles size={10} />
-                                                                {item.cost} Shards
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => handleAddItem(item)}
-                                                        className="w-10 h-10 flex items-center justify-center bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 rounded-lg transition-colors border border-purple-500/30 relative z-10"
-                                                    >
-                                                        <Plus size={18} />
-                                                    </button>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </div>
-                    ) : (
-                        <div className="space-y-8 animate-in fade-in duration-300">
-                            {/* COSMETICS TAB CONTENT */}
-
-                            {/* 1. PREMIUM AVATARS */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
-                                    <User className="text-pink-500" /> Premium Skins
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {COSMETIC_SHOP_ITEMS.filter(i => i.type === 'AVATAR').map((item) => (
-                                        <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden group hover:border-pink-500/50 transition-all hover:shadow-[0_0_30px_rgba(236,72,153,0.15)] flex flex-col">
-                                            <div className="relative aspect-[4/5] overflow-hidden bg-black">
-                                                <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                                                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 text-[10px] font-bold text-white uppercase tracking-wider">
-                                                    {item.rarity}
-                                                </div>
-                                            </div>
-                                            <div className="p-4 flex flex-col flex-1">
-                                                <h4 className="font-black text-lg text-white uppercase tracking-tight">{item.name}</h4>
-                                                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{item.description}</p>
-
-                                                <div className="mt-auto pt-4 flex items-center gap-3">
-                                                    <button className="flex-1 bg-slate-800 text-white font-black py-3 rounded-xl uppercase text-xs hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 border border-slate-700">
-                                                        <Diamond size={12} className="text-cyan-400" />
-                                                        <span>{item.premiumPrice}</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 2. THEMES & UI */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
-                                    <Monitor className="text-emerald-500" /> Avatar Backdrop
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {COSMETIC_SHOP_ITEMS.filter(i => i.id.startsWith('theme-')).map(item => {
-                                        const isOwned = useGameStore.getState().inventory.some(owned => owned.id === item.id);
-
-                                        const handleBuy = () => {
-                                            if (isOwned) return;
-                                            if (confirm(`Purchase ${item.name} for ${item.premiumPrice} Gems?`)) {
-                                                const success = buyItem(item);
-                                                if (!success) alert("Not enough Gems!");
-                                            }
-                                        };
-
-                                        return (
-                                            <div
-                                                key={item.id}
-                                                onClick={handleBuy}
-                                                className={`relative aspect-video bg-slate-900 rounded-2xl overflow-hidden border transition-all cursor-pointer group ${isOwned ? 'border-emerald-500/50 opacity-80' : 'border-slate-800 hover:border-emerald-500/50'}`}
-                                            >
-                                                {item.imageUrl.endsWith('.mp4') ? (
-                                                    <video
-                                                        src={item.imageUrl}
-                                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
-                                                        autoPlay
-                                                        loop
-                                                        muted
-                                                        playsInline
-                                                    />
-                                                ) : (
-                                                    <img src={item.imageUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                                                )}
-
-                                                {/* OWNED BADGE */}
-                                                {isOwned && (
-                                                    <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider z-10 box-border">
-                                                        Owned
-                                                    </div>
-                                                )}
-
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent flex flex-col justify-end p-4">
-                                                    <div className="flex justify-between items-end">
-                                                        <div>
-                                                            <h4 className="font-bold text-white">{item.name}</h4>
-                                                            <p className="text-xs text-slate-400">{item.description}</p>
-                                                        </div>
-                                                        <button
-                                                            className={`font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-colors ${isOwned ? 'bg-emerald-900/50 text-emerald-500 border border-emerald-500/30' : 'bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30'}`}
-                                                        >
-                                                            {isOwned ? (
-                                                                <>
-                                                                    <CheckCircle2 size={10} /> Owned
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Diamond size={10} /> {item.premiumPrice}
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* 3. COMPANIONS */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
-                                    <Ghost className="text-purple-500" /> Digital Companions
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                    {COSMETIC_SHOP_ITEMS.filter(i => i.id.startsWith('pet-')).map(item => (
-                                        <div key={item.id} className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex flex-col items-center gap-3 hover:bg-slate-800 transition-colors group">
-                                            <img src={item.imageUrl} className="w-16 h-16 drop-shadow-lg group-hover:-translate-y-1 transition-transform" />
-                                            <div className="text-center">
-                                                <div className="font-bold text-xs text-slate-200">{item.name}</div>
-                                                <div className="text-[10px] text-cyan-400 font-mono mt-1 flex items-center gap-1 justify-center">
-                                                    <Diamond size={8} /> {item.premiumPrice}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                        </div>
-                    )}
+                        );
+                    })}
                 </div>
             </div>
 

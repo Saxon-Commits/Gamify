@@ -108,24 +108,7 @@ export const SHOP_ITEMS = [
     },
 
     // C. Black Market (Premium)
-    {
-        id: 'oracle_protocol',
-        name: 'The Oracle',
-        cost: 200,
-        type: 'BLACK_MARKET',
-        currency: 'GEMS',
-        description: 'Auto-complete 1 Daily Task.',
-        flavor: 'Injecting truth into the simulation.'
-    },
-    {
-        id: 'mind_wipe',
-        name: 'Mind Wipe',
-        cost: 500,
-        type: 'BLACK_MARKET',
-        currency: 'GEMS',
-        description: 'Reset a Skill Tree branch to recover Skill Points.',
-        flavor: 'Selective memory formatting.'
-    },
+
 
     // D. Equipment & Accessories
     {
@@ -339,7 +322,7 @@ export const SHOP_ITEMS = [
         description: 'The master of the arcane. Commands all elements.',
         lore: "Some say he was the first developer. Others say he IS the code.",
         flavor: 'Unlimited power.',
-        imageUrl: '/assets/avatars/grand_wizard/grand_wizard_w_void_cloak_and_cursed_void_staff_shop_preview.png',
+        imageUrl: '/assets/avatars/grand_wizard/grand_wizard_a_void_cloak.png',
         videoUrl: '/assets/grand_wizard_idle.mp4',
         perks: {
             xpModifier: 0.5, // +50% XP

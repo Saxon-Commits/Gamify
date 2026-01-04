@@ -94,9 +94,13 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, active, varian
   );
 };
 
-const ResourceItem: React.FC<{ icon: React.ElementType; value: number; label: string; description: string; color: string }> = ({ icon: Icon, value, label, description, color }) => (
+const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; value: number; label: string; description: string; color: string }> = ({ icon: Icon, imageUrl, value, label, description, color }) => (
   <div className="group relative flex items-center space-x-1.5 cursor-help">
-    <Icon size={14} className={color} />
+    {imageUrl ? (
+      <img src={imageUrl} alt={label} className="w-8 h-8 object-contain pixelated" />
+    ) : (
+      Icon && <Icon size={14} className={color} />
+    )}
     <span className="text-xs font-bold text-slate-200">{value}</span>
 
     <div className="absolute top-full right-0 mt-3 w-32 p-2 bg-slate-950 border border-slate-800 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
@@ -173,7 +177,7 @@ export const Layout: React.FC = () => {
             <div className="w-px h-4 bg-slate-800" />
             <ResourceItem icon={Zap} value={stats.skillPoints} label="Skill Points" description="Unlock standard skill nodes." color="text-blue-400" />
             <div className="w-px h-4 bg-slate-800" />
-            <ResourceItem icon={Diamond} value={stats.gems} label="Gems" description="Premium Currency." color="text-cyan-400" />
+            <ResourceItem imageUrl="/assets/gem assets/gem icon.png" value={stats.gems} label="Gems" description="Premium Currency." color="text-cyan-400" />
           </div>
 
           <button

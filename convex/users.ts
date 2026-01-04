@@ -4,8 +4,10 @@ import { internalMutation, query } from "./_generated/server";
 // Price IDs (We could move these to a shared config)
 const PRICES = {
     LIFETIME: 'price_1SlpqyLQXrapzCX8bubgyJ0C',
-    PRO_MONTHLY: 'price_PRO_PLACEHOLDER', // TODO: Update
-    GEMS_500: 'price_GEMS_PLACEHOLDER', // TODO: Update
+    GEMS_100: 'price_100_gems',
+    GEMS_500: 'price_500_gems',
+    GEMS_1000: 'price_1000_gems',
+    GEMS_10000: 'price_10000_gems'
 };
 
 export const fulfillPurchase = internalMutation({
@@ -66,8 +68,15 @@ export const fulfillPurchase = internalMutation({
                 subscription: 'lifetime',
             });
             console.log(`Upgraded user ${user._id} to LIFETIME`);
+        } else if (args.priceId === PRICES.GEMS_100) {
+            await ctx.db.patch(user._id, { gems: (user.gems || 0) + 100 });
+        } else if (args.priceId === PRICES.GEMS_500) {
+            await ctx.db.patch(user._id, { gems: (user.gems || 0) + 500 });
+        } else if (args.priceId === PRICES.GEMS_1000) {
+            await ctx.db.patch(user._id, { gems: (user.gems || 0) + 1000 });
+        } else if (args.priceId === PRICES.GEMS_10000) {
+            await ctx.db.patch(user._id, { gems: (user.gems || 0) + 10000 });
         }
-        // Add other cases later
     },
 });
 

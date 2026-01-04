@@ -159,162 +159,164 @@ export const MerchantVideo: React.FC<{ className?: string }> = ({ className = ""
     );
 };
 
-// Quest Modal Component - Now includes Merchant on the side
-interface QuestModalProps {
+// Unified Merchant Shop Modal
+interface MerchantModalProps {
     isOpen: boolean;
     onClose: () => void;
     onBuyQuest: () => void;
     onCreateQuest: () => void;
+    realWorldItems: any[];
+    systemItems: any[];
+    onAddItem: (item: any) => void;
 }
 
-export const QuestModal: React.FC<QuestModalProps> = ({ isOpen, onClose, onBuyQuest, onCreateQuest }) => {
+export const MerchantModal: React.FC<MerchantModalProps> = ({
+    isOpen,
+    onClose,
+    onBuyQuest,
+    onCreateQuest,
+    realWorldItems,
+    systemItems,
+    onAddItem
+}) => {
     if (!isOpen) return null;
+
+    // Icon mapping helper (recreated here for containment)
+    const getIcon = (id: string) => {
+        // You would typically import these or pass mapped components, 
+        // but for now we'll use a generic fallback if specific ones aren't needed 
+        // or just rely on the passed item.imageUrl if available.
+        return null;
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
                 onClick={onClose}
             />
 
-            {/* Modal Content - Side by Side Layout */}
-            <div className="relative z-10 w-full max-w-5xl animate-in fade-in zoom-in duration-300">
+            {/* Modal Content */}
+            <div className="relative z-10 w-full max-w-6xl animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute -top-12 right-0 p-2 text-slate-400 hover:text-white transition-colors z-20"
+                    className="absolute -top-10 right-0 p-2 text-slate-400 hover:text-white transition-colors z-20 flex items-center gap-2"
                 >
+                    <span className="text-xs font-bold uppercase tracking-widest">Close Shop</span>
                     <X size={24} />
                 </button>
 
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* LEFT: Merchant Video */}
-                    <div className="lg:w-80 flex-shrink-0">
-                        <MerchantVideo className="h-full min-h-[300px] lg:min-h-[450px]" />
-                    </div>
+                <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
 
-                    {/* RIGHT: Quest Options */}
-                    <div className="flex-1 bg-slate-900 border-2 border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl shadow-amber-900/20">
-                        {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-amber-900/30 to-slate-900 p-6 border-b border-amber-500/20">
-                            <h2 className="text-2xl font-black text-amber-100 tracking-tight flex items-center gap-3">
-                                <span className="text-3xl">📜</span>
-                                Quest Commission
-                            </h2>
-                            <p className="text-sm text-slate-400 mt-1">Choose how you'd like to acquire a new quest</p>
-                        </div>
+                    {/* LEFT COLUMN: Merchant & Quests */}
+                    <div className="lg:w-80 flex-shrink-0 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
+                        <MerchantVideo className="h-[300px]" />
 
-                        {/* Options Grid */}
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Option 1: Buy Quest */}
-                            <button
-                                onClick={onBuyQuest}
-                                className="group p-6 bg-slate-800/50 border-2 border-slate-700 rounded-xl hover:border-blue-500/50 hover:bg-blue-900/10 transition-all duration-300 text-left"
-                            >
-                                <div className="w-14 h-14 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500/30 transition-all">
-                                    <ShoppingCart size={28} className="text-blue-400" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-blue-200 transition-colors">Buy Quest</h3>
-                                <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                                    Purchase a pre-made quest from the merchant's collection. Cost and rewards vary based on difficulty.
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Coins size={14} className="text-amber-400" />
-                                    <span>Cost varies by quest</span>
-                                </div>
-                            </button>
-
-                            {/* Option 2: Create Quest */}
-                            <button
-                                onClick={onCreateQuest}
-                                className="group p-6 bg-slate-800/50 border-2 border-slate-700 rounded-xl hover:border-purple-500/50 hover:bg-purple-900/10 transition-all duration-300 text-left"
-                            >
-                                <div className="w-14 h-14 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-purple-500/30 transition-all">
-                                    <Target size={28} className="text-purple-400" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-200 transition-colors">Create Quest</h3>
-                                <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                                    Design your own quest with custom objectives. Rewards scale with the number of goals you set.
-                                </p>
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Coins size={14} className="text-amber-400" />
-                                    <span>50 Gold to commission</span>
-                                </div>
-                            </button>
-                        </div>
-
-                        {/* Footer */}
-                        <div className="px-6 pb-6">
-                            <div className="bg-slate-950/50 rounded-lg p-4 border border-slate-800/50 text-center">
-                                <p className="text-[10px] uppercase tracking-widest text-slate-600">
-                                    All quest commissions are final • Choose wisely, adventurer
-                                </p>
+                        {/* Quest Options */}
+                        <div className="bg-slate-900 border-2 border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl shadow-amber-900/20 flex-shrink-0">
+                            <div className="bg-gradient-to-r from-amber-900/30 to-slate-900 p-4 border-b border-amber-500/20">
+                                <h2 className="text-lg font-black text-amber-100 tracking-tight flex items-center gap-2">
+                                    <span>📜</span> Quest Services
+                                </h2>
+                            </div>
+                            <div className="p-4 space-y-3">
+                                <button onClick={onBuyQuest} className="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500/50 transition-all group">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 group-hover:text-blue-300"><ShoppingCart size={16} /></div>
+                                        <div className="font-bold text-slate-200">Buy Quest</div>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 ml-11">Purchase pre-made adventures.</div>
+                                </button>
+                                <button onClick={onCreateQuest} className="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-purple-500/50 transition-all group">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400 group-hover:text-purple-300"><Target size={16} /></div>
+                                        <div className="font-bold text-slate-200">Create Quest</div>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 ml-11">Design your own objectives.</div>
+                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* BOTTOM ROW: Shop Items */}
-                <div className="mt-6 bg-slate-900 border-2 border-slate-700 rounded-2xl overflow-hidden">
-                    <div className="p-4 border-b border-slate-800 flex items-center gap-2">
-                        <span className="text-lg">🏪</span>
-                        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Merchant's Wares</h3>
-                        <span className="text-[10px] text-slate-500 ml-auto">Limited Stock</span>
-                    </div>
-                    <div className="p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {/* Placeholder Item 1 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-slate-700/50 border border-slate-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                ⚗️
+                    {/* RIGHT COLUMN: Shop Inventory */}
+                    <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                        <div className="p-5 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                                    <Coins className="text-amber-500" size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black text-white uppercase tracking-tight">Merchant's Inventory</h2>
+                                    <p className="text-xs text-slate-400">Rare goods and system upgrades</p>
+                                </div>
                             </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Elixir</div>
-                            <div className="text-[10px] font-bold text-amber-400">150g</div>
+                            <div className="bg-amber-900/20 border border-amber-500/20 px-3 py-1 rounded-full">
+                                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Stock Refreshed</span>
+                            </div>
                         </div>
 
-                        {/* Placeholder Item 2 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-slate-700/50 border border-slate-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                🗡️
-                            </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Blade</div>
-                            <div className="text-[10px] font-bold text-amber-400">500g</div>
-                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
 
-                        {/* Placeholder Item 3 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-slate-700/50 border border-slate-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                🛡️
+                            {/* SECTION 1: SYSTEM UPGRADES */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-black text-blue-400 uppercase tracking-widest border-b border-blue-500/20 pb-2">
+                                    System Upgrades
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {systemItems.map(item => (
+                                        <div key={item.id} className="bg-slate-800/40 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
+                                            <div className="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                                                {item.imageUrl ? (
+                                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
+                                                ) : <span className="text-2xl">⚡</span>}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-slate-200 truncate">{item.name}</div>
+                                                <div className="text-[10px] text-slate-500 line-clamp-2 leading-tight mb-1.5">{item.description}</div>
+                                                <div className="font-mono text-xs text-amber-500 font-bold">{item.cost}g</div>
+                                            </div>
+                                            <button
+                                                onClick={() => onAddItem(item)}
+                                                className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white flex items-center justify-center transition-colors border border-blue-500/20"
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Shield</div>
-                            <div className="text-[10px] font-bold text-amber-400">350g</div>
-                        </div>
 
-                        {/* Placeholder Item 4 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-purple-900/30 border border-purple-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                ✨
+                            {/* SECTION 2: REAL LIFE REWARDS */}
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-black text-amber-500 uppercase tracking-widest border-b border-amber-500/20 pb-2">
+                                    Real Life Rewards
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {realWorldItems.map(item => (
+                                        <div key={item.id} className="bg-slate-800/40 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
+                                            <div className="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                                                {item.imageUrl ? (
+                                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
+                                                ) : <span className="text-2xl">🎁</span>}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-slate-200 truncate">{item.name}</div>
+                                                <div className="text-[10px] text-slate-500 line-clamp-2 leading-tight mb-1.5">{item.description}</div>
+                                                <div className="font-mono text-xs text-amber-500 font-bold">{item.cost}g</div>
+                                            </div>
+                                            <button
+                                                onClick={() => onAddItem(item)}
+                                                className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white flex items-center justify-center transition-colors border border-amber-500/20"
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Essence</div>
-                            <div className="text-[10px] font-bold text-amber-400">250g</div>
-                        </div>
 
-                        {/* Placeholder Item 5 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-blue-900/30 border border-blue-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                💎
-                            </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Gem</div>
-                            <div className="text-[10px] font-bold text-amber-400">1000g</div>
-                        </div>
-
-                        {/* Placeholder Item 6 */}
-                        <div className="group p-3 bg-slate-800/50 border border-slate-700 rounded-xl hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer text-center">
-                            <div className="w-12 h-12 mx-auto mb-2 rounded-lg bg-green-900/30 border border-green-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                                🌿
-                            </div>
-                            <div className="text-xs font-bold text-slate-300 mb-1">Herb</div>
-                            <div className="text-[10px] font-bold text-amber-400">75g</div>
                         </div>
                     </div>
                 </div>
