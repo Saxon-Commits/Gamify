@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { ReactFlow, Background, Controls, MiniMap } from '@xyflow/react';
 import { useGameStore } from '../store/useGameStore';
 import { CustomSkillNode } from '../components/CustomSkillNode';
+import { BRANCH_CONFIGS } from '../src/utils/SkillTreeUtils';
 import { Info, Lock, Unlock, AlertCircle } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
@@ -19,10 +20,12 @@ export const SkillTree: React.FC = () => {
 
     const Icon = (Icons as any)[hoveredNode.icon] || Icons.HelpCircle;
 
+    const branchName = BRANCH_CONFIGS.find(b => b.id === hoveredNode.path)?.name || hoveredNode.path;
+
     return (
       <div className="absolute top-4 right-4 z-[60] w-72 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-right-4 duration-200">
         <div className="flex justify-between items-center mb-3">
-          <span className="font-black text-[10px] uppercase tracking-[0.2em] text-indigo-400">{hoveredNode.path}</span>
+          <span className="font-black text-[10px] uppercase tracking-[0.2em] text-indigo-400">{branchName}</span>
           {hoveredNode.isUnlocked ? (
             <span className="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 uppercase font-black">Mastered</span>
           ) : (

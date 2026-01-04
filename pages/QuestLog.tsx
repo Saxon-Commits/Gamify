@@ -826,7 +826,7 @@ export const QuestLog: React.FC = () => {
               {/* Tool 1: Grindstone */}
               <button
                 className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-amber-500/50 hover:bg-amber-950/10 transition-all duration-300"
-                onClick={() => navigate('/tools/grindstone')}
+                onClick={() => navigate('/app/tools/grindstone')}
               >
                 <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
                 <div className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-amber-500 group-hover:scale-110 transition-transform">
@@ -841,7 +841,7 @@ export const QuestLog: React.FC = () => {
               {/* Tool 2: Mind Wipe */}
               <button
                 className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/10 transition-all duration-300"
-                onClick={() => navigate('/tools/mind-wipe')}
+                onClick={() => navigate('/app/tools/mind-wipe')}
               >
                 <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
                 <div className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-purple-400 group-hover:scale-110 transition-transform">

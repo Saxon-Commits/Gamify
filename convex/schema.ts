@@ -8,6 +8,10 @@ export default defineSchema({
         name: v.optional(v.string()),
         email: v.optional(v.string()),
         pictureUrl: v.optional(v.string()),
+        // Monetization
+        subscription: v.optional(v.string()), // 'free', 'pro', 'lifetime'
+        credits: v.optional(v.number()), // 'gems' (virtual currency - keeping generic name 'credits' or explicit 'gems'?) -> Let's use 'gems' as per plan but verify if 'credits' is better. Plan said 'gems'.
+        gems: v.optional(v.number()),
     }).index("by_token", ["tokenIdentifier"]),
 
     // GameState Table: Stores the full monolithic state for the user

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SignInButton, SignUpButton, useUser } from '@clerk/clerk-react';
-import { Shield, Zap, Trophy, Layout, Users, Star, ArrowRight, Check } from 'lucide-react';
+import { Shield, Zap, Trophy, Layout, Users, Star, ArrowRight, Check, Sparkles } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
     const { isSignedIn } = useUser();
@@ -20,7 +20,7 @@ export const LandingPage: React.FC = () => {
                         <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center transform rotate-3">
                             <Trophy size={18} className="text-white" />
                         </div>
-                        <span className="font-bold text-xl tracking-tight">ParaXP</span>
+                        <span className="font-bold text-xl tracking-tight">Questify</span>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -163,7 +163,7 @@ export const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-2 opacity-50">
                         <Trophy size={16} />
-                        <span className="font-bold text-sm">ParaXP © 2024</span>
+                        <span className="font-bold text-sm">Questify © 2024</span>
                     </div>
 
                     <div className="flex gap-6 text-sm text-slate-500">

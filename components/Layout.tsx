@@ -136,7 +136,7 @@ export const Layout: React.FC = () => {
             <Sword size={18} className="text-white" />
           </div>
           <h1 className="text-lg font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tighter hidden sm:block">
-            ParaXP
+            Questify
           </h1>
         </div>
 
