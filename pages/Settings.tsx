@@ -205,9 +205,16 @@ export const Settings: React.FC = () => {
               <Coins size={14} />
               <span>+100k Resources (Dev)</span>
             </button>
+            <button
+              onClick={() => signOut()}
+              className="flex items-center space-x-2 px-6 py-3 bg-red-600/20 hover:bg-red-600/30 border border-red-600/40 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
+            >
+              <Trash2 size={14} />
+              <span>Log Out</span>
+            </button>
           </div>
         </section>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 };
