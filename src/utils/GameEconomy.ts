@@ -1,4 +1,4 @@
-import { Task, QuestDifficulty, AvatarPerks } from '../../types';
+import { Task, QuestDifficulty, AvatarPerks, InventoryItem } from '../../types';
 
 export const GOLD_REWARDS: Record<QuestDifficulty, number> = {
     TRIVIAL: 1,
@@ -8,7 +8,9 @@ export const GOLD_REWARDS: Record<QuestDifficulty, number> = {
     EPIC: 100
 };
 
-export const SHOP_ITEMS = [
+export type ShopItem = Omit<InventoryItem, 'acquiredAt' | 'quantity'>;
+
+export const SHOP_ITEMS: ShopItem[] = [
     // A. System Consumables
     {
         id: 'stim_pack',
@@ -119,7 +121,8 @@ export const SHOP_ITEMS = [
         currency: 'GEMS',
         description: 'A staff corrupted by forbidden spaghetti code.',
         flavor: 'It whispers optimization tips.',
-        imageUrl: '/assets/items/w_cursed_staff.png'
+        imageUrl: '/assets/items/w_cursed_staff.png',
+        slots: ['WEAPON']
     },
     // --- WEAPONS ---
     {
@@ -130,7 +133,8 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Heavy impact with a shockwave finish.',
         flavor: 'Stop. Hammer time.',
-        imageUrl: '/assets/items/w_thunder_hammer.png'
+        imageUrl: '/assets/items/w_thunder_hammer.png',
+        slots: ['WEAPON']
     },
     {
         id: 'w_neural_dagger',
@@ -140,7 +144,8 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Silent but deadly. Disconnects neural links.',
         flavor: 'Did you feel that? No? Good.',
-        imageUrl: '/assets/items/w_neural_dagger.png'
+        imageUrl: '/assets/items/w_neural_dagger.png',
+        slots: ['WEAPON']
     },
     {
         id: 'w_molten_sword',
@@ -150,7 +155,8 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Forged in the core of a dying server.',
         flavor: 'Hotfix incoming.',
-        imageUrl: '/assets/items/w_molten_sword.png'
+        imageUrl: '/assets/items/w_molten_sword.png',
+        slots: ['WEAPON']
     },
     {
         id: 'w_cyber_sword',
@@ -160,30 +166,13 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'A blade of pure energy.',
         flavor: 'Sharp enough to cut through firewalls.',
-        imageUrl: '/assets/items/w_cyber_sword.png'
+        imageUrl: '/assets/items/w_cyber_sword.png',
+        slots: ['WEAPON']
     },
 
     // --- ARMOR ---
-    {
-        id: 'a_nano_vest',
-        name: 'Nano-Weave Vest',
-        cost: 800,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'Lightweight protection against bugs.',
-        flavor: 'Comfortable and stylish.',
-        imageUrl: '/assets/items/a_nano_vest.png'
-    },
-    {
-        id: 'a_titan_exo',
-        name: 'Titan Exoskeleton',
-        cost: 5000,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'Turn yourself into a walking tank.',
-        flavor: 'Heavy metal inbound.',
-        imageUrl: '/assets/items/a_titan_exo.png'
-    },
+
+
     {
         id: 'a_void_cloak',
         name: 'Void Cloak',
@@ -192,20 +181,12 @@ export const SHOP_ITEMS = [
         currency: 'GEMS',
         description: 'Shimmering fabric from the null sector.',
         flavor: 'Now you see me...',
-        imageUrl: '/assets/items/a_void_cloak.png'
+        imageUrl: '/assets/items/a_void_cloak.png',
+        slots: ['ARMOR']
     },
 
     // --- HEADGEAR ---
-    {
-        id: 'h_tac_visor',
-        name: 'Tactical Visor',
-        cost: 1200,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'Highlights objectives and critical errors.',
-        flavor: 'I\'ve got you in my sights.',
-        imageUrl: '/assets/items/h_tac_visor.png'
-    },
+
     {
         id: 'h_oni_mask',
         name: 'Oni Mask',
@@ -214,18 +195,10 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Strike fear into the hearts of daemons.',
         flavor: 'Demon mode engaged.',
-        imageUrl: '/assets/items/h_oni_mask.png'
+        imageUrl: '/assets/items/h_oni_mask.png',
+        slots: ['ARMOR']
     },
-    {
-        id: 'h_gas_mask',
-        name: 'Hazmat Mask',
-        cost: 900,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'Filters out toxic comments and radiation.',
-        flavor: 'Breathe deep.',
-        imageUrl: '/assets/items/h_gas_mask.png'
-    },
+
 
     // --- ACCESSORIES ---
     {
@@ -236,28 +209,11 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Defy gravity. Walk on walls (metaphorically).',
         flavor: 'One small step.',
-        imageUrl: '/assets/items/a_grav_boots.png'
+        imageUrl: '/assets/items/a_grav_boots.png',
+        slots: ['ARMOR']
     },
-    {
-        id: 'acc_holo_drone',
-        name: 'Holo-Drone',
-        cost: 500,
-        type: 'BLACK_MARKET',
-        currency: 'GEMS',
-        description: 'A loyal companion that hovers nearby.',
-        flavor: 'Beep boop.',
-        imageUrl: '/assets/items/acc_holo_drone.png'
-    },
-    {
-        id: 'a_cyber_goggles',
-        name: 'Cyber Goggles',
-        cost: 1100,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'See the matrix.',
-        flavor: 'My eyes are augmented.',
-        imageUrl: '/assets/items/a_cyber_goggles.png'
-    },
+
+
     {
         id: 'w_data_gauntlet',
         name: 'Data Gauntlet',
@@ -266,28 +222,10 @@ export const SHOP_ITEMS = [
         currency: 'GOLD',
         description: 'Hack the planet with a wave of your hand.',
         flavor: 'Power glove on.',
-        imageUrl: '/assets/items/w_data_gauntlet.png'
+        imageUrl: '/assets/items/w_data_gauntlet.png',
+        slots: ['WEAPON']
     },
-    {
-        id: 'acc_cyber_shield',
-        name: 'Cyber Shield',
-        cost: 1500,
-        type: 'BLACK_MARKET',
-        currency: 'GOLD',
-        description: 'Holographic defense barrier.',
-        flavor: 'Access denied.',
-        imageUrl: '/assets/items/acc_cyber_shield.png'
-    },
-    {
-        id: 'acc_void_whisp',
-        name: 'Void Whisp',
-        cost: 2000,
-        type: 'BLACK_MARKET',
-        currency: 'GEMS',
-        description: 'A fragmented soul from the void.',
-        flavor: 'It hums with unknown energy.',
-        imageUrl: '/assets/items/acc_void_whisp.png'
-    },
+
 
     // --- CONSUMABLES ---
     {
@@ -310,68 +248,7 @@ export const SHOP_ITEMS = [
         flavor: 'Rise from the ashes.',
         imageUrl: '/assets/items/c_phoenix_feather.png'
     },
-    // E. Avatars
-    {
-        id: 'grand_wizard',
-        name: 'Grand Wizard',
-        cost: 2500, // Premium
-        rarity: 'LEGENDARY',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY'],
-        type: 'AVATAR',
-        currency: 'GEMS',
-        description: 'The master of the arcane. Commands all elements.',
-        lore: "Some say he was the first developer. Others say he IS the code.",
-        flavor: 'Unlimited power.',
-        imageUrl: '/assets/avatars/grand_wizard/grand_wizard_a_void_cloak.png',
-        videoUrl: '/assets/grand_wizard_idle.mp4',
-        perks: {
-            xpModifier: 0.5, // +50% XP
-            goldModifier: 0.5, // +50% Gold
-            luckModifier: 0.2 // +20% Luck
-        }
-    },
-    {
-        id: 'hero_star_general',
-        name: 'Dark Warlord',
-        cost: 1000,
-        type: 'AVATAR',
-        currency: 'GEMS',
-        description: 'Command the fleet.',
-        lore: 'A conqueror of a thousand repos per second. His commit history is written in blood.',
-        flavor: 'To infinity.',
-        imageUrl: '/assets/avatars/hero_star_general.png',
-        rarity: 'MYSTIC',
-        slots: ['WEAPON', 'ACCESSORY'],
-        perks: { shopDiscount: 0.15, goldModifier: 0.10 }
-    },
-    {
-        id: 'hero_dark_warrior',
-        name: 'Iron Viking',
-        cost: 500,
-        type: 'AVATAR',
-        currency: 'GEMS',
-        description: 'Embrace the dark mode.',
-        lore: 'Forged in the frosty north of the server farm. Resilient and unyielding.',
-        flavor: 'Shadows guide you.',
-        imageUrl: '/assets/avatars/hero_dark_warrior.png',
-        rarity: 'RARE',
-        slots: ['ACCESSORY'],
-        perks: { goldModifier: 0.10, luckModifier: 0.05 }
-    },
-    {
-        id: 'hero_cyber_knight',
-        name: 'Cyber Knight',
-        cost: 1500,
-        type: 'AVATAR',
-        currency: 'GEMS',
-        description: 'The futuristic defender of the net.',
-        lore: 'A digital warrior reconstructed from corrupted data.',
-        flavor: 'System online.',
-        imageUrl: '/assets/avatars/cyber_knight/base.png',
-        rarity: 'MYSTIC',
-        slots: ['WEAPON', 'ACCESSORY', 'ARMOR'],
-        perks: { xpModifier: 0.10, energyMaxBonus: 20 }
-    },
+
 ];
 
 /**

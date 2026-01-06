@@ -13,6 +13,7 @@ import { Character } from './pages/Character';
 import { Shop } from './pages/Shop';
 import { Inventory } from './pages/Inventory';
 import { Journal } from './pages/Journal';
+import { Guild } from './pages/Guild';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
 import { Grindstone } from './pages/tools/Grindstone';
@@ -36,6 +37,16 @@ const App: React.FC = () => {
       storeUser().catch(e => console.error("Sync failed:", e));
     }
   }, [user, isAuthenticated, storeUser]);
+
+  // Initial Theme Sync
+  useEffect(() => {
+    const theme = useGameStore.getState().settings.theme;
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   return (
     <HashRouter>
@@ -66,6 +77,7 @@ const App: React.FC = () => {
           <Route path="journal" element={<Journal />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="character" element={<Character />} />
+          <Route path="guild" element={<Guild />} />
           <Route path="settings" element={<Settings />} />
         </Route>
 

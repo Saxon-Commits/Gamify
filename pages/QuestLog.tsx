@@ -14,11 +14,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty }) => {
   const colors = {
-    TRIVIAL: 'bg-slate-800 text-slate-400 border-slate-700',
-    EASY: 'bg-green-900/30 text-green-400 border-green-800/50',
-    MEDIUM: 'bg-blue-900/30 text-blue-400 border-blue-800/50',
-    HARD: 'bg-amber-900/30 text-amber-400 border-amber-800/50',
-    EPIC: 'bg-purple-900/30 text-purple-400 border-purple-800/50'
+    TRIVIAL: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+    EASY: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800/50',
+    MEDIUM: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50',
+    HARD: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50',
+    EPIC: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/50'
   };
 
   return (
@@ -34,24 +34,24 @@ const QuestCard: React.FC<{ task: Task; completeTask: (id: string) => void; dele
   return (
     <div className={`
       relative p-4 rounded-xl border transition-all duration-300 group
-      ${task.completed ? 'bg-slate-900/30 border-slate-800 opacity-50' : 'bg-slate-900 border-slate-800 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10'}
+      ${task.completed ? 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 opacity-50' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10'}
     `}>
       <div className="flex items-start justify-between mt-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             {task.type === 'daily' && <span className="text-[9px] font-bold text-sky-400 flex items-center gap-1"><Sparkles size={10} /> DAILY</span>}
           </div>
-          <h4 className={`font-bold ${task.completed ? 'text-slate-500 line-through' : 'text-slate-200 group-hover:text-white'}`}>
+          <h4 className={`font-bold ${task.completed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white'}`}>
             {task.name}
           </h4>
           {task.description && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{task.description}</p>}
 
           <div className="flex items-center gap-3 mt-3">
-            <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-400 bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-900/50">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-900/50">
               <span>+{task.xpReward} XP</span>
             </div>
             {task.goldReward > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-900/50">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
                 <Coins size={10} />
                 <span>+{task.goldReward}</span>
               </div>
@@ -67,7 +67,7 @@ const QuestCard: React.FC<{ task: Task; completeTask: (id: string) => void; dele
               h-10 w-10 flex items-center justify-center rounded-xl border-2 transition-all duration-300
               ${task.completed
                 ? 'bg-green-500/10 border-green-500/30 text-green-500'
-                : 'border-slate-700 text-slate-600 hover:border-indigo-500 hover:text-indigo-400 hover:bg-slate-800'}
+                : 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
             `}
           >
             {task.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
@@ -147,7 +147,7 @@ const CreateBountyCard = ({ projectId, onCreate }: { projectId: string; onCreate
 
   return (
 
-    <div className="p-4 rounded-xl border border-dashed border-slate-700 bg-slate-900/30 hover:bg-slate-900/50 transition-colors">
+    <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="relative">
           <input
@@ -155,7 +155,7 @@ const CreateBountyCard = ({ projectId, onCreate }: { projectId: string; onCreate
             placeholder="Create new bounty..."
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:border-indigo-500 outline-none placeholder:text-slate-600 pr-10"
+            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:border-indigo-500 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 pr-10"
           />
           <button
             type="submit"
@@ -192,9 +192,9 @@ export const BountyColumn: React.FC<{
     return (
       <div ref={setNodeRef} className="h-full flex flex-col">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{title}</span>
-          <div className="h-[1px] flex-1 bg-slate-800" />
-          <button className="text-slate-500 hover:text-indigo-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</span>
+          <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800" />
+          <button className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400">
             <Plus size={14} />
           </button>
         </div>
@@ -218,8 +218,8 @@ export const BountyColumn: React.FC<{
               ))}
             </AnimatePresence>
             {bounties.length === 0 && (
-              <div className="py-8 text-center border-2 border-dashed border-slate-800 rounded-xl bg-slate-900/10">
-                <p className="text-[10px] text-slate-600">Drag items here</p>
+              <div className="py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/10">
+                <p className="text-[10px] text-slate-400 dark:text-slate-600">Drag items here</p>
               </div>
             )}
           </div>
@@ -552,7 +552,7 @@ export const QuestLog: React.FC = () => {
                       initial={{ opacity: 0, height: 200 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 200 }}
-                      className="w-full relative rounded-3xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-900"
+                      className="w-full relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900"
                     >
                       {/* Background Image Layer */}
                       <div
@@ -563,19 +563,19 @@ export const QuestLog: React.FC = () => {
                           backgroundPosition: 'center',
                         }}
                       />
-                      <div className="absolute inset-0 z-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-900/80" />
+                      <div className="absolute inset-0 z-0 bg-gradient-to-r from-white via-white/90 to-white/80 dark:from-slate-950 dark:via-slate-950/90 dark:to-slate-900/80" />
 
 
                       <div className="relative z-10 p-8 flex flex-col gap-8">
                         {/* Header Section */}
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-slate-800/80 backdrop-blur border border-slate-700 shadow-lg">
-                              {project.icon ? <img src={project.icon} className="w-10 h-10 object-contain" /> : <Map size={32} className="text-indigo-400" />}
+                            <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-lg">
+                              {project.icon ? <img src={project.icon} className="w-10 h-10 object-contain" /> : <Map size={32} className="text-indigo-500 dark:text-indigo-400" />}
                             </div>
                             <div>
-                              <h2 className="text-3xl font-black text-white uppercase tracking-wider">{project.name}</h2>
-                              <p className="text-slate-400">{project.description}</p>
+                              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-wider">{project.name}</h2>
+                              <p className="text-slate-500 dark:text-slate-400">{project.description}</p>
                             </div>
                           </div>
                           <button
@@ -583,7 +583,7 @@ export const QuestLog: React.FC = () => {
                               e.stopPropagation();
                               setExpandedQuestId(null);
                             }}
-                            className="p-2 rounded-full bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                            className="p-2 rounded-full bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-400 dark:hover:text-white transition-colors"
                           >
                             <ChevronDown className="rotate-180" size={24} />
                           </button>
@@ -595,7 +595,7 @@ export const QuestLog: React.FC = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-center">
 
                           {/* Description / Flavor Text Area */}
-                          <div className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 flex flex-col justify-center h-full">
+                          <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm rounded-xl p-6 border border-slate-200/50 dark:border-slate-700/50 flex flex-col justify-center h-full">
 
                             <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
                               <span className="flex items-center gap-2"><Map size={16} /> {activeTasks.length} Milestones</span>
@@ -663,11 +663,11 @@ export const QuestLog: React.FC = () => {
                             )}
 
                             {/* 3. Main Card Content (Inner) */}
-                            <div className={`relative flex flex-col h-full rounded-2xl overflow-hidden bg-slate-900 border ${project.completed ? 'border-green-900/50' : isLocked ? 'border-slate-800' : 'border-slate-800'} transition-colors duration-300`}>
+                            <div className={`relative flex flex-col h-full rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border ${project.completed ? 'border-green-500/50 dark:border-green-900/50' : isLocked ? 'border-slate-200 dark:border-slate-800' : 'border-slate-200 dark:border-slate-800'} transition-colors duration-300`}>
 
                               {/* Locked Overlay */}
                               {isLocked && (
-                                <div className="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center">
+                                <div className="absolute inset-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center">
                                   {/* Under Construction Art - scaled to fit nicely */}
                                   <img
                                     src="/assets/under construction pixel art.png"
@@ -686,8 +686,8 @@ export const QuestLog: React.FC = () => {
                                     </div>
 
                                     <div className="text-center px-6 max-w-sm">
-                                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 border border-slate-700/80 px-3 py-1 bg-slate-950/90 shadow-xl backdrop-blur-sm inline-block rounded-full">Coming Soon</p>
-                                      <p className="text-[10px] text-slate-300 font-medium leading-relaxed drop-shadow-md bg-slate-900/50 p-2 rounded-lg border border-slate-800/50 backdrop-blur-sm">
+                                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 border border-slate-200 dark:border-slate-700/80 px-3 py-1 bg-white/90 dark:bg-slate-950/90 shadow-xl backdrop-blur-sm inline-block rounded-full">Coming Soon</p>
+                                      <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed drop-shadow-md bg-white/50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
                                         {project.id === 'p-tech-1' && "The Scholar's Library is being excavated. Current Status: Writing ancient texts... Expected Unlock: Late Jan."}
                                         {project.id === 'p-tycoon-1' && "The Financial Vault is being forged. Current Status: Smelting gold bars... Expected Unlock: Late Jan."}
                                         {project.id === 'p-tycoon-2' && "The Steward's Castle is being fortified. Current Status: Drafting battle plans... Expected Unlock: Late Jan."}
@@ -721,12 +721,12 @@ export const QuestLog: React.FC = () => {
                                           className="w-[58px] h-[58px] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
                                         />
                                       ) : (
-                                        <div className={`p-2 rounded-lg ${project.completed ? 'bg-green-900/20 text-green-500' : 'bg-slate-800 text-indigo-400'}`}>
+                                        <div className={`p-2 rounded-lg ${project.completed ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-indigo-500 dark:text-indigo-400'}`}>
                                           <Map size={20} />
                                         </div>
                                       )}
                                       <div>
-                                        <h3 className="font-bold text-lg text-slate-100">{project.name}</h3>
+                                        <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">{project.name}</h3>
                                         <p className="text-xs text-slate-500">{project.description}</p>
                                       </div>
                                     </div>
@@ -735,7 +735,7 @@ export const QuestLog: React.FC = () => {
 
                                   {/* Progress Bar */}
                                   <div className="mt-4 flex items-center gap-4">
-                                    <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                                    <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                       <div
                                         className={`h-full transition-all duration-500 ${project.completed ? 'bg-green-500' : 'bg-indigo-500'}`}
                                         style={{ width: `${progress}%` }}
@@ -836,52 +836,52 @@ export const QuestLog: React.FC = () => {
         <div className="w-full lg:w-80 flex-shrink-0 space-y-6 lg:sticky lg:top-4 lg:self-start">
 
           {/* Tools Panel */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-lg">
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
               <Sword size={12} />
               <span>Tools</span>
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {/* Tool 1: Grindstone */}
               <button
-                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-amber-500/50 hover:bg-amber-950/10 transition-all duration-300"
+                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-amber-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 dark:hover:bg-amber-950/10 transition-all duration-300"
                 onClick={() => navigate('/app/tools/grindstone')}
               >
                 <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-amber-500 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-amber-500 group-hover:scale-110 transition-transform">
                   <Hammer size={18} />
                 </div>
                 <div className="text-center">
-                  <span className="block text-[10px] font-bold text-slate-300 group-hover:text-amber-200 uppercase tracking-wider">Grindstone</span>
-                  <span className="block text-[9px] text-slate-600 scale-90">Focus Mode</span>
+                  <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-200 uppercase tracking-wider">Grindstone</span>
+                  <span className="block text-[9px] text-slate-500 dark:text-slate-600 scale-90">Focus Mode</span>
                 </div>
               </button>
 
               {/* Tool 2: Mind Wipe */}
               <button
-                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-purple-500/50 hover:bg-purple-950/10 transition-all duration-300"
+                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-purple-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-purple-500/50 dark:hover:bg-purple-950/10 transition-all duration-300"
                 onClick={() => navigate('/app/tools/mind-wipe')}
               >
                 <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
-                <div className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-purple-400 group-hover:scale-110 transition-transform">
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                   <Book size={18} />
                 </div>
                 <div className="text-center">
-                  <span className="block text-[10px] font-bold text-slate-300 group-hover:text-purple-200 uppercase tracking-wider">Journal</span>
-                  <span className="block text-[9px] text-slate-600 scale-90">Daily Log</span>
+                  <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-purple-600 dark:group-hover:text-purple-200 uppercase tracking-wider">Journal</span>
+                  <span className="block text-[9px] text-slate-500 dark:text-slate-600 scale-90">Daily Log</span>
                 </div>
               </button>
 
               {/* Tool 3: Empty */}
-              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/50 border-dashed opacity-50">
-                <Plus size={16} className="text-slate-700" />
-                <span className="text-[9px] font-bold text-slate-700 uppercase">Slot Empty</span>
+              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-300 dark:border-slate-800/50 border-dashed opacity-50">
+                <Plus size={16} className="text-slate-400 dark:text-slate-700" />
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-700 uppercase">Slot Empty</span>
               </div>
 
               {/* Tool 4: Empty */}
-              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/50 border-dashed opacity-50">
-                <Plus size={16} className="text-slate-700" />
-                <span className="text-[9px] font-bold text-slate-700 uppercase">Slot Empty</span>
+              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-300 dark:border-slate-800/50 border-dashed opacity-50">
+                <Plus size={16} className="text-slate-400 dark:text-slate-700" />
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-700 uppercase">Slot Empty</span>
               </div>
             </div>
           </div>

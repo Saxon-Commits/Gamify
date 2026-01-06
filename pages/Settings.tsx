@@ -4,10 +4,12 @@ import { useClerk } from "@clerk/clerk-react";
 import { useGameStore } from '../store/useGameStore';
 import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen } from 'lucide-react';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
+import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { CloudSyncControls } from '../components/CloudSyncControls';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
-import { Shield, Zap, Info as InfoIcon } from 'lucide-react';
+import { Shield, Zap, Info as InfoIcon, Sun } from 'lucide-react';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 const LIFETIME_PRICE_ID = 'price_1SlpqyLQXrapzCX8bubgyJ0C';
 
@@ -32,17 +34,17 @@ export const Settings: React.FC = () => {
       <div className="grid grid-cols-1 gap-6">
 
         {/* MEMBERSHIP CARD */}
-        <section className="relative overflow-hidden bg-slate-900 border border-indigo-500/30 rounded-2xl p-6 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 opacity-50" />
+        <section className="relative overflow-hidden bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 rounded-2xl p-6 group shadow-lg dark:shadow-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 dark:from-indigo-500/10 to-purple-50/50 dark:to-purple-500/10 opacity-50" />
 
           <div className="relative flex justify-between items-start">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-indigo-500/20 rounded-lg">
-                <Shield className="text-indigo-400" size={24} />
+              <div className="p-2 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg">
+                <Shield className="text-indigo-500 dark:text-indigo-400" size={24} />
               </div>
               <div>
-                <h2 className="text-lg font-black uppercase tracking-widest text-indigo-400">Status: {user?.subscription === 'lifetime' ? 'Lifetime Archetype' : 'Novice'}</h2>
-                <p className="text-xs text-slate-400">Current Access Level</p>
+                <h2 className="text-lg font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Status: {user?.subscription === 'lifetime' ? 'Lifetime Archetype' : 'Novice'}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Current Access Level</p>
               </div>
             </div>
             {user?.subscription === 'lifetime' && (
@@ -54,11 +56,11 @@ export const Settings: React.FC = () => {
           </div>
 
           {user?.subscription !== 'lifetime' && (
-            <div className="relative mt-4 bg-slate-950/50 rounded-xl p-6 border border-slate-800">
+            <div className="relative mt-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-white">Unlock Lifetime Access</h3>
-                  <p className="text-sm text-slate-400 max-w-sm">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">Unlock Lifetime Access</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm">
                     Get permanent access to Cloud Sync, Unlimited Journal Formatting, 3 Exclusive Avatars, and support future development.
                   </p>
                   <div className="flex gap-2">
@@ -77,16 +79,16 @@ export const Settings: React.FC = () => {
           )}
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-6">
-            <Info className="text-indigo-400" size={18} />
-            <h2 className="text-sm font-bold uppercase tracking-widest">About the System</h2>
+            <Info className="text-indigo-500 dark:text-indigo-400" size={18} />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200">About the System</h2>
           </div>
-          <p className="text-slate-400 text-sm leading-relaxed mb-4">
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-4">
             PARA RPG is a gamified productivity system designed to turn real-world projects into epic quests and habits into experience points.
             The system is powered by local storage, meaning all your data stays private and stored directly in your browser.
           </p>
-          <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-xs text-slate-500">
+          <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
             Version 1.2.0 - "Constellation Update"
           </div>
           <button
@@ -107,17 +109,30 @@ export const Settings: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <Sun className="text-amber-500" size={18} />
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">Appearance</h2>
+            </div>
+            <ThemeToggle />
+          </div>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
+            Toggle between Light and Dark mode.
+          </p>
+        </section>
+
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-6">
-            <Volume2 className="text-indigo-400" size={18} />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Audio Settings</h2>
+            <Volume2 className="text-indigo-500 dark:text-indigo-400" size={18} />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200">Audio Settings</h2>
           </div>
 
           <div className="space-y-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-slate-400 text-sm font-medium">Background Music Volume</span>
-                <span className="text-indigo-400 text-xs font-mono bg-indigo-500/10 px-2 py-1 rounded">
+                <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">Background Music Volume</span>
+                <span className="text-indigo-500 dark:text-indigo-400 text-xs font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded">
                   {Math.round((settings.musicVolume !== undefined ? settings.musicVolume : 0.4) * 100)}%
                 </span>
               </div>
@@ -134,10 +149,10 @@ export const Settings: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Database className="text-indigo-400" size={18} />
-            <h2 className="text-sm font-bold uppercase tracking-widest">Cloud Sync (Beta)</h2>
+            <Database className="text-indigo-500 dark:text-indigo-400" size={18} />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200">Cloud Sync (Beta)</h2>
           </div>
 
           <CloudSyncControls />
@@ -163,7 +178,10 @@ export const Settings: React.FC = () => {
             <button
               onClick={() => {
                 const { inventory } = useGameStore.getState();
-                const allItems = SHOP_ITEMS.filter(i => i.type !== 'REAL_LIFE' && i.type !== 'SYSTEM');
+                // Merge both lists
+                const combinedItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+                const allItems = combinedItems.filter(i => i.type !== 'REAL_LIFE' && i.type !== 'SYSTEM');
+
                 const currentInventory = useGameStore.getState().inventory;
                 const finalInventory = [...currentInventory];
 
@@ -176,13 +194,14 @@ export const Settings: React.FC = () => {
                       acquiredAt: new Date().toISOString(),
                       quantity: 1,
                       imageUrl: item.imageUrl,
-                      perks: (item as any).perks
+                      perks: (item as any).perks,
+                      slots: (item as any).slots // Ensure slots are carried over
                     });
                   }
                 });
 
                 useGameStore.setState({ inventory: finalInventory });
-                alert('All Items (Avatars + Gear) Unlocked!');
+                alert(`Unlocked ${finalInventory.length - currentInventory.length} new items! (Total: ${finalInventory.length})`);
               }}
               className="flex items-center space-x-2 px-6 py-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
             >

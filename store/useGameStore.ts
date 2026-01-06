@@ -4,6 +4,7 @@ import { get, set, del } from 'idb-keyval';
 import { GameState, Stats, Project, Task, GameSettings, VitalityData, JournalEntry } from '../types';
 import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/gameLogic';
 import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
+import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { ITEM_EFFECTS } from '../src/utils/itemEffects';
 
 const INITIAL_STATS: Stats = {
@@ -42,7 +43,8 @@ const INITIAL_SETTINGS: GameSettings = {
   musicVolume: 0.4,
   isMusicMuted: false,
   honorSystemAgreed: false,
-  hasSeenTutorial: false
+  hasSeenTutorial: false,
+  theme: 'dark'
 };
 
 import { generateSkillTree } from '../src/utils/SkillTreeUtils';
@@ -308,7 +310,8 @@ export const useGameStore = create<GameState>()(
         if (stats.activeAvatarId) {
           // Find avatar in inventory (it should be there if equiped, or use base/default logic)
           // SHOP_ITEMS has the definition. We can lookup directly.
-          const avatarDef = SHOP_ITEMS.find(i => i.id === stats.activeAvatarId || (stats.activeAvatarId === 'base' && i.id === 'base_hero')); // Assuming base exists or undefined
+          const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+          const avatarDef = allItems.find(i => i.id === stats.activeAvatarId || (stats.activeAvatarId === 'base' && i.id === 'base_hero')); // Assuming base exists or undefined
           if (avatarDef && (avatarDef as any).perks) {
             activePerks = (avatarDef as any).perks;
           }
@@ -400,7 +403,8 @@ export const useGameStore = create<GameState>()(
         // --- GOLD DISCOUNT PERKS (Only applies to Gold) ---
         let finalCost = cost;
         if (!isPremium && stats.activeAvatarId) {
-          const avatarDef = SHOP_ITEMS.find(i => i.id === stats.activeAvatarId);
+          const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+          const avatarDef = allItems.find(i => i.id === stats.activeAvatarId);
           if (avatarDef && (avatarDef as any).perks?.shopDiscount) {
             finalCost = Math.round(cost * (1 - (avatarDef as any).perks.shopDiscount));
           }
@@ -464,7 +468,8 @@ export const useGameStore = create<GameState>()(
         // Recalculate Totals with Discounts
         let activePerks = undefined;
         if (stats.activeAvatarId) {
-          const avatarDef = SHOP_ITEMS.find(i => i.id === stats.activeAvatarId);
+          const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+          const avatarDef = allItems.find(i => i.id === stats.activeAvatarId);
           activePerks = (avatarDef as any)?.perks;
         }
 
@@ -515,7 +520,8 @@ export const useGameStore = create<GameState>()(
 
       addItem: (itemId, quantity = 1) => {
         const { inventory } = get();
-        const itemDef = SHOP_ITEMS.find(i => i.id === itemId);
+        const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+        const itemDef = allItems.find(i => i.id === itemId);
         if (!itemDef) return;
 
         const existingItem = inventory.find(i => i.id === itemId);
@@ -602,8 +608,38 @@ export const useGameStore = create<GameState>()(
         // 4. Unlock
         const newNodes = skillNodes.map(n => n.id === nodeId ? { ...n, data: { ...n.data, isUnlocked: true, unlockedAt: new Date().toISOString() } } : n);
 
+        // --- MASTERY REWARD LOGIC ---
+        // Map Node ID -> Avatar ID
+        const REWARD_MAP: Record<string, string> = {
+          'branch_1-10': 'avatar_scribe_master',
+          'branch_2-10': 'avatar_master_blacksmith',
+          'branch_3-10': 'avatar_master_bounty_hunter'
+        };
+
+        const rewardAvatarId = REWARD_MAP[nodeId];
+        let newInventory = [...get().inventory];
+
+        if (rewardAvatarId) {
+          // Check if already owned (shouldn't be, but safety first)
+          const alreadyOwned = newInventory.some(i => i.id === rewardAvatarId);
+          if (!alreadyOwned) {
+            const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+            const rewardItem = allItems.find(i => i.id === rewardAvatarId);
+            if (rewardItem) {
+              newInventory.push({
+                ...rewardItem,
+                type: rewardItem.type as any,
+                acquiredAt: new Date().toISOString(),
+                quantity: 1
+              } as any);
+            }
+          }
+        }
+        // -----------------------------
+
         set({
           skillNodes: newNodes,
+          inventory: newInventory, // Save updated inventory
           stats: {
             ...stats,
             skillPoints: stats.skillPoints - costSP,
@@ -657,7 +693,8 @@ export const useGameStore = create<GameState>()(
 
         // --- PERK INTEGRATION (Energy Max) ---
         if (stats.activeAvatarId) {
-          const avatarDef = SHOP_ITEMS.find(i => i.id === stats.activeAvatarId);
+          const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+          const avatarDef = allItems.find(i => i.id === stats.activeAvatarId);
           if (avatarDef && (avatarDef as any).perks?.energyMaxBonus) {
             maxEnergy += (avatarDef as any).perks.energyMaxBonus;
           }
@@ -685,6 +722,19 @@ export const useGameStore = create<GameState>()(
         set(state => ({
           settings: { ...state.settings, isMusicMuted: !state.settings.isMusicMuted }
         }));
+      },
+
+      toggleTheme: () => {
+        set(state => {
+          const newTheme = state.settings.theme === 'light' ? 'dark' : 'light';
+          // Apply directly to DOM for instant feedback
+          if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+          return { settings: { ...state.settings, theme: newTheme } };
+        });
       },
 
       addTasks: (newTasks: Task[]) => {

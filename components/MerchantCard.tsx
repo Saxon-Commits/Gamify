@@ -29,7 +29,7 @@ export const MerchantCard: React.FC<MerchantCardProps> = ({
             <div className={`absolute -inset-0.5 bg-gradient-to-r from-amber-600/50 via-yellow-500/50 to-amber-600/50 rounded-xl blur opacity-0 transition duration-500 pointer-events-none ${isHovered ? 'opacity-75' : ''}`} />
 
             <div
-                className={`relative w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-900/90 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:border-amber-500/50 hover:shadow-amber-500/10`}
+                className={`relative w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm shadow-2xl transition-all duration-500 hover:border-amber-500/50 hover:shadow-amber-500/10`}
             >
                 {/* Decorative Top Border */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-800 via-amber-900 to-slate-800 opacity-50"></div>
@@ -37,16 +37,16 @@ export const MerchantCard: React.FC<MerchantCardProps> = ({
                 {/* Optional Page Title Header (e.g. MARKETPLACE) */}
                 {title && (
                     <div className="p-4 pb-0">
-                        <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2 mb-1">
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2 mb-1">
                             {title}
                         </h2>
                     </div>
                 )}
 
                 {/* Card Header */}
-                <div className="p-4 border-b border-slate-800 flex justify-between items-center group">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center group">
                     <div>
-                        <h3 className="text-lg font-black text-slate-200 tracking-tight group-hover:text-amber-400 transition-colors">WANDERING MERCHANT</h3>
+                        <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 tracking-tight group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">WANDERING MERCHANT</h3>
                         <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Rare Goods and Quests Vendor</p>
                     </div>
                     <div className={`h-2 w-2 rounded-full ${isHovered ? 'bg-amber-500 animate-pulse shadow-[0_0_10px_#f59e0b]' : 'bg-slate-700'} transition-all duration-300`}></div>
@@ -115,8 +115,8 @@ export const MerchantCard: React.FC<MerchantCardProps> = ({
                     </div>
 
                     {/* Interactive "Shop Status" */}
-                    <div className="bg-black/30 rounded-lg p-3 border border-slate-800/50 flex items-center justify-center">
-                        <div className="text-xs font-bold text-amber-400 animate-pulse">OPEN FOR BUSINESS</div>
+                    <div className="bg-slate-100 dark:bg-black/30 rounded-lg p-3 border border-slate-200 dark:border-slate-800/50 flex items-center justify-center">
+                        <div className="text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">OPEN FOR BUSINESS</div>
                     </div>
                 </div>
 
@@ -140,7 +140,7 @@ export const MerchantVideo: React.FC<{ className?: string }> = ({ className = ""
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover pointer-events-none scale-110"
+                className="w-full h-full object-cover pointer-events-none scale-[1.7]"
                 style={{
                     filter: 'contrast(1.1) brightness(0.9)',
                 }}
@@ -190,49 +190,43 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pt-24 px-4 pb-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+                className="absolute inset-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md"
                 onClick={onClose}
             />
 
             {/* Modal Content */}
             <div className="relative z-10 w-full max-w-6xl animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
                 {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute -top-10 right-0 p-2 text-slate-400 hover:text-white transition-colors z-20 flex items-center gap-2"
-                >
-                    <span className="text-xs font-bold uppercase tracking-widest">Close Shop</span>
-                    <X size={24} />
-                </button>
 
-                <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
+
+                <div className="flex flex-col lg:flex-row gap-8 h-full overflow-hidden">
 
                     {/* LEFT COLUMN: Merchant & Quests */}
                     <div className="lg:w-80 flex-shrink-0 flex flex-col gap-6 overflow-y-auto custom-scrollbar">
                         <MerchantVideo className="h-[300px]" />
 
                         {/* Quest Options */}
-                        <div className="bg-slate-900 border-2 border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl shadow-amber-900/20 flex-shrink-0">
-                            <div className="bg-gradient-to-r from-amber-900/30 to-slate-900 p-4 border-b border-amber-500/20">
-                                <h2 className="text-lg font-black text-amber-100 tracking-tight flex items-center gap-2">
+                        <div className="bg-white dark:bg-slate-900 border-2 border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl shadow-amber-900/20 flex-shrink-0">
+                            <div className="bg-gradient-to-r from-amber-100/30 to-slate-50 dark:from-amber-900/30 dark:to-slate-900 p-4 border-b border-amber-500/20">
+                                <h2 className="text-lg font-black text-amber-600 dark:text-amber-100 tracking-tight flex items-center gap-2">
                                     <span>📜</span> Quest Services
                                 </h2>
                             </div>
                             <div className="p-4 space-y-3">
-                                <button onClick={onBuyQuest} className="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-blue-500/50 transition-all group">
+                                <button onClick={onBuyQuest} className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 transition-all group">
                                     <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400 group-hover:text-blue-300"><ShoppingCart size={16} /></div>
-                                        <div className="font-bold text-slate-200">Buy Quest</div>
+                                        <div className="p-2 bg-blue-500/20 rounded-lg text-blue-600 dark:text-blue-400 group-hover:text-blue-500 dark:group-hover:text-blue-300"><ShoppingCart size={16} /></div>
+                                        <div className="font-bold text-slate-800 dark:text-slate-200">Buy Quest</div>
                                     </div>
                                     <div className="text-[10px] text-slate-500 ml-11">Purchase pre-made adventures.</div>
                                 </button>
-                                <button onClick={onCreateQuest} className="w-full text-left p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-purple-500/50 transition-all group">
+                                <button onClick={onCreateQuest} className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 hover:border-purple-500/50 transition-all group">
                                     <div className="flex items-center gap-3 mb-1">
-                                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400 group-hover:text-purple-300"><Target size={16} /></div>
-                                        <div className="font-bold text-slate-200">Create Quest</div>
+                                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-600 dark:text-purple-400 group-hover:text-purple-500 dark:group-hover:text-purple-300"><Target size={16} /></div>
+                                        <div className="font-bold text-slate-800 dark:text-slate-200">Create Quest</div>
                                     </div>
                                     <div className="text-[10px] text-slate-500 ml-11">Design your own objectives.</div>
                                 </button>
@@ -241,19 +235,27 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
                     </div>
 
                     {/* RIGHT COLUMN: Shop Inventory */}
-                    <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
-                        <div className="p-5 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
+                    <div className="flex-1 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                        <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                    <Coins className="text-amber-500" size={20} />
+                                    <Coins className="text-amber-600 dark:text-amber-500" size={20} />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white uppercase tracking-tight">Merchant's Inventory</h2>
-                                    <p className="text-xs text-slate-400">Rare goods and system upgrades</p>
+                                    <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Merchant's Inventory</h2>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Rare goods and system upgrades</p>
                                 </div>
                             </div>
-                            <div className="bg-amber-900/20 border border-amber-500/20 px-3 py-1 rounded-full">
-                                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Stock Refreshed</span>
+                            <div className="flex items-center gap-3">
+                                <div className="bg-amber-900/20 border border-amber-500/20 px-3 py-1 rounded-full">
+                                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">Stock Refreshed</span>
+                                </div>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors border border-transparent hover:border-slate-700"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
                         </div>
 
@@ -266,16 +268,16 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {systemItems.map(item => (
-                                        <div key={item.id} className="bg-slate-800/40 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
-                                            <div className="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                                        <div key={item.id} className="bg-slate-50/40 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 hover:border-blue-500/50 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
+                                            <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
                                                 {item.imageUrl ? (
                                                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
                                                 ) : <span className="text-2xl">⚡</span>}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-slate-200 truncate">{item.name}</div>
+                                                <div className="font-bold text-slate-900 dark:text-slate-200 truncate">{item.name}</div>
                                                 <div className="text-[10px] text-slate-500 line-clamp-2 leading-tight mb-1.5">{item.description}</div>
-                                                <div className="font-mono text-xs text-amber-500 font-bold">{item.cost}g</div>
+                                                <div className="font-mono text-xs text-amber-600 dark:text-amber-500 font-bold">{item.cost}g</div>
                                             </div>
                                             <button
                                                 onClick={() => onAddItem(item)}
@@ -295,16 +297,16 @@ export const MerchantModal: React.FC<MerchantModalProps> = ({
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {realWorldItems.map(item => (
-                                        <div key={item.id} className="bg-slate-800/40 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
-                                            <div className="w-16 h-16 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                                        <div key={item.id} className="bg-slate-50/40 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 hover:border-amber-500/50 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl p-3 flex items-center gap-4 transition-all group">
+                                            <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
                                                 {item.imageUrl ? (
                                                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover pixelated" />
                                                 ) : <span className="text-2xl">🎁</span>}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-slate-200 truncate">{item.name}</div>
+                                                <div className="font-bold text-slate-900 dark:text-slate-200 truncate">{item.name}</div>
                                                 <div className="text-[10px] text-slate-500 line-clamp-2 leading-tight mb-1.5">{item.description}</div>
-                                                <div className="font-mono text-xs text-amber-500 font-bold">{item.cost}g</div>
+                                                <div className="font-mono text-xs text-amber-600 dark:text-amber-500 font-bold">{item.cost}g</div>
                                             </div>
                                             <button
                                                 onClick={() => onAddItem(item)}

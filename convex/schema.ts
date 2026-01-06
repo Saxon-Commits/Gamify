@@ -37,4 +37,93 @@ export default defineSchema({
     })
         .index("by_user", ["userId"])
         .index("by_user_date", ["userId", "date"]),
+
+    // ============================================
+    // GUILD SYSTEM TABLES
+    // ============================================
+
+    // Guilds table - Core guild entity
+    guilds: defineTable({
+        name: v.string(),
+        description: v.optional(v.string()),
+        bannerId: v.optional(v.string()), // cosmetic banner ID
+        leaderId: v.id("users"),
+        level: v.number(), // guild level (starts at 1)
+        xp: v.number(), // collective XP earned
+        treasury: v.object({
+            gold: v.number(),
+            gems: v.number(),
+        }),
+        settings: v.object({
+            isPublic: v.boolean(), // can anyone join?
+            joinRequiresApproval: v.boolean(), // needs officer approval?
+        }),
+        createdAt: v.number(),
+    }).index("by_leader", ["leaderId"]),
+
+    // Guild members - tracks who is in which guild
+    guildMembers: defineTable({
+        guildId: v.id("guilds"),
+        userId: v.id("users"),
+        role: v.string(), // 'leader' | 'officer' | 'member'
+        contribution: v.object({
+            xp: v.number(),
+            gold: v.number(),
+            tasks: v.number(),
+        }),
+        joinedAt: v.number(),
+    })
+        .index("by_guild", ["guildId"])
+        .index("by_user", ["userId"]),
+
+    // Guild activity feed - tracks events for the feed
+    guildActivities: defineTable({
+        guildId: v.id("guilds"),
+        userId: v.id("users"),
+        type: v.string(), // 'quest_complete', 'level_up', 'joined', 'left', 'achievement', 'project_contribution'
+        data: v.any(), // flexible payload for each event type
+        timestamp: v.number(),
+    }).index("by_guild", ["guildId"]),
+
+    // Guild invites - for invite links and direct invites
+    guildInvites: defineTable({
+        guildId: v.id("guilds"),
+        invitedUserId: v.optional(v.id("users")), // for direct invites
+        inviteCode: v.optional(v.string()), // for link invites
+        status: v.string(), // 'pending', 'accepted', 'declined', 'expired'
+        createdAt: v.number(),
+        expiresAt: v.optional(v.number()),
+    })
+        .index("by_guild", ["guildId"])
+        .index("by_user", ["invitedUserId"])
+        .index("by_code", ["inviteCode"]),
+
+    // Guild shared projects - collaborative goals
+    guildProjects: defineTable({
+        guildId: v.id("guilds"),
+        title: v.string(),
+        description: v.optional(v.string()),
+        status: v.string(), // 'active', 'completed', 'archived'
+        targetTasks: v.number(), // goal count
+        completedTasks: v.number(), // current progress
+        contributors: v.array(v.object({
+            userId: v.id("users"),
+            tasks: v.number(),
+        })),
+        rewards: v.object({
+            xp: v.number(),
+            gold: v.number(),
+        }),
+        createdAt: v.number(),
+        completedAt: v.optional(v.number()),
+    }).index("by_guild", ["guildId"]),
+
+    // Guild messages - simple chat/announcements
+    guildMessages: defineTable({
+        guildId: v.id("guilds"),
+        userId: v.id("users"),
+        content: v.string(),
+        isPinned: v.boolean(), // true for announcements
+        timestamp: v.number(),
+    }).index("by_guild_time", ["guildId", "timestamp"]),
 });

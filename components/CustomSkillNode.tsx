@@ -5,7 +5,7 @@ import * as Icons from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 
 export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
-  const { stats, skillEdges, skillNodes, setHoveredNode, unlockNode } = useGameStore();
+  const { stats, skillEdges, skillNodes, setHoveredNode, unlockNode, setAvatar } = useGameStore();
 
   const Icon = (Icons as any)[data.icon] || Icons.HelpCircle;
 
@@ -103,7 +103,20 @@ export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
       style={{ zIndex: isUnlockable ? 10 : 1 }}
       onClick={(e) => {
         e.stopPropagation();
-        if (isUnlockable) unlockNode(id);
+        if (isUnlockable) {
+          unlockNode(id);
+        } else if (data.isUnlocked) {
+          // EQUIP LOGIC FOR MASTERY NODES
+          const MASTERY_MAP: Record<string, string> = {
+            'branch_1-10': 'avatar_scribe_master',
+            'branch_2-10': 'avatar_master_blacksmith',
+            'branch_3-10': 'avatar_master_bounty_hunter'
+          };
+          const avatarId = MASTERY_MAP[id];
+          if (avatarId) {
+            setAvatar(avatarId);
+          }
+        }
       }}
       onMouseEnter={() => setHoveredNode({ ...data, isUnlockable, canAfford, isParentUnlocked, isJumpUnlockable })}
       onMouseLeave={() => setHoveredNode(null)}

@@ -11,7 +11,8 @@ const nodeTypes = {
 };
 
 export const SkillTree: React.FC = () => {
-  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats } = useGameStore();
+  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats, settings } = useGameStore();
+  const isDark = settings.theme === 'dark';
 
   const onNodesChange = useCallback(() => { }, []);
 
@@ -23,7 +24,7 @@ export const SkillTree: React.FC = () => {
     const branchName = BRANCH_CONFIGS.find(b => b.id === hoveredNode.path)?.name || hoveredNode.path;
 
     return (
-      <div className="absolute top-4 right-4 z-[60] w-72 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-right-4 duration-200">
+      <div className="absolute top-4 right-4 z-[60] w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-right-4 duration-200">
         <div className="flex justify-between items-center mb-3">
           <span className="font-black text-[10px] uppercase tracking-[0.2em] text-indigo-400">{branchName}</span>
           {hoveredNode.isUnlocked ? (
@@ -36,7 +37,7 @@ export const SkillTree: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3 mb-3">
-          <div className={`p-2 rounded-lg bg-slate-800 border border-slate-700 text-indigo-400 overflow-hidden relative shrink-0`}>
+          <div className={`p-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-500 dark:text-indigo-400 overflow-hidden relative shrink-0`}>
             {hoveredNode.image ? (
               <img
                 src={hoveredNode.image}
@@ -48,10 +49,10 @@ export const SkillTree: React.FC = () => {
               <Icon size={20} />
             )}
           </div>
-          <h3 className="font-bold text-lg text-slate-100 leading-tight">{hoveredNode.label}</h3>
+          <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight">{hoveredNode.label}</h3>
         </div>
 
-        <p className="text-sm text-slate-400 leading-relaxed mb-4">{hoveredNode.description}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">{hoveredNode.description}</p>
 
         {hoveredNode.flavor && (
           <p className="text-xs text-slate-500 italic mb-4 border-l-2 border-slate-800 pl-3 leading-relaxed">
@@ -85,15 +86,15 @@ export const SkillTree: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6">
-      <div className="flex-1 bg-slate-950 overflow-hidden relative">
+      <div className="flex-1 bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
         <div className="absolute top-4 left-4 z-10">
-          <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 p-2 px-3 rounded-lg shadow-2xl text-[10px] text-slate-400 flex items-center space-x-3">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-2 px-3 rounded-lg shadow-xl text-[10px] text-slate-500 dark:text-slate-400 flex items-center space-x-3">
             <div className="flex items-center space-x-1">
-              <Info size={12} className="text-indigo-400" />
-              <span className="font-bold text-slate-300">Controls:</span>
+              <Info size={12} className="text-indigo-500 dark:text-indigo-400" />
+              <span className="font-bold text-slate-700 dark:text-slate-300">Controls:</span>
             </div>
             <span>• Two fingers to pan</span>
-            <span className="text-slate-700">|</span>
+            <span className="text-slate-300 dark:text-slate-700">|</span>
             <span>• Hover for details</span>
           </div>
         </div>
@@ -108,21 +109,27 @@ export const SkillTree: React.FC = () => {
           fitView
           minZoom={0.15}
           maxZoom={2}
-          colorMode="dark"
+          colorMode={isDark ? 'dark' : 'light'}
           panOnScroll={true}
           selectionOnDrag={true}
           proOptions={{ hideAttribution: true }}
           defaultViewport={{ x: 0, y: 0, zoom: 0.5 }}
         >
-          <Background color="#1e293b" variant="dots" gap={30} size={1} />
-          <Controls position="bottom-right" showInteractive={false} className="bg-slate-900 border-slate-800" />
+          <Background color={isDark ? "#1e293b" : "#cbd5e1"} variant="dots" gap={30} size={1} />
+          <Controls position="bottom-right" showInteractive={false} className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100" />
           <MiniMap
-            style={{ height: 100, width: 140, backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
+            style={{
+              height: 100,
+              width: 140,
+              backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+              border: `1px solid ${isDark ? '#1e293b' : '#cbd5e1'}`,
+              borderRadius: '8px'
+            }}
             nodeColor={(n: any) => {
               if (n.data.isUnlocked) return '#6366f1';
-              return '#334155';
+              return isDark ? '#334155' : '#cbd5e1';
             }}
-            maskColor="rgba(0, 0, 0, 0.8)"
+            maskColor={isDark ? "rgba(0, 0, 0, 0.8)" : "rgba(255, 255, 255, 0.8)"}
           />
         </ReactFlow>
       </div>

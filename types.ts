@@ -107,6 +107,7 @@ export interface GameSettings {
   isMusicMuted?: boolean;
   honorSystemAgreed?: boolean;
   hasSeenTutorial?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export interface VitalityData {
@@ -118,7 +119,7 @@ export interface VitalityData {
   nutritionGoal?: string;
 }
 
-export type AvatarRarity = 'COMMON' | 'RARE' | 'EPIC' | 'MYSTIC' | 'LEGENDARY';
+export type AvatarRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'MYSTIC' | 'LEGENDARY';
 export type EquipmentSlot = 'WEAPON' | 'ARMOR' | 'ACCESSORY';
 
 export interface InventoryItem {
@@ -128,9 +129,9 @@ export interface InventoryItem {
   lore?: string; // Added lore for detailed descriptions
   flavor?: string; // Added flavour text
   imageUrl?: string;
-  type: 'REAL_LIFE' | 'IN_GAME' | 'SYSTEM' | 'BLACK_MARKET' | 'QUEST_ITEM' | 'AVATAR' | 'THEME';
+  type: 'REAL_LIFE' | 'IN_GAME' | 'SYSTEM' | 'BLACK_MARKET' | 'QUEST_ITEM' | 'AVATAR' | 'THEME' | 'COMPANION';
   cost?: number;
-  currency?: 'GOLD' | 'GEMS'; // Default GOLD
+  currency?: 'GOLD' | 'GEMS' | 'VOID_SHARD'; // Default GOLD
   acquiredAt: string;
   quantity: number;
   perks?: AvatarPerks; // Added perks
@@ -138,6 +139,7 @@ export interface InventoryItem {
   slots?: EquipmentSlot[]; // Added slots
   realMoneyPrice?: number; // Removed in favor of Gems
   premiumPrice?: number; // Cost in Gems
+  videoUrl?: string; // For animated backdrops
 }
 
 export interface GameState {
@@ -172,6 +174,7 @@ export interface GameState {
   updateSettings: (settings: Partial<GameSettings>) => void;
   setMusicVolume: (volume: number) => void;
   toggleMusicMute: () => void;
+  toggleTheme: () => void;
   addTasks: (newTasks: Task[]) => void;
   createTask: (task: Omit<Task, 'id' | 'completed'>) => void;
   deleteTask: (taskId: string) => void;
