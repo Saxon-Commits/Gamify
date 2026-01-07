@@ -38,6 +38,12 @@ async function hasPermission(ctx: any, guildId: Id<"guilds">, userId: Id<"users"
 }
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+export const MAX_GUILD_MEMBERS = 50;
+
+// ============================================
 // QUERIES
 // ============================================
 
@@ -108,17 +114,28 @@ export const getGuildMembers = query({
             members.map(async (member) => {
                 const user = await ctx.db.get(member.userId);
 
-                // Fetch game state for avatar loadout
-                const gameStateRec = await ctx.db
-                    .query("gameState")
-                    .withIndex("by_user", (q) => q.eq("userId", member.userId))
-                    .first();
+                let stats: any = {};
 
-                const stats = gameStateRec?.state?.stats || {};
+                if (user) {
+                    // GameState is keyed by Clerk ID (identity.subject), while User is keyed by tokenIdentifier (issuer|subject).
+                    // We need to extract the subject to find the game state.
+                    const clerkId = user.tokenIdentifier.split('|')[1];
+
+                    if (clerkId) {
+                        const gameStateRec = await ctx.db
+                            .query("gameState")
+                            .withIndex("by_user", (q) => q.eq("userId", clerkId))
+                            .first();
+
+                        if (gameStateRec?.state?.stats) {
+                            stats = gameStateRec.state.stats;
+                        }
+                    }
+                }
 
                 return {
                     ...member,
-                    userName: user?.name ?? "Unknown",
+                    userName: user?.username ?? user?.name ?? "Unknown",
                     userPictureUrl: user?.pictureUrl,
                     level: stats.level || 1,
                     avatarId: stats.activeAvatarId || 'starter_villager_male',
@@ -211,7 +228,14 @@ export const createGuild = mutation({
             .first();
 
         if (existingMembership) {
-            throw new Error("You must leave your current guild before creating a new one");
+            // Self-healing for ghost memberships
+            const existingGuild = await ctx.db.get(existingMembership.guildId);
+            if (!existingGuild) {
+                console.log("Found ghost membership (create). Deleting...");
+                await ctx.db.delete(existingMembership._id);
+            } else {
+                throw new Error("You must leave your current guild before creating a new one");
+            }
         }
 
         // Create the guild
@@ -264,11 +288,30 @@ export const joinGuild = mutation({
             .withIndex("by_user", (q) => q.eq("userId", userId))
             .first();
 
-        if (existing) throw new Error("You must leave your current guild first");
+        if (existing) {
+            // Check if the guild actually exists (Self-healing for ghost memberships)
+            const existingGuild = await ctx.db.get(existing.guildId);
+            if (!existingGuild) {
+                console.log("Found ghost membership for non-existent guild. Deleting...");
+                await ctx.db.delete(existing._id);
+            } else {
+                throw new Error("You must leave your current guild first");
+            }
+        }
 
         const guild = await ctx.db.get(args.guildId);
         if (!guild) throw new Error("Guild not found");
         if (!guild.settings.isPublic) throw new Error("This guild is private");
+
+        // Check member limit
+        const memberCount = (await ctx.db
+            .query("guildMembers")
+            .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
+            .collect()).length;
+
+        if (memberCount >= MAX_GUILD_MEMBERS) {
+            throw new Error(`Guild is full (Max ${MAX_GUILD_MEMBERS} members)`);
+        }
 
         // Add as member
         await ctx.db.insert("guildMembers", {
@@ -544,6 +587,7 @@ export const createProject = mutation({
         rewards: v.object({
             xp: v.number(),
             gold: v.number(),
+            gems: v.optional(v.number()),
         }),
     },
     handler: async (ctx, args) => {
@@ -552,6 +596,28 @@ export const createProject = mutation({
 
         const hasPerms = await hasPermission(ctx, args.guildId, userId, "officer");
         if (!hasPerms) throw new Error("Only officers can start projects");
+
+        // VALIDATE TREASURY FUNDS
+        const guild = await ctx.db.get(args.guildId);
+        if (!guild) throw new Error("Guild not found");
+
+        const goldCost = args.rewards.gold || 0;
+        const gemsCost = args.rewards.gems || 0;
+
+        const currentGold = guild.treasury.gold || 0;
+        const currentGems = guild.treasury.gems || 0;
+
+        if (currentGold < goldCost) throw new Error(`Insufficient Treasury Gold (Has: ${currentGold}, Needs: ${goldCost})`);
+        if (currentGems < gemsCost) throw new Error(`Insufficient Treasury Gems (Has: ${currentGems}, Needs: ${gemsCost})`);
+
+        // DEDUCT FUNDS
+        await ctx.db.patch(args.guildId, {
+            treasury: {
+                ...guild.treasury,
+                gold: currentGold - goldCost,
+                gems: currentGems - gemsCost,
+            }
+        });
 
         const projectId = await ctx.db.insert("guildProjects", {
             guildId: args.guildId,
@@ -565,7 +631,11 @@ export const createProject = mutation({
             createdAt: Date.now(),
         });
 
-        await logGuildActivity(ctx, args.guildId, userId, "project_started", { projectTitle: args.title, projectId });
+        await logGuildActivity(ctx, args.guildId, userId, "project_started", {
+            projectTitle: args.title,
+            projectId,
+            cost: { gold: goldCost, gems: gemsCost }
+        });
 
         return projectId;
     },
@@ -628,8 +698,26 @@ export const contributeToProject = mutation({
             // Simple guild XP update
             const guild = await ctx.db.get(project.guildId);
             if (guild) {
+                const xpReward = project.rewards.xp;
+                let newXp = guild.xp + xpReward;
+                let newLevel = guild.level;
+
+                // Simple Leveling Curve: Next Level = CurrentLevel * 1000
+                // While we have enough XP to level up...
+                while (newXp >= newLevel * 1000) {
+                    newXp -= newLevel * 1000;
+                    newLevel++;
+
+                    // Log Level Up
+                    await logGuildActivity(ctx, project.guildId, userId, "guild_level_up", {
+                        newLevel,
+                        prevLevel: newLevel - 1
+                    });
+                }
+
                 await ctx.db.patch(project.guildId, {
-                    xp: guild.xp + project.rewards.xp,
+                    xp: newXp,
+                    level: newLevel,
                     treasury: {
                         ...guild.treasury,
                         gold: guild.treasury.gold + project.rewards.gold
@@ -642,6 +730,8 @@ export const contributeToProject = mutation({
     },
 });
 
+
+
 export const getGuildProjects = query({
     args: { guildId: v.id("guilds") },
     handler: async (ctx, args) => {
@@ -650,5 +740,230 @@ export const getGuildProjects = query({
             .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
             .filter(q => q.neq(q.field("status"), "archived"))
             .collect();
+    },
+});
+
+// ============================================
+// INVITE SYSTEM
+// ============================================
+
+export const createInvite = mutation({
+    args: { guildId: v.id("guilds") },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        // Check if member
+        const member = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+
+        if (!member || member.guildId !== args.guildId) throw new Error("Not a member of this guild");
+
+        // Generate simple 6-char code
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        await ctx.db.insert("guildInvites", {
+            guildId: args.guildId,
+            inviteCode: code,
+            status: "active",
+            createdAt: Date.now(),
+            expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+        });
+
+        return code;
+    },
+});
+
+export const joinGuildByCode = mutation({
+    args: { inviteCode: v.string() },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const invite = await ctx.db
+            .query("guildInvites")
+            .withIndex("by_code", (q) => q.eq("inviteCode", args.inviteCode))
+            .first();
+
+        if (!invite) throw new Error("Invalid invite code");
+        if (!invite.status || invite.status !== "active") throw new Error("Invite expired or inactive");
+        if (invite.expiresAt && invite.expiresAt < Date.now()) throw new Error("Invite expired");
+
+        // Check if already in a guild
+        const existing = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+
+        if (existing) {
+            // Self-healing
+            const existingGuild = await ctx.db.get(existing.guildId);
+            if (!existingGuild) {
+                await ctx.db.delete(existing._id);
+            } else {
+                throw new Error("You must leave your current guild first");
+            }
+        }
+
+        // Check member limit
+        const memberCount = (await ctx.db
+            .query("guildMembers")
+            .withIndex("by_guild", (q) => q.eq("guildId", invite.guildId))
+            .collect()).length;
+
+        if (memberCount >= MAX_GUILD_MEMBERS) {
+            throw new Error(`Guild is full (Max ${MAX_GUILD_MEMBERS} members)`);
+        }
+
+        // Add member
+        await ctx.db.insert("guildMembers", {
+            guildId: invite.guildId,
+            userId,
+            role: "member",
+            contribution: { xp: 0, gold: 0, tasks: 0 },
+            joinedAt: Date.now(),
+        });
+
+        // Log
+        const user = await ctx.db.get(userId);
+        await logGuildActivity(ctx, invite.guildId, userId, "joined", { userName: user?.name ?? "Unknown", method: "invite" });
+
+        return invite.guildId;
+    },
+});
+// Debugging/Admin: Add XP manually
+export const addGuildXp = mutation({
+    args: {
+        guildId: v.id("guilds"),
+        amount: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const guild = await ctx.db.get(args.guildId);
+        if (!guild) throw new Error("Guild not found");
+
+        // Verify permission (leader only for now for this cheat tool)
+        if (guild.leaderId !== userId) throw new Error("Only leader can add XP");
+
+        let newXp = guild.xp + args.amount;
+        let newLevel = guild.level;
+
+        // Leveling logic
+        while (newXp >= newLevel * 1000) {
+            newXp -= newLevel * 1000;
+            newLevel++;
+
+            await logGuildActivity(ctx, args.guildId, userId, "guild_level_up", {
+                newLevel,
+                prevLevel: newLevel - 1
+            });
+        }
+
+        await ctx.db.patch(args.guildId, {
+            xp: newXp,
+            level: newLevel,
+        });
+
+        return { newLevel, newXp };
+    },
+});
+
+export const donateToTreasury = mutation({
+    args: {
+        guildId: v.id("guilds"),
+        amount: v.number(),
+        currency: v.string(), // 'gold' | 'gems'
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+        if (args.amount <= 0) throw new Error("Invalid amount");
+
+        // Fetch User (for name) and GameState (for currency)
+        // Fetch User (for name) and GameState (for currency)
+        const user = await ctx.db.get(userId);
+        if (!user) throw new Error("User not found");
+
+        // Identity needed for gameState lookup (uses subject ID, not Convex ID)
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthenticated");
+
+        const gameState = await ctx.db
+            .query("gameState")
+            .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+            .first();
+
+        if (!gameState || !gameState.state || !gameState.state.stats) {
+            throw new Error("Game state not found");
+        }
+
+        // Verify membership
+        const membership = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+
+        if (!membership || membership.guildId !== args.guildId) {
+            throw new Error("You are not a member of this guild");
+        }
+
+        const guild = await ctx.db.get(args.guildId);
+        if (!guild) throw new Error("Guild not found");
+
+        const currentStats = gameState.state.stats;
+
+        // Check funds and deduct
+        if (args.currency === 'gold') {
+            const currentGold = currentStats.gold || 0;
+            if (currentGold < args.amount) throw new Error("Insufficient Gold");
+            currentStats.gold -= args.amount;
+        } else if (args.currency === 'gems') {
+            const currentGems = currentStats.gems || 0;
+            if (currentGems < args.amount) throw new Error("Insufficient Gems");
+            currentStats.gems -= args.amount;
+        } else {
+            throw new Error("Invalid currency");
+        }
+
+        // Update GameState
+        // Note: We need to update the whole state object or carefully patch it. 
+        // Since 'state' is 'v.any()', we can patch the whole stats object inside it if we constructed it, 
+        // but here we modified `currentStats` which is a reference to `gameState.state.stats`.
+        // So `gameState.state` is mutated in memory. We put it back.
+        await ctx.db.patch(gameState._id, { state: gameState.state });
+
+        // Add to treasury
+        const currentTreasury = guild.treasury || { gold: 0, gems: 0 };
+        const newTreasury = {
+            gold: (currentTreasury.gold || 0) + (args.currency === 'gold' ? args.amount : 0),
+            gems: (currentTreasury.gems || 0) + (args.currency === 'gems' ? args.amount : 0),
+        };
+
+        await ctx.db.patch(guild._id, { treasury: newTreasury });
+
+        // Update member contribution
+        const currentContribution = membership.contribution || { xp: 0, gold: 0, tasks: 0 };
+        await ctx.db.patch(membership._id, {
+            contribution: {
+                ...currentContribution,
+                gold: (currentContribution.gold || 0) + (args.currency === 'gold' ? args.amount : 0),
+                // Only tracking Gold in contribution based on schema? 
+                // Schema has { xp, gold, tasks }. Maybe we should add 'gems' to schema?
+                // For now, let's keep it simple or map gems to gold value? No, just track gold or ignore gems in "contribution" stats for now.
+            }
+        });
+
+        // Log activity
+        await logGuildActivity(ctx, args.guildId, userId, "donation", {
+            amount: args.amount,
+            currency: args.currency,
+            userName: user.name ?? "Member"
+        });
+
+        return { success: true, newBalance: args.currency === 'gold' ? currentStats.gold : currentStats.gems };
     },
 });

@@ -161,6 +161,7 @@ export interface GameState {
   completeProject: (projectId: string) => void;
   unlockNode: (nodeId: string) => void;
   addRewards: (xp: number, gold: number) => void;
+  deductCurrency: (amount: number, currency: 'gold' | 'gems') => void;
   setAvatar: (avatarId: string) => void;
   setBackdrop: (backdropId: string | null) => void;
   equipItem: (slot: 'mainHand' | 'armor' | 'head' | 'accessory', itemId: string | null) => void;

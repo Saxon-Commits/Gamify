@@ -42,11 +42,49 @@ const App: React.FC = () => {
   useEffect(() => {
     const theme = useGameStore.getState().settings.theme;
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+  // Global Auto-Save Logic
+  const gameState = useGameStore(state => state);
+  const saveToCloud = useMutation(api.gameState.save);
+  const pendingSave = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!user || !isAuthenticated) return;
+
+    // Skip if state is empty/default (avoid overwriting cloud with empty)
+    if (Object.keys(gameState.stats).length === 0) return;
+
+    if (pendingSave.current) clearTimeout(pendingSave.current);
+
+    pendingSave.current = setTimeout(async () => {
+      try {
+        const stateToSave = JSON.parse(JSON.stringify(gameState));
+        await saveToCloud({ state: stateToSave });
+        // Optional: console.log("Global Auto-save success");
+      } catch (error) {
+        console.error("Global Auto-save failed:", error);
+      }
+    }, 2000); // 2 second debounce
+
+    return () => {
+      if (pendingSave.current) clearTimeout(pendingSave.current);
+    };
+  }, [
+    user,
+    isAuthenticated,
+    // Watch critical state (same dependencies as before)
+    gameState.stats,
+    gameState.inventory,
+    gameState.tasks,
+    gameState.projects,
+    gameState.vitality,
+    gameState.skillNodes,
+    // When the user changes avatar, `stats` changes (activeAvatarId), so this will trigger!
+    saveToCloud
+  ]);
 
   return (
     <HashRouter>

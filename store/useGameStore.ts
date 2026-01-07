@@ -806,6 +806,16 @@ export const useGameStore = create<GameState>()(
         });
       },
 
+      deductCurrency: (amount, currency) => {
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            gold: currency === 'gold' ? Math.max(0, state.stats.gold - amount) : state.stats.gold,
+            gems: currency === 'gems' ? Math.max(0, state.stats.gems - amount) : state.stats.gems
+          }
+        }));
+      },
+
     }),
     { name: 'life-rpg-storage', partialize: (state) => ({ ...state, hoveredNode: null }) }
   )

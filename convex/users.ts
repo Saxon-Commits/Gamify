@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 // Price IDs (We could move these to a shared config)
 const PRICES = {
@@ -92,5 +92,79 @@ export const getMe = query({
             .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
             .first();
         return user;
+    },
+});
+
+export const checkUsername = query({
+    args: { username: v.string() },
+    handler: async (ctx, args) => {
+        const normalized = args.username.trim().toLowerCase();
+
+        // Basic validation
+        if (normalized.length < 3) return { available: false, reason: "Too short" };
+        if (normalized.length > 20) return { available: false, reason: "Too long" };
+        if (!/^[a-z0-9_]+$/.test(normalized)) return { available: false, reason: "Invalid characters" };
+
+        const existing = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", normalized))
+            .first();
+
+        // If existing user is ME, it's "available" (to keep)
+        if (existing) {
+            const identity = await ctx.auth.getUserIdentity();
+            if (identity && existing.tokenIdentifier === identity.tokenIdentifier) {
+                return { available: true, reason: "Current username" };
+            }
+            return { available: false, reason: "Username taken" };
+        }
+
+        return {
+            available: true,
+            reason: "Available"
+        };
+    },
+});
+
+export const setUsername = mutation({
+    args: { username: v.string() },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthenticated");
+
+        const normalized = args.username.trim().toLowerCase();
+
+        // 1. Validate format
+        if (normalized.length < 3 || normalized.length > 20 || !/^[a-z0-9_]+$/.test(normalized)) {
+            throw new Error("Invalid username format");
+        }
+
+        // 2. Check uniqueness 
+        const existing = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", normalized))
+            .first();
+
+        // If it exists AND it's not me, fail
+        if (existing && existing.tokenIdentifier !== identity.tokenIdentifier) {
+            throw new Error("Username already taken");
+        }
+
+        // 3. Find my user record
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) {
+            throw new Error("User record not found");
+        }
+
+        // 4. Update
+        await ctx.db.patch(user._id, {
+            username: normalized
+        });
+
+        return { success: true, username: normalized };
     },
 });

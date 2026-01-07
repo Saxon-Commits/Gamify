@@ -14,6 +14,14 @@ export const CloudSyncControls: React.FC = () => {
 
     const [status, setStatus] = React.useState<'idle' | 'saving' | 'loading' | 'success' | 'error'>('idle');
 
+    // Auto-save is now handled globally in App.tsx
+    // We keep this component for manual control and status display (if we link state later)
+
+    /* 
+       TODO: To show "Saving..." status here from the global saver, we'd need to move `status` 
+       to the global store. for now, this manual button is just an extra "Force Save".
+    */
+
     const handleSave = async () => {
         if (!isSignedIn) return;
         setStatus('saving');
@@ -82,7 +90,7 @@ export const CloudSyncControls: React.FC = () => {
                     className="flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
                     <Upload size={14} className={status === 'saving' ? 'animate-bounce' : ''} />
-                    <span>Save to Cloud</span>
+                    <span>{status === 'saving' ? 'Saving...' : 'Save to Cloud'}</span>
                 </button>
 
                 <button

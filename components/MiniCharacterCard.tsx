@@ -38,12 +38,15 @@ const getItemUrl = (itemId: string | null | undefined): string | null => {
     return null;
 };
 
-// AVATAR CONFIGURATIONS - Exact copy from Character.tsx
+// --- CONFIGURATIONS FROM Character.tsx ---
+
 const AVATAR_CONFIGS: Record<string, { height: number, offsetX: number, offsetY: number }> = {
+    // Starters
     'starter_elf_male': { height: 77, offsetX: -4, offsetY: -2 },
     'starter_elf_female': { height: 77, offsetX: -4, offsetY: -2 },
     'starter_villager_male': { height: 77, offsetX: -4, offsetY: -2 },
     'starter_villager_female': { height: 77, offsetX: -4, offsetY: -2 },
+    // Premium
     'grand_wizard': { height: 77, offsetX: 1, offsetY: -16 },
     'hero_cyber_knight': { height: 77, offsetX: 5, offsetY: -2 },
     'dark_wizard': { height: 77, offsetX: 1, offsetY: -16 },
@@ -53,13 +56,12 @@ const AVATAR_CONFIGS: Record<string, { height: number, offsetX: number, offsetY:
     'geisha_android': { height: 77, offsetX: 1, offsetY: -16 },
     'xv_android': { height: 77, offsetX: 1, offsetY: -30 },
     'toxic_alchemist': { height: 77, offsetX: 1, offsetY: -16 },
+    // Mastery
     'avatar_scribe_master': { height: 77, offsetX: 1, offsetY: -16 },
     'avatar_master_blacksmith': { height: 77, offsetX: 1, offsetY: -31 },
     'avatar_master_bounty_hunter': { height: 77, offsetX: 11, offsetY: -11 },
 };
 
-// COMPANION CONFIGURATIONS - Exact copy from Character.tsx
-// These percentages are calibrated for a 440x440 container
 const COMPANION_CONFIGS: Record<string, { top: number, right: number, scale: number, rot: number }> = {
     'companion-data-serpent': { top: 68.5, right: 67, scale: 1.05, rot: 1 },
     'companion-digital-ghost': { top: 41, right: 63, scale: 1.25, rot: -1 },
@@ -68,9 +70,23 @@ const COMPANION_CONFIGS: Record<string, { top: number, right: number, scale: num
     'companion-pebble-golem': { top: 64.5, right: 63.5, scale: 1.30, rot: 1 },
     'companion-phoenix-hatchling': { top: 66.5, right: 66, scale: 1.20, rot: 1 },
     'companion-holo-drone': { top: 41, right: 63, scale: 1.10, rot: -1 },
-    'acc_holo_drone': { top: 41, right: 63, scale: 1.10, rot: -1 },
+    'acc_holo_drone': { top: 41, right: 63, scale: 1.10, rot: -1 }, // Alias
     'companion-void-whisp': { top: 38.5, right: 63, scale: 1.00, rot: 7 },
-    'active-protocol-droid': { top: 26, right: 53, scale: 1.2, rot: 0 },
+    'active-protocol-droid': { top: 26, right: 53, scale: 1.2, rot: 0 } // Default for now
+};
+
+const BACKDROP_CONFIGS: Record<string, { scale: number, offsetX: number, offsetY: number }> = {
+    'theme-apocalyptic-ruins': { scale: 142, offsetX: 0, offsetY: -67 },
+    'theme-crystal-cavern': { scale: 116, offsetX: 0, offsetY: -32 },
+    'theme-digital-city': { scale: 125, offsetX: 29, offsetY: -45 },
+    'theme-frozen-tundra': { scale: 100, offsetX: 0, offsetY: 0 },
+    'theme-mushroom-grove': { scale: 98, offsetX: 0, offsetY: 25 },
+    'theme-ocean-depths': { scale: 100, offsetX: 0, offsetY: 0 },
+    'theme-sakura-temple': { scale: 100, offsetX: 0, offsetY: 0 },
+    'theme-space-station': { scale: 100, offsetX: 0, offsetY: 0 },
+    'theme-sunset-mountain': { scale: 117, offsetX: 0, offsetY: 12 },
+    'theme-volcanic-hellscape': { scale: 105, offsetX: 0, offsetY: 7 },
+    'theme-wizards-library': { scale: 118, offsetX: 5, offsetY: 15 },
 };
 
 export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
@@ -83,25 +99,37 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
     const companionUrl = getItemUrl(companionId);
     const backdropUrl = getItemUrl(backdropId);
 
+    // Avatar Logic
     const avatarConfig = AVATAR_CONFIGS[avatarId];
-    const avatarHeight = avatarConfig?.height ?? 77;
+    const avatarHeight = avatarConfig?.height ?? 95; // Default updated to 95 to match Character.tsx
     const avatarOffsetX = avatarConfig?.offsetX ?? 0;
     const avatarOffsetY = avatarConfig?.offsetY ?? 0;
 
+    // Companion Logic
     const companionConfig = companionId ? COMPANION_CONFIGS[companionId] : null;
-
     // Character screen uses 440x440, companion is w-28 h-28 = 112px
     // 112/440 = 25.45% of container width
     const companionSizePercent = 25.45;
 
+    // Backdrop Logic
+    const backdropConfig = backdropId ? BACKDROP_CONFIGS[backdropId] : null;
+    const backdropScale = backdropConfig?.scale ?? 100;
+    const backdropOffsetX = (backdropConfig?.offsetX ?? 0);
+    const backdropOffsetY = (backdropConfig?.offsetY ?? 0);
+
+    // Convert pixel offsets to percentages of the 440px reference container
+    const backdropXPercent = (backdropOffsetX / 440) * 100;
+    const backdropYPercent = (backdropOffsetY / 440) * 100;
+
+    const backdropStyle = (backdropScale !== 100 || backdropOffsetX !== 0 || backdropOffsetY !== 0) ? {
+        transform: `scale(${backdropScale / 100}) translate(${backdropXPercent}%, ${backdropYPercent}%)`,
+        transformOrigin: 'center center'
+    } : undefined;
+
     return (
         <div className={`bg-slate-900 rounded-2xl overflow-hidden ${className}`}>
-            {/* 
-                Main Image Area - EXACT structure from Character.tsx
-                Character screen uses max-w-[440px] with h-[440px] = 1:1 aspect ratio
-            */}
-            <div className="relative w-full aspect-square">
-                {/* BACKDROP LAYER - Exact same as Character.tsx with object-cover */}
+            <div className="relative w-full aspect-square overflow-hidden">
+                {/* BACKDROP LAYER */}
                 {backdropUrl ? (
                     backdropUrl.endsWith('.mp4') ? (
                         <video
@@ -111,39 +139,52 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
                             muted
                             playsInline
                             className="absolute inset-0 w-full h-full object-cover opacity-80"
+                            style={backdropStyle}
                         />
                     ) : (
                         <img
                             src={backdropUrl}
                             className="absolute inset-0 w-full h-full object-cover pixelated"
-                            style={{ imageRendering: 'pixelated' }}
+                            style={{
+                                imageRendering: 'pixelated',
+                                ...backdropStyle
+                            }}
                         />
                     )
                 ) : (
                     <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-indigo-950 via-slate-900 to-black" />
                 )}
 
-                {/* Grounding Gradient Overlay - Same as Character.tsx default (h-40 of 440 = ~9%) */}
+                {/* Grounding Gradient Overlay */}
                 <div className="absolute bottom-0 inset-x-0 h-[36%] bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-0 pointer-events-none" />
 
-                {/* Avatar - EXACT positioning from Character.tsx */}
-                {/* Convert pixel offsets to percentages: original card is 440px, so offset/440*100 = percentage */}
+                {/* Avatar */}
                 <img
                     src={avatarUrl}
                     alt="Avatar"
-                    className="absolute left-1/2 w-auto object-contain pixelated z-10"
+                    className="absolute w-auto object-contain pixelated z-10"
                     style={{
                         imageRendering: 'pixelated',
                         backfaceVisibility: 'hidden',
-                        // Convert px to % based on 440px reference: offsetX/440*100, offsetY/440*100
-                        transform: `translateX(calc(-50% + ${(avatarOffsetX / 440) * 100}%)) translateY(${(avatarOffsetY / 440) * 100}%) translateZ(0)`,
                         WebkitFontSmoothing: 'none',
+
+                        // Positioning:
+                        // 1. Start at absolute center (left 50%)
+                        // 2. Add the config offset as a percentage of the CONTAINER width (offsetX / 440)
+                        // 3. TranslateX -50% to center the image itself on that point
+                        left: `calc(50% + ${(avatarOffsetX / 440) * 100}%)`,
+
+                        // Y Positioning:
+                        // Use bottom + percentage offset (negative offsetY moves UP, so minus negative = plus)
+                        // This avoids translateY % being relative to image height
+                        bottom: `${(-avatarOffsetY / 440) * 100}%`,
+
+                        transform: 'translateX(-50%) translateZ(0)',
                         height: `${avatarHeight}%`,
-                        bottom: 0
                     }}
                 />
 
-                {/* COMPANION OVERLAY - EXACT structure from Character.tsx */}
+                {/* COMPANION OVERLAY */}
                 {companionId && companionUrl && companionConfig && (
                     <div
                         className="absolute transition-all duration-500 z-20"
@@ -151,14 +192,11 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
                             top: `${companionConfig.top}%`,
                             right: `${companionConfig.right}%`,
                             transform: `scale(${companionConfig.scale}) rotate(${companionConfig.rot}deg)`,
-                            // Companion size as percentage of container (same ratio as Character screen)
                             width: `${companionSizePercent}%`,
                             height: `${companionSizePercent}%`,
                         }}
                     >
-                        {/* Bounce Wrapper - Same as Character.tsx */}
                         <div className="relative animate-bounce-slow w-full h-full">
-                            {/* Main Companion Image - fill the container */}
                             <img
                                 src={companionUrl}
                                 alt="Companion"

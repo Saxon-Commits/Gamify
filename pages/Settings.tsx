@@ -1,17 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useClerk } from "@clerk/clerk-react";
 import { useGameStore } from '../store/useGameStore';
-import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen } from 'lucide-react';
+import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen, CheckCircle, Edit2, X, RefreshCw, User as UserIcon } from 'lucide-react';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { CloudSyncControls } from '../components/CloudSyncControls';
-import { useQuery, useAction } from 'convex/react';
+import { useQuery, useAction, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Shield, Zap, Info as InfoIcon, Sun } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 const LIFETIME_PRICE_ID = 'price_1SlpqyLQXrapzCX8bubgyJ0C';
+
+// Separate inner component to handle username edit state cleanly to avoid too much clutter in main
+const ProfileSettings: React.FC<{ currentUsername?: string }> = ({ currentUsername }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newUsername, setNewUsername] = useState(currentUsername || "");
+  const [error, setError] = useState("");
+
+  const setUsernameMutation = useMutation(api.users.setUsername);
+  // Note: React Query or specific hooks might be better for debounced check, 
+  // but here we will just check on submit or let the mutation fail for simplicity
+  // OR we can implement a manual check if we want real-time feedback.
+  // Let's stick to simple "Save" button feedback.
+
+  const handleSave = async () => {
+    if (newUsername.length < 3) {
+      setError("Too short (min 3 chars)");
+      return;
+    }
+    try {
+      await setUsernameMutation({ username: newUsername });
+      setIsEditing(false);
+      setError("");
+    } catch (e: any) {
+      setError(e.message || "Failed to update");
+    }
+  };
+
+  return (
+    <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+      <div className="flex items-center space-x-3 mb-6">
+        <UserIcon className="text-indigo-500 dark:text-indigo-400" size={18} />
+        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200">Identity</h2>
+      </div>
+
+      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="space-y-1">
+          <div className="text-xs text-slate-500 font-bold uppercase">Username</div>
+          {isEditing ? (
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 font-bold">@</span>
+              <input
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                className="bg-slate-200 dark:bg-slate-800 border-none rounded px-2 py-1 text-sm font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                autoFocus
+              />
+            </div>
+          ) : (
+            <div className="text-lg font-mono font-bold text-slate-900 dark:text-white">
+              @{currentUsername || "unknown"}
+            </div>
+          )}
+          {error && <div className="text-xs text-red-500">{error}</div>}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <button onClick={() => { setIsEditing(false); setError(""); setNewUsername(currentUsername || ""); }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors">
+                <X size={16} />
+              </button>
+              <button onClick={handleSave} className="p-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg shadow-lg shadow-indigo-500/20 transition-colors">
+                <CheckCircle size={16} />
+              </button>
+            </>
+          ) : (
+            <button onClick={() => { setIsEditing(true); setNewUsername(currentUsername || ""); }} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 hover:text-indigo-500 transition-colors">
+              <Edit2 size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 export const Settings: React.FC = () => {
   const { signOut } = useClerk();
@@ -78,6 +153,8 @@ export const Settings: React.FC = () => {
             </div>
           )}
         </section>
+
+        <ProfileSettings currentUsername={user?.username} />
 
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-6">
