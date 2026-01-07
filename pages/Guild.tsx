@@ -11,6 +11,7 @@ import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { MiniCharacterCard } from '../components/MiniCharacterCard';
 import { GuildChat } from '../components/GuildChat';
 import { RichTextEditor } from '../components/RichTextEditor';
+import { AnnouncementListItem } from '../components/announcements/AnnouncementListItem';
 import { X } from 'lucide-react';
 
 
@@ -1430,67 +1431,20 @@ export const Guild: React.FC = () => {
                                         </div>
                                     ) : (
                                         announcements.map((msg) => (
-                                            <div
+                                            <AnnouncementListItem
                                                 key={msg._id}
-                                                onClick={() => setViewingAnnouncement(msg)}
-                                                className="relative bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 cursor-pointer hover:bg-amber-500/10 transition-colors group"
-                                            >
-                                                <div className="flex items-start gap-2">
-                                                    <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                                                        <Megaphone size={12} className="text-amber-400" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex justify-between items-start">
-                                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-1 block truncate">
-                                                                {msg.userName}
-                                                            </span>
-                                                            {isOfficer && (
-                                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setEditingAnnouncementId(msg._id);
-                                                                            setAnnouncementText(msg.content);
-                                                                            setIsPostPanelOpen(true);
-                                                                        }}
-                                                                        className="text-slate-600 hover:text-indigo-400 transition-colors"
-                                                                    >
-                                                                        <Pencil size={10} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleDeleteAnnouncement(msg._id);
-                                                                        }}
-                                                                        className="text-slate-600 hover:text-red-400 transition-colors"
-                                                                    >
-                                                                        <Trash2 size={10} />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="ql-snow announcement-reader compact">
-                                                            <div
-                                                                className="ql-editor max-h-full overflow-hidden line-clamp-3"
-                                                                dangerouslySetInnerHTML={{ __html: msg.content }}
-                                                            />
-                                                        </div>
-                                                        <div className="flex items-center justify-between mt-1 text-[9px] text-slate-600">
-                                                            <span>{new Date(msg._creationTime).toLocaleDateString()}</span>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    toggleLike({ guildId: guild._id, messageId: msg._id });
-                                                                }}
-                                                                className={`flex items-center gap-1 hover:text-red-400 transition-colors ${msg.isLiked ? 'text-red-500' : ''}`}
-                                                            >
-                                                                <Heart size={10} className={msg.isLiked ? 'fill-current' : ''} />
-                                                                <span>{msg.likeCount || 0}</span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                announcement={msg}
+                                                guildId={guild._id}
+                                                isOfficer={isOfficer}
+                                                onView={() => setViewingAnnouncement(msg)}
+                                                onEdit={() => {
+                                                    setEditingAnnouncementId(msg._id);
+                                                    setAnnouncementText(msg.content);
+                                                    setIsPostPanelOpen(true);
+                                                }}
+                                                onDelete={() => handleDeleteAnnouncement(msg._id)}
+                                                onToggleLike={() => toggleLike({ guildId: guild._id, messageId: msg._id })}
+                                            />
                                         ))
                                     )}
                                 </div>
