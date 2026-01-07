@@ -182,3 +182,165 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.8);
 }
+
+/* Guaranteed Announcement Reader Box */
+.announcement-reader .ql-editor {
+  padding: 0 !important;
+  /* logic is handled by container padding usually, but here we want to be careful. User wanted remove !p-0. Let's start with standard naming */
+  /* Actually, user said "Remove 'padding: 0' override".
+     The previous code had padding: 0 !important.
+     I will Replace it with decent defaults. */
+}
+
+/* Let's write the actual CSS requested in plan */
+.announcement-reader .ql-editor {
+  padding: 1rem !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  color: #cbd5e1 !important;
+  /* text-slate-300 */
+  line-height: 1.6 !important;
+}
+
+.announcement-reader .ql-editor ul,
+.announcement-reader .ql-editor ol {
+  padding-left: 1.5em !important;
+  list-style-position: outside !important;
+  margin-bottom: 1em !important;
+}
+
+.announcement-reader .ql-editor li {
+  margin-bottom: 0.25em !important;
+  padding-left: 0.25em !important;
+}
+
+.announcement-reader .ql-editor h1 {
+  @apply text-2xl font-black mb-4 text-white !important;
+}
+
+.announcement-reader .ql-editor h2 {
+  @apply text-xl font-bold mb-3 text-indigo-300 !important;
+}
+
+.announcement-reader .ql-editor p {
+  @apply mb-4 !important;
+}
+
+.announcement-reader .ql-editor strong {
+  @apply font-bold text-indigo-100 !important;
+}
+
+/* Ensure images look premium */
+.announcement-reader .ql-editor img {
+  @apply rounded-xl border border-slate-700 my-6 shadow-2xl max-w-full h-auto block mx-auto;
+}
+
+/* Guaranteed Announcement Reader Box (List View) */
+.announcement-reader.compact .ql-editor {
+  padding: 0 !important;
+  height: auto !important;
+  /* Fix layout overlap */
+  overflow: hidden !important;
+  /* Prevent internal scrolling */
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  color: #cbd5e1 !important;
+  /* text-slate-300 */
+}
+
+/* Force inside positioning for the compact list to prevent clipping */
+.announcement-reader.compact .ql-editor ul,
+.announcement-reader.compact .ql-editor ol {
+  list-style-position: inside !important;
+  padding-left: 0 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.announcement-reader.compact .ql-editor li {
+  padding-left: 0 !important;
+}
+
+/* Modal Read-Only Editor Overrides (Bubble Theme) */
+.announcement-modal-reader .quill {
+  border: none !important;
+}
+
+.announcement-modal-reader .ql-container.ql-bubble {
+  font-family: inherit !important;
+  font-size: 1rem !important;
+  border: none !important;
+}
+
+.announcement-modal-reader .ql-editor {
+  padding: 0 !important;
+  line-height: 1.6 !important;
+  color: #f1f5f9 !important;
+  /* text-slate-100 */
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+}
+
+.announcement-modal-reader .ql-editor h1 {
+  @apply text-2xl font-black mb-4 text-white !important;
+}
+
+.announcement-modal-reader .ql-editor h2 {
+  @apply text-xl font-bold mb-3 text-indigo-300 !important;
+}
+
+.announcement-modal-reader .ql-editor p {
+  @apply mb-4 !important;
+}
+
+.announcement-modal-reader .ql-editor strong {
+  @apply font-bold text-indigo-100 !important;
+}
+
+.announcement-modal-reader .ql-editor ul,
+.announcement-modal-reader .ql-editor ol {
+  padding-left: 1.5em !important;
+  list-style-position: outside !important;
+  /* Modal has room for outside */
+  margin-bottom: 1em !important;
+}
+
+.announcement-modal-reader .ql-editor li {
+  margin-bottom: 0.5rem !important;
+}
+
+.announcement-modal-reader .ql-editor img {
+  @apply rounded-xl border border-slate-700 my-6 shadow-2xl max-w-full h-auto block mx-auto;
+}
+
+/* Animations for Side Panel if tailwindcss-animate is missing */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in-from-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}

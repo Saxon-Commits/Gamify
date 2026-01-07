@@ -118,6 +118,16 @@ export default defineSchema({
             gold: v.number(),
             gems: v.optional(v.number()),
         }),
+        // New Fields for Enhanced Projects
+        storedTasks: v.optional(v.array(v.object({
+            id: v.string(),
+            name: v.string(),
+            description: v.optional(v.string()),
+            xpReward: v.number(),
+            goldReward: v.number(),
+            difficulty: v.string(),
+        }))),
+        joinedUserIds: v.optional(v.array(v.id("users"))),
         createdAt: v.number(),
         completedAt: v.optional(v.number()),
     }).index("by_guild", ["guildId"]),
@@ -128,6 +138,7 @@ export default defineSchema({
         userId: v.id("users"),
         content: v.string(),
         isPinned: v.boolean(), // true for announcements
+        likes: v.optional(v.array(v.id("users"))), // Array of user IDs who liked the message
         timestamp: v.number(),
     }).index("by_guild_time", ["guildId", "timestamp"]),
 });

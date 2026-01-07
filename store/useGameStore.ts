@@ -212,19 +212,6 @@ export const useGameStore = create<GameState>()(
       },
 
 
-      // --- NOTES SYSTEM ---
-      notesContent: '',
-      isNotesOpen: false,
-
-      toggleNotes: (isOpen) => {
-        set((state) => ({
-          isNotesOpen: isOpen !== undefined ? isOpen : !state.isNotesOpen
-        }));
-      },
-
-      setNotesContent: (content) => {
-        set({ notesContent: content });
-      },
       inventory: [],
       cart: [],
       purchaseHistory: [],

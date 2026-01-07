@@ -49,9 +49,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange 
                 [{ 'font': [] }],
                 [{ 'header': [1, 2, false] }],
                 ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                 [{ 'color': [] }, { 'background': [] }],
-                ['link', 'image'],
+                ['image'],
                 ['clean']
             ],
             handlers: {

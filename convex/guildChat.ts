@@ -69,22 +69,37 @@ export const sendMessage = mutation({
 export const getAnnouncements = query({
     args: { guildId: v.id("guilds") },
     handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        let currentUserId: string | null = null;
+
+        if (identity) {
+            const user = await ctx.db
+                .query("users")
+                .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+                .unique();
+            if (user) currentUserId = user._id;
+        }
+
         const messages = await ctx.db
             .query("guildMessages")
             .withIndex("by_guild_time", (q) => q.eq("guildId", args.guildId))
             .filter(q => q.eq(q.field("isPinned"), true))
             .order("desc")
-            .take(3);
+            .take(50);
 
         return await Promise.all(
             messages.map(async (msg) => {
                 const user = await ctx.db.get(msg.userId);
                 const userName = user?.username ?? user?.name ?? "Unknown";
+                const likes = msg.likes || [];
+                const isLiked = currentUserId ? likes.includes(currentUserId as any) : false;
 
                 return {
                     ...msg,
                     userName,
                     userPictureUrl: user?.pictureUrl,
+                    likeCount: likes.length,
+                    isLiked,
                 };
             })
         );
@@ -160,5 +175,81 @@ export const deleteAnnouncement = mutation({
         if (!message.isPinned) throw new Error("Not an announcement");
 
         await ctx.db.delete(args.messageId);
+    },
+});
+// Update an announcement (Leader/Officer only)
+export const updateAnnouncement = mutation({
+    args: {
+        messageId: v.id("guildMessages"),
+        guildId: v.id("guilds"),
+        content: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthenticated");
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) throw new Error("User not found");
+
+        const membership = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .first();
+
+        if (!membership || membership.guildId !== args.guildId) throw new Error("Not a member");
+        if (membership.role !== "leader" && membership.role !== "officer") {
+            throw new Error("Permission denied");
+        }
+
+        const message = await ctx.db.get(args.messageId);
+        if (!message) throw new Error("Message not found");
+        if (!message.isPinned) throw new Error("Not an announcement");
+
+        await ctx.db.patch(args.messageId, {
+            content: args.content,
+        });
+    },
+});
+
+// Toggle Like on Announcement
+export const toggleAnnouncementLike = mutation({
+    args: {
+        messageId: v.id("guildMessages"),
+        guildId: v.id("guilds"),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthenticated");
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) throw new Error("User not found");
+
+        const message = await ctx.db.get(args.messageId);
+        if (!message) throw new Error("Message not found");
+        if (!message.isPinned) throw new Error("Not an announcement");
+
+        const likes = message.likes || [];
+        const userId = user._id;
+
+        const hasLiked = likes.includes(userId);
+        let newLikes;
+
+        if (hasLiked) {
+            newLikes = likes.filter((id) => id !== userId);
+        } else {
+            newLikes = [...likes, userId];
+        }
+
+        await ctx.db.patch(args.messageId, {
+            likes: newLikes,
+        });
     },
 });

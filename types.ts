@@ -1,6 +1,6 @@
 
 export type QuestDifficulty = 'TRIVIAL' | 'EASY' | 'MEDIUM' | 'HARD' | 'EPIC';
-export type TaskType = 'main' | 'side' | 'daily';
+export type TaskType = 'main' | 'side' | 'daily' | 'guild';
 
 export interface Task {
   id: string;
@@ -206,12 +206,6 @@ export interface GameState {
   addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'date'>) => void;
   deleteJournalEntry: (id: string) => void;
   updateJournalEntry: (entry: JournalEntry) => void;
-
-  // Notes System
-  notesContent: string;
-  isNotesOpen: boolean;
-  toggleNotes: (isOpen?: boolean) => void;
-  setNotesContent: (content: string) => void;
 }
 
 export interface JournalEntry {

@@ -112,13 +112,11 @@ const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; valu
 
 import { HonorPledgeModal } from './HonorPledgeModal';
 import { TutorialOverlay } from './TutorialOverlay';
-import { NotesPanel } from './NotesPanel';
-import { StickyNote } from 'lucide-react';
 
 import { StarterSelectionModal } from './StarterSelectionModal';
 
 export const Layout: React.FC = () => {
-  const { stats, isNotesOpen, toggleNotes } = useGameStore();
+  const { stats } = useGameStore();
   const location = useLocation();
 
   // Check if user needs to select a starter avatar
@@ -138,7 +136,6 @@ export const Layout: React.FC = () => {
       <HonorPledgeModal />
       <TutorialOverlay />
       {needsStarter && <StarterSelectionModal onComplete={() => { }} />}
-      <NotesPanel />
 
       {/* Top Navigation Bar - Shrunk for space */}
       <header className="h-16 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-6 flex items-center justify-between sticky top-0 z-50 transition-colors duration-300">
@@ -151,7 +148,7 @@ export const Layout: React.FC = () => {
           </h1>
         </div>
 
-        <nav className="flex items-center gap-1.5 bg-slate-100/50 dark:bg-slate-950/50 px-2 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
+        <nav className="flex items-center gap-1.5 bg-slate-100/50 dark:bg-slate-950/50 px-2 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300 overflow-x-auto max-w-full no-scrollbar">
           {NavLinks.map(link => (
             <NavItem
               key={link.to}
@@ -186,14 +183,6 @@ export const Layout: React.FC = () => {
             <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />
             <ResourceItem imageUrl="/assets/gem assets/gem icon.png" value={stats.gems} label="Gems" description="Premium Currency." color="text-cyan-400" />
           </div>
-
-          <button
-            onClick={() => toggleNotes()}
-            className={`p-2 rounded-lg transition-colors ${isNotesOpen ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800'}`}
-            title="Open Notes"
-          >
-            <StickyNote size={20} />
-          </button>
 
           {/* Settings Icon (Moved from main nav) */}
           <Link to="/app/settings" className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors">

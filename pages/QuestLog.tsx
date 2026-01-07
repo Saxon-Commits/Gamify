@@ -11,6 +11,8 @@ import { MerchantCard, MerchantModal } from '../components/MerchantCard';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ProjectDetailView } from '../components/ProjectDetailView';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
 
 const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty }) => {
   const colors = {
@@ -237,8 +239,32 @@ export const QuestLog: React.FC = () => {
     const store = useGameStore.getState();
     if (store.deleteTask) {
       store.deleteTask(taskId);
-    } else {
       console.error("deleteTask is missing from store state!", store);
+    }
+  };
+
+  // Guild Contribution Hook
+  const contributeToProject = useMutation(api.guilds.contributeToProject);
+
+  const handleCompleteTask = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Local completion first for UI responsiveness
+    completeTask(taskId);
+
+    // If it's a guild task, sync contribution to backend
+    if (task.type === 'guild' && task.projectId) {
+      try {
+        await contributeToProject({
+          projectId: task.projectId as any, // ID type assertion
+          amount: 1
+        });
+        console.log("Contributed to project via task completion");
+      } catch (e) {
+        console.error("Failed to contribute to guild project:", e);
+        // Ideally revert local state if crucial, but for now we Log.
+      }
     }
   };
 
@@ -448,7 +474,13 @@ export const QuestLog: React.FC = () => {
     // The previous logic for Titan was filtering narrowly.
 
     // NEW LOGIC:
-    const tasksForProject = tasks.filter(t => t.projectId === projectId);
+    let tasksForProject = tasks.filter(t => t.projectId === projectId);
+
+    // If this is the "Projects" column (p-tech-1), also include Guild Project tasks
+    if (projectId === 'p-tech-1') {
+      const guildTasks = tasks.filter(t => t.type === 'guild');
+      tasksForProject = [...tasksForProject, ...guildTasks];
+    }
 
     // If we have tasks, return them (plus any forced defaults for Titan/Physical if missing?)
     // User wants "Bounty Columns". If I move a task to Titan, it should show up.
@@ -495,11 +527,8 @@ export const QuestLog: React.FC = () => {
   return (
     <div className="max-w-[95%] mx-auto pb-20">
       {/* Page Background */}
-      <div
-        className="fixed inset-0 z-[-1] bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/assets/quests%20page%20background.png')" }}
-      />
-      {/* Overlay to ensure text readability if needed, or rely on existing component backgrounds */}
+      {/* Page Background - Removed missing image, relying on CSS pattern in Layout */}
+      {/* Overlay to ensure text readability */}
       <div className="fixed inset-0 z-[-1] bg-slate-950/70 pointer-events-none" />
 
       {/* Quest Modal */}
@@ -524,8 +553,8 @@ export const QuestLog: React.FC = () => {
 
           {/* MAIN QUESTS - Top 4 Projects (2 Column Layout) */}
           <div className="flex items-center gap-3 mb-[-10px]">
-            <img src="/assets/items/fantasy-divider.png" className="h-1 w-12 opacity-0" alt="" /> {/* Spacer/Placeholder if needed, or just text */}
-            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">Foundations</h2>
+            {/* Removed missing divider image */}
+            <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">Foundations</h2>
             <div className="h-[1px] flex-1 bg-gradient-to-r from-amber-500/50 to-transparent" />
           </div>
           <div className="flex flex-col gap-4">
@@ -566,7 +595,7 @@ export const QuestLog: React.FC = () => {
                       <div className="absolute inset-0 z-0 bg-gradient-to-r from-white via-white/90 to-white/80 dark:from-slate-950 dark:via-slate-950/90 dark:to-slate-900/80" />
 
 
-                      <div className="relative z-10 p-8 flex flex-col gap-8">
+                      <div className="relative z-10 p-4 md:p-8 flex flex-col gap-6 md:gap-8">
                         {/* Header Section */}
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-4">
@@ -792,9 +821,9 @@ export const QuestLog: React.FC = () => {
           {/* SIDE QUESTS - Remaining Projects (3 Column Layout) */}
           <div className="space-y-6 relative mt-8">
             <div className="flex items-center gap-3 mb-[-10px]">
-              <img src="/assets/items/fantasy-divider.png" className="h-1 w-12 opacity-0" alt="" />
+              {/* Removed missing divider image */}
               <div className="flex-1">
-                <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">
+                <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">
                   {expandedQuestId ? 'Relevant Bounties' : 'Bounties'}
                 </h2>
                 <p className="text-xs text-slate-500 font-mono mt-1">do the task or habit and acquire the bounty to reap your rewards, refreshes daily</p>
@@ -819,7 +848,7 @@ export const QuestLog: React.FC = () => {
                       pid={pid}
                       title={columnName}
                       bounties={columnBounties}
-                      completeTask={completeTask}
+                      completeTask={handleCompleteTask}
                       deleteTask={handleDeleteTask}
                       onCreate={handleCreateBounty}
                     />

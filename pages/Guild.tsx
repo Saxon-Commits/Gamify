@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { Users, Shield, Trophy, Target, Crown, Sparkles, Sliders, ChevronDown, ChevronUp, Search, Plus, Lock, Globe, MessageCircle, Share, Copy, LogOut, Megaphone, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Shield, Trophy, Target, Crown, Sparkles, Sliders, ChevronDown, ChevronUp, Search, Plus, Lock, Globe, MessageCircle, Share, Copy, LogOut, Megaphone, Trash2, CheckCircle, ListChecks, Scroll, ArrowLeft, Pencil, Heart } from 'lucide-react';
 import { useQuery, useMutation } from "convex/react";
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.bubble.css'; // Optional, but good for read-only if we wanted
 import { api } from "../convex/_generated/api";
 import { useGameStore } from '../store/useGameStore';
 import { ALL_COSMETIC_ITEMS, STARTER_AVATARS, COSMETIC_SHOP_ITEMS } from '../src/utils/CosmeticsData';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { MiniCharacterCard } from '../components/MiniCharacterCard';
 import { GuildChat } from '../components/GuildChat';
+import { RichTextEditor } from '../components/RichTextEditor';
+import { X } from 'lucide-react';
 
 
 // Types for member loadout (Mock for compatibility with MemberEditPanel until we fully wire it up)
@@ -196,7 +201,7 @@ const DonationModal: React.FC<{
     );
 };
 
-const CreateGuildForm: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
+const CreateGuildForm: React.FC<{ onCancel: () => void, onSuccess?: (newGuildId: string) => void }> = ({ onCancel, onSuccess }) => {
     const createGuild = useMutation(api.guilds.createGuild);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
@@ -210,10 +215,10 @@ const CreateGuildForm: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
         setSubmitting(true);
 
         try {
-            await createGuild({ name, description, isPublic });
+            const newGuildId = await createGuild({ name, description, isPublic });
+            onSuccess?.(newGuildId); // Navigate to the new guild
         } catch (err: any) {
             setError(err.message || 'Failed to create guild');
-        } finally {
             setSubmitting(false);
         }
     };
@@ -303,148 +308,124 @@ const CreateGuildForm: React.FC<{ onCancel: () => void }> = ({ onCancel }) => {
     );
 };
 
-const GuildBrowser: React.FC<{ onCreateClick: () => void }> = ({ onCreateClick }) => {
+// --- GUILD BROWSER CONFIG ---
+const GuildBrowser: React.FC<{
+    onCreateClick: () => void,
+    onJoinClick?: (guildId: any) => void,
+    myGuildIds?: string[]
+}> = ({ onCreateClick, onJoinClick, myGuildIds = [] }) => {
     const publicGuilds = useQuery(api.guilds.getPublicGuilds);
     const joinGuild = useMutation(api.guilds.joinGuild);
-    const joinByCode = useMutation(api.guilds.joinGuildByCode);
-
-    const [joiningId, setJoiningId] = useState<string | null>(null);
-    const [inviteCode, setInviteCode] = useState('');
-    const [joiningCode, setJoiningCode] = useState(false);
-    const [codeError, setCodeError] = useState<string | null>(null);
+    const [search, setSearch] = useState('');
 
     const handleJoin = async (guildId: any) => {
-        setJoiningId(guildId);
+        if (!confirm("Join this guild?")) return;
         try {
             await joinGuild({ guildId });
-        } catch (err) {
-            console.error("Failed to join guild", err);
-        } finally {
-            setJoiningId(null);
+            onJoinClick?.(guildId);
+        } catch (error: any) {
+            alert(error.message);
         }
     };
 
     const handleJoinByCode = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inviteCode.trim()) return;
-
-        setJoiningCode(true);
-        setCodeError(null);
-        try {
-            await joinByCode({ inviteCode: inviteCode.trim().toUpperCase() });
-        } catch (err: any) {
-            console.error("Failed to join by code", err);
-            setCodeError(err.message || "Invalid invite code");
-        } finally {
-            setJoiningCode(false);
-        }
+        // Implement invite code join later if needed or via URL
+        alert("Invite code joining via URL is supported. Please use the full link.");
     };
 
+    const filteredGuilds = publicGuilds?.filter(g =>
+        g.name.toLowerCase().includes(search.toLowerCase()) ||
+        g.description?.toLowerCase().includes(search.toLowerCase())
+    );
+
     return (
-        <div className="space-y-8">
-            <div className="text-center space-y-4">
-                <h1 className="text-4xl font-black text-white uppercase tracking-wider">Join a Guild</h1>
-                <p className="text-slate-400 max-w-lg mx-auto">
-                    Find a community of like-minded adventurers. Collaborate, compete, and earn rewards together.
+        <div className="max-w-4xl mx-auto space-y-8">
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center">
+                <Users size={48} className="mx-auto text-indigo-400 mb-4" />
+                <h2 className="text-3xl font-bold text-white mb-2">Find Your Community</h2>
+                <p className="text-slate-400 mb-8 max-w-lg mx-auto">
+                    Join an existing guild to find like-minded players, or establish your own order.
                 </p>
-                <button
-                    onClick={onCreateClick}
-                    className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-colors border border-slate-700"
-                >
-                    <Plus size={18} />
-                    Create New Guild
-                </button>
-            </div>
 
-            <div className="bg-white/5 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden p-6 mb-8">
-                <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                    <Lock size={16} className="text-indigo-400" />
-                    Have an Invite Code?
-                </h3>
-                <form onSubmit={handleJoinByCode} className="flex gap-2">
-                    <input
-                        type="text"
-                        value={inviteCode}
-                        onChange={(e) => setInviteCode(e.target.value)}
-                        placeholder="ENTER-CODE"
-                        className="bg-slate-950 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono uppercase placeholder:normal-case placeholder:font-sans focus:outline-none focus:border-indigo-500 w-full max-w-xs"
-                        maxLength={6}
-                    />
+                <div className="flex gap-4 justify-center">
                     <button
-                        type="submit"
-                        disabled={!inviteCode || joiningCode}
-                        className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-bold transition-colors"
+                        onClick={onCreateClick}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center gap-2"
                     >
-                        {joiningCode ? 'Joining...' : 'Join Private Guild'}
+                        <Plus size={18} />
+                        Create New Guild
                     </button>
-                </form>
-                {codeError && <p className="text-red-400 text-sm mt-2">{codeError}</p>}
+                    {/* Add Invite Code Input Trigger if needed */}
+                </div>
             </div>
 
-            <div className="bg-white/5 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex items-center gap-3">
-                    <Search className="text-slate-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search guilds..."
-                        className="bg-transparent border-none focus:outline-none text-slate-900 dark:text-white w-full placeholder-slate-500"
-                    />
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-white">Public Guilds</h3>
+                    <div className="relative w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                        <input
+                            type="text"
+                            placeholder="Search guilds..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
                 </div>
 
-                <div className="divide-y divide-slate-200 dark:divide-slate-700">
-                    {!publicGuilds ? (
-                        <div className="p-8 text-center text-slate-500">Loading guilds...</div>
-                    ) : publicGuilds.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <Shield className="mx-auto h-12 w-12 text-slate-600 mb-4" />
-                            <h3 className="text-xl font-bold text-white mb-2">No Guilds Found</h3>
-                            <p className="text-slate-400 mb-6">Be the first to start a guild!</p>
-                            <button
-                                onClick={onCreateClick}
-                                className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold"
-                            >
-                                Create Guild
-                            </button>
-                        </div>
-                    ) : (
-                        publicGuilds.map((guild) => (
-                            <div key={guild._id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                                        {guild.name.substring(0, 2).toUpperCase()}
+                {!filteredGuilds ? (
+                    <div className="text-center py-12 text-slate-500">Loading guilds...</div>
+                ) : filteredGuilds.length === 0 ? (
+                    <div className="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700 border-dashed">
+                        <p className="text-slate-400">No guilds found matching "{search}"</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {filteredGuilds.map((guild) => {
+                            const isMember = myGuildIds.includes(guild._id);
+                            return (
+                                <div key={guild._id} className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center justify-between hover:border-slate-600 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center shrink-0 font-bold text-xl text-slate-400">
+                                            {guild.name.substring(0, 1)}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold text-lg flex items-center gap-2">
+                                                {guild.name}
+                                                {isMember && <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Member</span>}
+                                            </h4>
+                                            <p className="text-slate-400 text-sm line-clamp-1">{guild.description || "No description provided."}</p>
+                                            <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
+                                                <span className="flex items-center gap-1"><Users size={12} /> {guild.memberCount} Members</span>
+                                                <span className="flex items-center gap-1"><Trophy size={12} /> Lvl {guild.level}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg">{guild.name}</h3>
-                                        <p className="text-slate-500 text-sm line-clamp-1">{guild.description || "No description provided."}</p>
-                                    </div>
+                                    {isMember ? (
+                                        <button disabled className="px-4 py-2 bg-slate-700 text-slate-400 rounded-lg text-sm font-bold cursor-not-allowed">
+                                            Joined
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleJoin(guild._id)}
+                                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold transition-colors"
+                                        >
+                                            Join Guild
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="text-right hidden sm:block">
-                                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Members</p>
-                                        <p className="text-white font-mono">{guild.memberCount} / 50</p>
-                                    </div>
-                                    <div className="text-right hidden sm:block">
-                                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Level</p>
-                                        <p className="text-amber-400 font-mono">{guild.level}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => handleJoin(guild._id)}
-                                        disabled={joiningId === guild._id}
-                                        className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-bold text-sm transition-colors border border-white/10"
-                                    >
-                                        {joiningId === guild._id ? 'Joining...' : 'Join'}
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
-const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId, isOfficer }) => {
+const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean, forceCreate?: boolean, onResetForceCreate?: () => void }> = ({ guildId, isOfficer, forceCreate, onResetForceCreate }) => {
     const projects = useQuery(api.guilds.getGuildProjects, { guildId });
     const guildData = useQuery(api.guilds.getGuild, { guildId });
     const createProject = useMutation(api.guilds.createProject);
@@ -455,15 +436,70 @@ const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId
     const [rewardGold, setRewardGold] = useState(100);
     const [rewardGems, setRewardGems] = useState(0);
 
+    const [projectTasks, setProjectTasks] = useState<any[]>([]);
+    const [newTaskName, setNewTaskName] = useState('');
+    const [newTaskXp, setNewTaskXp] = useState(50);
+    const [newTaskDiff, setNewTaskDiff] = useState('EASY');
+
+    useEffect(() => {
+        if (forceCreate && isOfficer) {
+            setIsCreating(true);
+            onResetForceCreate?.();
+        }
+    }, [forceCreate, isOfficer, onResetForceCreate]);
+
     const treasury = guildData?.treasury || { gold: 0, gems: 0 };
     const canAfford = (treasury.gold || 0) >= rewardGold && (treasury.gems || 0) >= rewardGems;
+
+    // We need current user ID (Clerk ID) to check against joinedUserIds.
+    // This component might not verify auth but parent does.
+    // Ideally we pass userId prop or use store.
+    // const myClerkId = useGameStore(state => state.user?.id); // REMOVED: Property user does not exist
+    // Actually, `projects` from backend has `joinedUserIds`.
+    const joinProject = useMutation(api.guilds.joinProject);
+    const addTasks = useGameStore(state => state.addTasks);
+    const tasks = useGameStore(state => state.tasks);
+    const completeTask = useGameStore(state => state.completeTask);
+    // We also need a way to get the current user's Convex ID if joinedUserIds stores Convex ID?
+    // Schema says `v.id("users")`. So we need to match that.
+    // The `projects` query returns documents with Convex IDs.
+    // `gameState` uses Clerk ID.
+    // `api.guilds.getGuildProjects` likely returns what we need.
+    // BUT checking "isJoined" client side requires knowing MY convex ID.
+    // `useQuery(api.users.getMe)` would get it.
+    const me = useQuery(api.users.getMe);
+
+    const handleQuickComplete = async (userTaskId: string, projectId: any) => {
+        completeTask(userTaskId);
+        try {
+            await contribute({
+                projectId,
+                amount: 1
+            });
+        } catch (e) {
+            console.error("Contribution failed", e);
+        }
+    };
+
+    const handleAddTask = () => {
+        if (!newTaskName) return;
+        setProjectTasks([...projectTasks, {
+            id: `t-${Date.now()}`,
+            name: newTaskName,
+            xpReward: newTaskXp,
+            goldReward: 0, // Simplifying for now, or add input
+            difficulty: newTaskDiff
+        }]);
+        setNewTaskName('');
+    }
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         const form = e.target as HTMLFormElement;
         const title = (form.elements.namedItem('title') as HTMLInputElement).value;
         const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
-        const targetTasks = parseInt((form.elements.namedItem('target') as HTMLInputElement).value);
+        // targetTasks is now optional or derived
+        // const targetTasks = parseInt((form.elements.namedItem('target') as HTMLInputElement).value);
 
         if (!canAfford) {
             alert("Insufficient funds in Guild Treasury!");
@@ -474,10 +510,40 @@ const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId
             guildId,
             title,
             description,
-            targetTasks,
-            rewards: { xp: targetTasks * 10, gold: rewardGold, gems: rewardGems }
+            targetTasks: projectTasks.length, // Logic: target is number of tasks defined
+            rewards: { xp: projectTasks.length * 10, gold: rewardGold, gems: rewardGems }, // Base XP reward for Project Completion?
+            tasks: projectTasks
         });
         setIsCreating(false);
+        setProjectTasks([]);
+    };
+
+    const handleJoin = async (projectId: any) => {
+        try {
+            const newTasks = await joinProject({ guildId, projectId });
+            // Add tasks to local store (with mapped IDs probably handled by backend or just raw?)
+            // Backend returns raw objects. We need to ensure they have unique IDs for the user?
+            // Or the backend storedTasks have generic IDs (t-1).
+            // If multiple users join, they get same task IDs? That might conflict if global IDs?
+            // `gamestate.tasks` are user-specific. So ID collision only matters within one user's list.
+            // As long as Project 1 tasks don't clash with Project 2 tasks.
+            // We should probably re-id them or ensure `t-guild-projId-taskId` format?
+            // For now assume backend or creation ensured distinct enough IDs (Date.now() above is weak but ok for demo).
+
+            // Map tasks to ensure they belong to this project ID in the user's quest log
+            const mappedTasks = newTasks.map((t: any) => ({
+                ...t,
+                projectId: projectId, // This ensures they go to the right column/group
+                completed: false,
+                type: 'guild', // New type? Or 'main'
+                energyCost: 10 // Default
+            }));
+
+            addTasks(mappedTasks);
+            alert("Joined Project! Tasks added to your Quest Log.");
+        } catch (e: any) {
+            alert("Failed to join: " + e.message);
+        }
     };
 
     const handleContribute = async (projectId: any) => {
@@ -512,14 +578,37 @@ const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId
                         <label className="block text-slate-400 text-xs font-bold mb-1">Description</label>
                         <textarea name="description" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white h-20 resize-none" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-slate-400 text-xs font-bold mb-1">Target Tasks</label>
-                            <input name="target" type="number" defaultValue={100} min={10} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" required />
+
+                    {/* Dynamic Task Creator */}
+                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                        <label className="block text-slate-400 text-xs font-bold mb-2">Project Tasks ({projectTasks.length})</label>
+                        <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                            {projectTasks.map((t, i) => (
+                                <div key={i} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
+                                    <span className="text-white">{t.name}</span>
+                                    <span className="text-xs text-slate-400">{t.difficulty} | {t.xpReward} XP</span>
+                                </div>
+                            ))}
+                            {projectTasks.length === 0 && <p className="text-slate-600 text-sm italic">No tasks added yet.</p>}
                         </div>
-                        <div>
-                            <label className="block text-slate-400 text-xs font-bold mb-1">XP Reward (Auto)</label>
-                            <input type="text" disabled value="10 XP per Task" className="w-full bg-slate-900/50 border border-slate-800 rounded-lg px-3 py-2 text-slate-500" />
+
+                        <div className="flex gap-2">
+                            <input
+                                value={newTaskName}
+                                onChange={e => setNewTaskName(e.target.value)}
+                                placeholder="Task Name"
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white"
+                            />
+                            <select
+                                value={newTaskDiff}
+                                onChange={e => setNewTaskDiff(e.target.value)}
+                                className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white"
+                            >
+                                <option value="EASY">Easy</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HARD">Hard</option>
+                            </select>
+                            <button type="button" onClick={handleAddTask} className="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">+</button>
                         </div>
                     </div>
 
@@ -576,6 +665,68 @@ const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId
                 )}
             </div>
 
+            {/* NEW: Guild Bounties Section */}
+            {projects && projects.length > 0 && (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 mb-6">
+                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <ListChecks size={16} /> Available Bounties
+                    </h3>
+                    <div className="grid gap-2">
+                        {projects.flatMap(p => (
+                            p.storedTasks?.map((t: any) => ({ ...t, projectName: p.title, projectId: p._id })) || []
+                        )).map((task: any, i: number) => {
+                            // Find matching user task
+                            const userTask = tasks.find(t => t.type === 'guild' && t.projectId === task.projectId && t.name === task.name);
+                            const isCompleted = userTask?.completed;
+                            const hasJoined = !!userTask;
+
+                            return (
+                                <div key={i} className={`flex items-center justify-between bg-slate-900/50 border ${isCompleted ? 'border-green-500/30 bg-green-900/10' : 'border-slate-700/50'} p-3 rounded-xl transition-all`}>
+                                    <div className="flex items-center gap-4">
+                                        {/* Status Icon / Action */}
+                                        {hasJoined ? (
+                                            <button
+                                                onClick={() => !isCompleted && handleQuickComplete(userTask.id, task.projectId)}
+                                                disabled={isCompleted}
+                                                className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${isCompleted
+                                                    ? 'bg-green-500 border-green-500 text-white'
+                                                    : 'border-slate-600 hover:border-indigo-500 hover:bg-indigo-500/20 text-transparent'
+                                                    }`}
+                                            >
+                                                {isCompleted && <CheckCircle size={14} />}
+                                            </button>
+                                        ) : (
+                                            <div className="w-6 h-6 rounded-full border-2 border-slate-700 border-dashed flex items-center justify-center" title="Join project to start">
+                                                <Lock size={12} className="text-slate-600" />
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <p className={`font-bold ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{task.name}</p>
+                                            <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                                                {task.projectName}
+                                                <span className="w-1 h-1 rounded-full bg-slate-600" />
+                                                <span className={`${task.difficulty === 'HARD' ? 'text-red-400' : task.difficulty === 'MEDIUM' ? 'text-amber-400' : 'text-green-400'}`}>
+                                                    {task.difficulty}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-right">
+                                            <span className="block text-xs font-bold text-indigo-400">+{task.xpReward} XP</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {projects.every(p => !p.storedTasks?.length) && (
+                            <p className="text-xs text-slate-500 italic">No specific tasks defined for these projects.</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {!projects ? (
                 <div className="text-center py-8 text-slate-500">Loading projects...</div>
             ) : projects.length === 0 ? (
@@ -591,68 +742,75 @@ const GuildProjects: React.FC<{ guildId: any, isOfficer: boolean }> = ({ guildId
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {projects.map(project => (
-                        <div key={project._id} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
-                            <div className="flex items-start justify-between mb-4">
-                                <div>
-                                    <h3 className="text-lg font-bold text-white">{project.title}</h3>
-                                    <p className="text-slate-400 text-sm">{project.description}</p>
+                    {projects.map(project => {
+                        const isJoined = me && project.joinedUserIds?.includes(me._id); // Assuming me is { _id: ... }
+
+                        return (
+                            <div key={project._id} className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">{project.title}</h3>
+                                        <p className="text-slate-400 text-sm">{project.description}</p>
+                                        <div className="flex gap-2 mt-2">
+                                            <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">
+                                                {project.rewards.gold} Gold
+                                            </span>
+                                            {project.rewards.gems ? (
+                                                <span className="text-xs bg-cyan-900/30 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20">
+                                                    {project.rewards.gems} Gems
+                                                </span>
+                                            ) : null}
+                                        </div>
+                                    </div>
+
+                                    {isJoined ? (
+                                        <div className="flex flex-col items-end">
+                                            <span className="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-600/30 flex items-center gap-1">
+                                                <CheckCircle size={12} /> Active
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleJoin(project._id)}
+                                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg shadow-indigo-600/20"
+                                        >
+                                            Join Quest
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Rewards</div>
-                                    <div className="flex gap-2 text-xs font-mono">
-                                        <span className="text-purple-400">{project.rewards.xp} XP</span>
-                                        <span className="text-amber-400">{project.rewards.gold} Gold</span>
+                                {/* REMOVED EXTRA CLOSING DIV */}
+
+                                {/* Progress Bar */}
+                                <div className="mb-4">
+                                    <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                        <span>Progress</span>
+                                        <span>{project.completedTasks} / {project.targetTasks}</span>
+                                    </div>
+                                    <div className="h-4 bg-slate-900 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500"
+                                            style={{ width: `${Math.min(100, (project.completedTasks / project.targetTasks) * 100)}%` }}
+                                        />
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Progress Bar */}
-                            <div className="mb-4">
-                                <div className="flex justify-between text-xs text-slate-400 mb-1">
-                                    <span>Progress</span>
-                                    <span>{project.completedTasks} / {project.targetTasks}</span>
-                                </div>
-                                <div className="h-4 bg-slate-900 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500"
-                                        style={{ width: `${Math.min(100, (project.completedTasks / project.targetTasks) * 100)}%` }}
-                                    />
-                                </div>
-                            </div>
+                                {/* Contributors */}
+                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
+                                    <div className="flex -space-x-2">
+                                        {project.contributors.map((c, i) => (
+                                            <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-white" title="Contributor">
+                                                {/* We don't have avatar URLs here yet without another fetch, simple initials/icon for now */}
+                                                <Users size={12} />
+                                            </div>
+                                        ))}
+                                        {project.contributors.length === 0 && <span className="text-xs text-slate-500 italic">No contributors yet</span>}
+                                    </div>
 
-                            {/* Contributors */}
-                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                                <div className="flex -space-x-2">
-                                    {project.contributors.map((c, i) => (
-                                        <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-white" title="Contributor">
-                                            {/* We don't have avatar URLs here yet without another fetch, simple initials/icon for now */}
-                                            <Users size={12} />
-                                        </div>
-                                    ))}
-                                    {project.contributors.length === 0 && <span className="text-xs text-slate-500 italic">No contributors yet</span>}
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        max={10}
-                                        value={contributionAmount[project._id] || ''}
-                                        onChange={(e) => setContributionAmount({ ...contributionAmount, [project._id]: parseInt(e.target.value) })}
-                                        className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-sm"
-                                        placeholder="Qty"
-                                    />
-                                    <button
-                                        onClick={() => handleContribute(project._id)}
-                                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-lg text-sm font-bold"
-                                    >
-                                        Contribute
-                                    </button>
+                                    <span className="text-xs text-slate-500 italic">Complete tasks in Quest Log to contribute</span>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -873,14 +1031,27 @@ const GuildSettings: React.FC<{ guild: any, membership: any, members: any[] }> =
 
 export const Guild: React.FC = () => {
     const { stats } = useGameStore();
-    const myGuildConfig = useQuery(api.guilds.getMyGuild);
-    const [view, setView] = useState<'browse' | 'create'>('browse');
+    const myGuilds = useQuery(api.guilds.getMyGuilds);
+    const [activeGuildId, setActiveGuildId] = useState<string | null>(null);
+    const [view, setView] = useState<'dashboard' | 'browse' | 'create'>('dashboard');
     const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'chat' | 'settings'>('overview');
 
-    // Fetch members and activity only if we have a guild
-    const guildId = myGuildConfig?.guild?._id;
+    useEffect(() => {
+        if (myGuilds && myGuilds.length > 0 && !activeGuildId) {
+            setActiveGuildId(myGuilds[0].guild._id);
+            setView('dashboard');
+        } else if (myGuilds && myGuilds.length === 0) {
+            setView('browse');
+        }
+    }, [myGuilds, activeGuildId]);
+
+    const activeGuildConfig = myGuilds?.find(g => g.guild._id === activeGuildId);
+
+    // Fetch members and activity only if we have an active guild
+    const guildId = activeGuildConfig?.guild?._id;
     const guildMembers = useQuery(api.guilds.getGuildMembers, guildId ? { guildId } : "skip");
     const guildActivity = useQuery(api.guilds.getGuildActivity, guildId ? { guildId } : "skip");
+    const guildProjects = useQuery(api.guilds.getGuildProjects, guildId ? { guildId } : "skip");
 
     // Invite System
     const createInvite = useMutation(api.guilds.createInvite);
@@ -892,10 +1063,15 @@ export const Guild: React.FC = () => {
     const [isLeaving, setIsLeaving] = useState(false);
 
     const handleLeave = async () => {
+        if (!activeGuildId) return;
         if (!confirm("Are you sure you want to leave this guild? You will lose your contributions.")) return;
         setIsLeaving(true);
         try {
-            await leaveGuild({});
+            await leaveGuild({ guildId: activeGuildId });
+            // After leaving, if we have other guilds, switch to one of them?
+            // The query update will remove this guild from list.
+            // We should rely on useEffect to reset activeGuildId if current becomes invalid.
+            setActiveGuildId(null); // This will trigger the useEffect to pick a new active guild or go to browse
         } catch (error) {
             console.error("Failed to leave guild:", error);
             alert("Failed to leave guild. Leaders must transfer leadership or disband the guild.");
@@ -904,32 +1080,47 @@ export const Guild: React.FC = () => {
         }
     };
 
-
-
     // Announcement System
     const announcements = useQuery(api.guildChat.getAnnouncements, guildId ? { guildId } : "skip");
     const postAnnouncement = useMutation(api.guildChat.postAnnouncement);
     const deleteAnnouncement = useMutation(api.guildChat.deleteAnnouncement);
+    const updateAnnouncement = useMutation(api.guildChat.updateAnnouncement);
+    const toggleLike = useMutation(api.guildChat.toggleAnnouncementLike);
+
     const [isPostingAnnouncement, setIsPostingAnnouncement] = useState(false);
     const [announcementText, setAnnouncementText] = useState("");
+    const [isPostPanelOpen, setIsPostPanelOpen] = useState(false);
+    const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
+    const [viewingAnnouncement, setViewingAnnouncement] = useState<any>(null);
 
     const handlePostAnnouncement = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!announcementText.trim()) return;
+        if (!announcementText.trim() || !guildId || announcementText === "<p><br></p>") return;
 
         try {
-            await postAnnouncement({ guildId: myGuildConfig?.guild?._id, content: announcementText });
+            if (editingAnnouncementId) {
+                await updateAnnouncement({
+                    messageId: editingAnnouncementId as any,
+                    guildId,
+                    content: announcementText
+                });
+            } else {
+                await postAnnouncement({ guildId, content: announcementText });
+            }
             setAnnouncementText("");
+            setEditingAnnouncementId(null);
             setIsPostingAnnouncement(false);
+            setIsPostPanelOpen(false);
         } catch (error) {
-            console.error("Failed to post announcement", error);
+            console.error("Failed to post/update announcement", error);
         }
     }
 
     const handleDeleteAnnouncement = async (messageId: any) => {
+        if (!guildId) return;
         if (!confirm("Delete this announcement?")) return;
         try {
-            await deleteAnnouncement({ messageId, guildId: myGuildConfig?.guild?._id });
+            await deleteAnnouncement({ messageId, guildId });
         } catch (error) {
             console.error("Failed to delete", error);
         }
@@ -957,10 +1148,11 @@ export const Guild: React.FC = () => {
     };
 
     const handleInvite = async () => {
+        if (!guildId) return;
         setIsGeneratingInvite(true);
         try {
             // Check if we already have a valid code? For now just generate new one
-            const code = await createInvite({ guildId: myGuildConfig?.guild?._id });
+            const code = await createInvite({ guildId });
             setInviteCode(code);
         } catch (error) {
             console.error("Failed to generate invite:", error);
@@ -969,8 +1161,11 @@ export const Guild: React.FC = () => {
         }
     };
 
+    // Quick Action States
+    const [triggerProjectCreation, setTriggerProjectCreation] = useState(false);
+
     // Loading State
-    if (myGuildConfig === undefined) {
+    if (myGuilds === undefined) {
         return (
             <div className="w-full h-[60vh] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -978,21 +1173,55 @@ export const Guild: React.FC = () => {
         );
     }
 
-    // NO GUILD STATE -> Show Browser or Creator
-    if (myGuildConfig === null) {
+    // If NO guilds at all, or explicitly in browse/create view
+    if (myGuilds.length === 0 || view === 'browse' || view === 'create') {
+        if (view === 'create') {
+            return <CreateGuildForm
+                onCancel={() => setView('browse')}
+                onSuccess={(newGuildId) => {
+                    setActiveGuildId(newGuildId);
+                    setView('dashboard');
+                }}
+            />;
+        }
         return (
             <div className="w-full pb-32 pl-4 pr-4">
-                {view === 'create' ? (
-                    <CreateGuildForm onCancel={() => setView('browse')} />
-                ) : (
-                    <GuildBrowser onCreateClick={() => setView('create')} />
+                {myGuilds.length > 0 && view === 'browse' && (
+                    <div className="max-w-4xl mx-auto mb-6">
+                        <button
+                            onClick={() => {
+                                setActiveGuildId(myGuilds[0].guild._id); // Go back to first guild if available
+                                setView('dashboard');
+                            }}
+                            className="flex items-center gap-2 text-slate-400 hover:text-white"
+                        >
+                            <ArrowLeft size={16} /> Back to My Guilds
+                        </button>
+                    </div>
                 )}
+                <GuildBrowser
+                    onCreateClick={() => setView('create')}
+                    onJoinClick={(newGuildId) => {
+                        setActiveGuildId(newGuildId);
+                        setView('dashboard');
+                    }}
+                    myGuildIds={myGuilds.map(g => g.guild._id)}
+                />
             </div>
         );
     }
 
-    // HAS GUILD STATE -> Show Dashboard
-    const { guild, memberCount, membership } = myGuildConfig;
+    // Confirm we have an active guild config selected
+    if (!activeGuildConfig) {
+        return (
+            <div className="w-full h-[60vh] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        );
+    }
+
+    // HAS GUILD STATE -> Show Dashboard for activeGuildId
+    const { guild, memberCount, membership } = activeGuildConfig;
     const isOfficer = membership.role === 'leader' || membership.role === 'officer';
 
     // Build user member object for the UI
@@ -1010,155 +1239,255 @@ export const Guild: React.FC = () => {
 
     return (
         <div className="w-full pb-32 pl-4 pr-4">
-            <div className="flex flex-col lg:flex-row gap-6">
-                {/* Main Content - Left/Center */}
-                <div className="flex-1 max-w-[900px] space-y-8">
-                    {/* Header */}
-                    <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-indigo-500/30">
-                            <Shield size={40} className="text-white" />
-                        </div>
-                        <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-wider mb-2">
-                            {guild.name}
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-                            {guild.description || "No description provided."}
-                        </p>
+            {/* Header Section */}
 
-                        {/* Guild Level & XP */}
-                        <div className="max-w-md mx-auto mt-6 mb-8">
-                            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                                <span>Level {guild.level}</span>
-                                <span className="text-white">{Math.floor(guild.xp)} / {guild.level * 1000} XP</span>
+
+            <div className="w-full flex flex-col lg:flex-row gap-8 items-start">
+                {/* Main Content - Left/Center */}
+                <div className="flex-1 min-w-0 space-y-8">
+                    {/* Header Section */}
+                    <div className="w-full bg-slate-800/50 border border-slate-700/50 p-6 rounded-2xl">
+                        <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                            <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+                                <Shield size={48} className="text-white" />
                             </div>
-                            <div className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative group">
-                                <div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-                                    style={{ width: `${Math.min(100, (guild.xp / (guild.level * 1000)) * 100)}%` }}
-                                />
-                                {/* Tooltip on hover */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 flex items-center justify-center text-[10px] font-mono text-white pointer-events-none">
-                                    {(guild.level * 1000) - Math.floor(guild.xp)} XP to Level {guild.level + 1}
+                            <div className="flex-1">
+                                <h1 className="text-3xl font-black text-white uppercase tracking-wider mb-2">
+                                    {guild.name}
+                                </h1>
+                                <p className="text-slate-400 max-w-2xl mx-auto md:mx-0 mb-4">
+                                    {guild.description || "No description provided."}
+                                </p>
+
+                                {/* Guild XP Bar */}
+                                <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-4 max-w-xl">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                            <Sparkles className="text-amber-400" size={14} />
+                                            Guild XP
+                                        </h3>
+                                        <span className="text-xs font-mono text-indigo-400">Level {guild.level}</span>
+                                    </div>
+                                    <div className="h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-amber-500 to-orange-600"
+                                            style={{ width: `${Math.min(100, (guild.xp / (guild.level * 1000)) * 100)}%` }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between mt-1 text-[10px] uppercase font-bold text-slate-500">
+                                        <span>{Math.floor(guild.xp)} XP</span>
+                                        <span>{guild.level * 1000} XP</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Navigation Tabs */}
-                        <div className="flex justify-center gap-4 mt-6">
-                            <button
-                                onClick={() => setActiveTab('overview')}
-                                className={`px-4 py-2 rounded-full font-bold text-sm transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                            >
-                                Overview
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('projects')}
-                                className={`px-4 py-2 rounded-full font-bold text-sm transition-colors ${activeTab === 'projects' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                            >
-                                Projects
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('chat')}
-                                className={`px-4 py-2 rounded-full font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-                            >
-                                <MessageCircle size={16} />
-                                Chat
-                            </button>
-                            {isOfficer && (
+                            {/* Treasury Section in Header */}
+                            <div className="flex flex-col gap-3 min-w-[200px] border-l border-slate-700/50 pl-6 md:ml-6 mt-6 md:mt-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Crown className="text-yellow-400" size={16} />
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Treasury</h3>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-900/50 p-2 rounded-lg border border-slate-700/50 text-center">
+                                        <span className="block text-lg font-black text-amber-400">{guild.treasury?.gold || 0}</span>
+                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Gold</span>
+                                    </div>
+                                    <div className="bg-slate-900/50 p-2 rounded-lg border border-slate-700/50 text-center">
+                                        <span className="block text-lg font-black text-cyan-400">{guild.treasury?.gems || 0}</span>
+                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Gems</span>
+                                    </div>
+                                </div>
                                 <button
-                                    onClick={() => setActiveTab('settings')}
-                                    className={`px-4 py-2 rounded-full font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
+                                    onClick={() => setIsDonating(true)}
+                                    className="w-full bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 rounded-lg py-2 text-xs font-bold transition-colors flex items-center justify-center gap-2"
                                 >
-                                    <Sliders size={16} />
-                                    Settings
+                                    <Plus size={14} />
+                                    Donate
                                 </button>
-                            )}
+                            </div>
                         </div>
+                    </div>
+                    {/* Navigation Tabs */}
+                    <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+                        <button
+                            onClick={() => setActiveTab('overview')}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                        >
+                            Overview
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('projects')}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'projects' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                        >
+                            Projects
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('chat')}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                        >
+                            <MessageCircle size={16} />
+                            Chat
+                        </button>
+                        {isOfficer && (
+                            <button
+                                onClick={() => setActiveTab('settings')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                            >
+                                <Sliders size={16} />
+                                Settings
+                            </button>
+                        )}
                     </div>
 
                     {activeTab === 'chat' ? (
                         <GuildChat guildId={guild._id} currentUserId={membership.userId} />
                     ) : activeTab === 'projects' ? (
-                        <GuildProjects guildId={guild._id} isOfficer={isOfficer} />
+                        <GuildProjects
+                            guildId={guild._id}
+                            isOfficer={isOfficer}
+                            forceCreate={triggerProjectCreation}
+                            onResetForceCreate={() => setTriggerProjectCreation(false)}
+                        />
                     ) : activeTab === 'settings' && isOfficer ? (
                         <GuildSettings guild={guild} membership={membership} members={guildMembers || []} />
                     ) : (
-                        <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {/* Announcements Section */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 flex flex-col overflow-hidden max-h-[600px] h-fit">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                         <Megaphone className="text-amber-400" size={20} />
                                         Announcements
                                     </h3>
-                                    {isOfficer && !isPostingAnnouncement && (
+                                    {isOfficer && (
                                         <button
-                                            onClick={() => setIsPostingAnnouncement(true)}
+                                            onClick={() => setIsPostPanelOpen(true)}
                                             className="text-xs font-bold text-indigo-400 hover:text-indigo-300"
                                         >
-                                            + Post Update
+                                            + Post
                                         </button>
                                     )}
                                 </div>
 
-                                {isPostingAnnouncement && (
-                                    <form onSubmit={handlePostAnnouncement} className="mb-6 bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                                        <textarea
-                                            value={announcementText}
-                                            onChange={(e) => setAnnouncementText(e.target.value)}
-                                            placeholder="Write an announcement..."
-                                            className="w-full bg-slate-800 border-none rounded-lg p-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 mb-2 resize-none"
-                                            rows={3}
-                                            autoFocus
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsPostingAnnouncement(false)}
-                                                className="px-3 py-1 text-xs font-bold text-slate-400 hover:text-white"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={!announcementText.trim()}
-                                                className="px-3 py-1 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:opacity-50"
-                                            >
-                                                Post
-                                            </button>
+                                {/* SIDE PANEL FOR POSTING */}
+                                {isPostPanelOpen && (
+                                    <div className="fixed inset-0 top-16 z-[100] flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                                        <div className="w-full max-w-xl bg-slate-900 border-l border-slate-700 h-[calc(100vh-64px)] flex flex-col shadow-2xl animate-in slide-in-from-right duration-500">
+                                            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                                                        <Megaphone className="text-indigo-400" size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <h2 className="text-xl font-bold text-white">{editingAnnouncementId ? "Edit Announcement" : "Create Announcement"}</h2>
+                                                        <p className="text-xs text-slate-500">{editingAnnouncementId ? "Update your message for the guild" : "Draft a rich-text message for the guild"}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setIsPostPanelOpen(false)}
+                                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                >
+                                                    <X size={20} />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex-1 overflow-hidden p-6">
+                                                <RichTextEditor
+                                                    value={announcementText}
+                                                    onChange={setAnnouncementText}
+                                                />
+                                            </div>
+
+                                            <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsPostPanelOpen(false);
+                                                        setEditingAnnouncementId(null);
+                                                        setAnnouncementText("");
+                                                    }}
+                                                    className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors"
+                                                >
+                                                    Discard
+                                                </button>
+                                                <button
+                                                    onClick={handlePostAnnouncement}
+                                                    disabled={!announcementText.trim() || announcementText === "<p><br></p>"}
+                                                    className="flex-1 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
+                                                >
+                                                    {editingAnnouncementId ? "Save Changes" : "Post Announcement"}
+                                                </button>
+                                            </div>
                                         </div>
-                                    </form>
+                                    </div>
                                 )}
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pr-2">
                                     {!announcements ? (
-                                        <div className="text-center text-slate-500 text-xs">Loading updates...</div>
+                                        <div className="text-center text-slate-500 text-xs">Loading...</div>
                                     ) : announcements.length === 0 ? (
                                         <div className="text-center text-slate-500 text-sm py-4 italic">
-                                            No announcements yet.
+                                            No announcements.
                                         </div>
                                     ) : (
                                         announcements.map((msg) => (
-                                            <div key={msg._id} className="relative bg-amber-500/5 border border-amber-500/20 rounded-lg p-4">
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
-                                                        <Megaphone size={14} className="text-amber-400" />
+                                            <div
+                                                key={msg._id}
+                                                onClick={() => setViewingAnnouncement(msg)}
+                                                className="relative bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 cursor-pointer hover:bg-amber-500/10 transition-colors group"
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                                        <Megaphone size={12} className="text-amber-400" />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex justify-between items-start">
-                                                            <span className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1 block">
-                                                                {msg.userName} • {new Date(msg._creationTime).toLocaleDateString()}
+                                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-1 block truncate">
+                                                                {msg.userName}
                                                             </span>
                                                             {isOfficer && (
-                                                                <button
-                                                                    onClick={() => handleDeleteAnnouncement(msg._id)}
-                                                                    className="text-slate-600 hover:text-red-400 transition-colors"
-                                                                >
-                                                                    <Trash2 size={12} />
-                                                                </button>
+                                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setEditingAnnouncementId(msg._id);
+                                                                            setAnnouncementText(msg.content);
+                                                                            setIsPostPanelOpen(true);
+                                                                        }}
+                                                                        className="text-slate-600 hover:text-indigo-400 transition-colors"
+                                                                    >
+                                                                        <Pencil size={10} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDeleteAnnouncement(msg._id);
+                                                                        }}
+                                                                        className="text-slate-600 hover:text-red-400 transition-colors"
+                                                                    >
+                                                                        <Trash2 size={10} />
+                                                                    </button>
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <p className="text-white text-sm whitespace-pre-wrap">{msg.content}</p>
+                                                        <div className="ql-snow announcement-reader compact">
+                                                            <div
+                                                                className="ql-editor max-h-full overflow-hidden line-clamp-3"
+                                                                dangerouslySetInnerHTML={{ __html: msg.content }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center justify-between mt-1 text-[9px] text-slate-600">
+                                                            <span>{new Date(msg._creationTime).toLocaleDateString()}</span>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleLike({ guildId: guild._id, messageId: msg._id });
+                                                                }}
+                                                                className={`flex items-center gap-1 hover:text-red-400 transition-colors ${msg.isLiked ? 'text-red-500' : ''}`}
+                                                            >
+                                                                <Heart size={10} className={msg.isLiked ? 'fill-current' : ''} />
+                                                                <span>{msg.likeCount || 0}</span>
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1167,89 +1496,98 @@ export const Guild: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Dashboard Cards (Treasury & Projects Summary) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                {/* Treasury Card */}
-                                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Crown className="text-yellow-400" size={24} />
-                                        <h3 className="text-lg font-bold text-white">Treasury</h3>
+                            {/* Projects Card */}
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 max-h-[600px] h-fit flex flex-col">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <Target className="text-indigo-400" size={20} />
+                                        <h3 className="text-lg font-bold text-white">Projects</h3>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 text-center">
-                                            <span className="block text-2xl font-black text-amber-400">{guild.treasury?.gold || 0}</span>
-                                            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Gold</span>
-                                        </div>
-                                        <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50 text-center">
-                                            <span className="block text-2xl font-black text-cyan-400">{guild.treasury?.gems || 0}</span>
-                                            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Gems</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsDonating(true)}
-                                        className="w-full mt-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/50 rounded-lg py-2 text-sm font-bold transition-colors flex items-center justify-center gap-2"
-                                    >
-                                        <Plus size={16} />
-                                        Donate to Treasury
-                                    </button>
+                                    {isOfficer && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveTab('projects');
+                                                setTriggerProjectCreation(true);
+                                            }}
+                                            className="text-xs font-bold text-indigo-400 hover:text-indigo-300"
+                                        >
+                                            + New
+                                        </button>
+                                    )}
                                 </div>
-
-                                {/* Active Projects Summary */}
-                                <div
+                                <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1">
+                                    {!guildProjects ? (
+                                        <div className="text-center text-slate-500 text-xs">Loading...</div>
+                                    ) : guildProjects.filter(p => p.status === 'active').length === 0 ? (
+                                        <div className="text-center text-slate-500 text-sm py-4 italic">
+                                            No active projects.
+                                        </div>
+                                    ) : (
+                                        guildProjects.filter(p => p.status === 'active').map((project) => (
+                                            <div
+                                                key={project._id}
+                                                onClick={() => setActiveTab('projects')}
+                                                className="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-3 cursor-pointer hover:border-indigo-500/40 transition-colors"
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <h4 className="text-sm font-bold text-white truncate">{project.title}</h4>
+                                                    <span className="text-[10px] text-indigo-400 font-mono">
+                                                        {project.completedTasks}/{project.targetTasks}
+                                                    </span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-indigo-500 rounded-full transition-all"
+                                                        style={{ width: `${Math.min(100, (project.completedTasks / project.targetTasks) * 100)}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                                <button
                                     onClick={() => setActiveTab('projects')}
-                                    className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 cursor-pointer hover:border-indigo-500 transition-colors group"
+                                    className="w-full mt-4 bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white text-center py-2 rounded-lg text-sm font-bold transition-all"
                                 >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-3">
-                                            <Target className="text-indigo-400 group-hover:text-indigo-300" size={24} />
-                                            <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">Projects</h3>
-                                        </div>
-                                        <ChevronDown className="-rotate-90 text-slate-500 group-hover:text-white" />
-                                    </div>
-                                    <p className="text-slate-400 text-sm mb-4">
-                                        Work together on guild goals to earn XP and rewards.
-                                    </p>
-                                    <div className="w-full bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 text-center py-2 rounded-lg text-sm font-bold group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                        View Projects
-                                    </div>
-                                </div>
+                                    View All Projects
+                                </button>
                             </div>
 
-                            {/* Activity Feed */}
-                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-                                <div className="flex items-center gap-3 mb-6">
+                            {/* ORPHANED: Activity Feed - Will be added back elsewhere later
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 h-full flex flex-col">
+                                <div className="flex items-center gap-3 mb-4">
                                     <Sparkles className="text-amber-400" size={20} />
-                                    <h3 className="text-lg font-bold text-white">Activity Feed</h3>
+                                    <h3 className="text-lg font-bold text-white">Activity</h3>
                                 </div>
-
-                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar max-h-[300px] pr-1">
                                     {!guildActivity ? (
-                                        <div className="text-center text-slate-500 text-sm py-4">Loading activity...</div>
+                                        <div className="text-center text-slate-500 text-sm py-4">Loading...</div>
                                     ) : guildActivity.length === 0 ? (
                                         <div className="text-center text-slate-500 text-sm py-4">No recent activity.</div>
                                     ) : (
                                         guildActivity.map((activity) => (
-                                            <div key={activity._id} className="flex items-start gap-3 text-sm">
-                                                <div className="w-8 h-8 bg-slate-700 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                            <div key={activity._id} className="flex items-start gap-2.5 text-xs">
+                                                <div className="w-6 h-6 bg-slate-700 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden mt-0.5">
                                                     {activity.userPictureUrl ? (
                                                         <img src={activity.userPictureUrl} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <span className="font-bold text-xs text-white uppercase">{activity.userName.substring(0, 2)}</span>
+                                                        <span className="font-bold text-[10px] text-white uppercase">{activity.userName.substring(0, 2)}</span>
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-slate-300">
+                                                    <p className="text-slate-300 leading-snug">
                                                         <span className="font-bold text-white">{activity.userName}</span>
                                                         {' '}
-                                                        {activity.type === 'joined' && 'joined the guild'}
-                                                        {activity.type === 'guild_created' && 'created the guild'}
-                                                        {activity.type === 'left' && 'left the guild'}
-                                                        {activity.type === 'kicked' && 'was kicked from the guild'}
-                                                        {activity.type === 'promoted' && `was promoted to ${activity.data.newRole}`}
-                                                        {activity.type === 'project_started' && `started project "${activity.data.projectTitle}"`}
-                                                        {activity.type === 'project_completed' && `completed project "${activity.data.projectTitle}"`}
+                                                        {activity.type === 'joined' && 'joined'}
+                                                        {activity.type === 'guild_created' && 'created guild'}
+                                                        {activity.type === 'left' && 'left'}
+                                                        {activity.type === 'kicked' && 'was kicked'}
+                                                        {activity.type === 'promoted' && `promoted to ${activity.data.newRole}`}
+                                                        {activity.type === 'project_started' && `started "${activity.data.projectTitle}"`}
+                                                        {activity.type === 'project_completed' && `completed "${activity.data.projectTitle}"`}
                                                     </p>
-                                                    <p className="text-xs text-slate-600 mt-0.5">
+                                                    <p className="text-[10px] text-slate-600 mt-0.5">
                                                         {new Date(activity.timestamp).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -1258,17 +1596,45 @@ export const Guild: React.FC = () => {
                                     )}
                                 </div>
                             </div>
+                            */}
 
-
-                        </>
+                            {/* Bounty Board */}
+                            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 max-h-[600px] h-fit flex flex-col">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Scroll className="text-amber-400" size={20} />
+                                        Bounty Board
+                                    </h3>
+                                    {isOfficer && (
+                                        <button
+                                            onClick={() => alert("Bounty System Coming Soon!")}
+                                            className="text-xs font-bold text-amber-400 hover:text-amber-300"
+                                        >
+                                            + New
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-1">
+                                    {/* Placeholder - replace with actual bounty data later */}
+                                    <div className="flex flex-col items-center justify-center text-center p-6 bg-slate-900/30 rounded-lg border border-slate-700/30 border-dashed">
+                                        <Scroll className="text-slate-600 mb-2" size={32} />
+                                        <p className="text-slate-500 text-sm font-medium">No active bounties</p>
+                                        <p className="text-slate-600 text-xs mt-1">Check back later for new guild tasks</p>
+                                    </div>
+                                </div>
+                                <button className="w-full mt-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 py-2 rounded-lg text-xs font-bold transition-colors">
+                                    View All Bounties
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* Guild Members Column - Right edge */}
-                <div className="w-full lg:w-auto lg:min-w-[420px] ml-auto">
-                    <div className="sticky top-20 space-y-4">
+                {/* Sidebar - Right */}
+                <div className="w-full lg:w-80 shrink-0">
+                    <div className="sticky top-4 space-y-6">
                         <div className="flex items-center justify-between px-2">
-                            <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                 <Users size={14} />
                                 Guild Members ({memberCount} / 50)
                             </h3>
@@ -1283,7 +1649,7 @@ export const Guild: React.FC = () => {
                                     <GuildMemberCard
                                         key={member._id}
                                         member={{
-                                            id: member._id, // use membership ID as generic ID
+                                            id: member._id,
                                             name: member.userName,
                                             level: member.level,
                                             role: member.role === 'leader' ? 'Leader' : member.role === 'officer' ? 'Officer' : 'Member',
@@ -1293,7 +1659,7 @@ export const Guild: React.FC = () => {
                                             companionId: member.companionId,
                                             backdropId: member.backdropId
                                         }}
-                                        isUser={false} // TODO: Check if this is current user
+                                        isUser={false}
                                     />
                                 ))
                             )}
@@ -1308,7 +1674,7 @@ export const Guild: React.FC = () => {
                             {isGeneratingInvite ? 'Generating...' : 'Invite Friends'}
                         </button>
 
-                        {/* Invite Code Modal / Popover (Inline for now) */}
+                        {/* Invite Code Modal */}
                         {inviteCode && (
                             <div className="bg-slate-800 border-2 border-indigo-500/50 rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
                                 <div className="flex justify-between items-start mb-2">
@@ -1329,8 +1695,46 @@ export const Guild: React.FC = () => {
                             </div>
                         )}
 
+                        {/* My Guilds List */}
+                        <div className="pt-6 border-t border-slate-700/50">
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Guilds</h4>
+                            <div className="space-y-2 mb-4">
+                                {myGuilds?.map((g) => (
+                                    <button
+                                        key={g.guild._id}
+                                        onClick={() => setActiveGuildId(g.guild._id)}
+                                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${activeGuildId === g.guild._id
+                                            ? 'bg-indigo-600/20 border border-indigo-500/50'
+                                            : 'hover:bg-slate-800 border border-transparent hover:border-slate-700'
+                                            }`}
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center font-bold text-white shrink-0">
+                                            {g.guild.name.substring(0, 1)}
+                                        </div>
+                                        <div className="text-left min-w-0">
+                                            <p className={`text-sm font-bold truncate ${activeGuildId === g.guild._id ? 'text-indigo-400' : 'text-slate-300'
+                                                }`}>
+                                                {g.guild.name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-600 flex items-center gap-1">
+                                                Lvl {g.guild.level} • {g.membership.role}
+                                            </p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={() => setView('browse')}
+                                className="w-full flex items-center justify-center gap-2 p-2 text-xs font-bold text-slate-500 hover:text-indigo-400 transition-colors border border-dashed border-slate-700 hover:border-indigo-500/50 rounded-lg"
+                            >
+                                <Plus size={14} />
+                                Join Another Guild
+                            </button>
+                        </div>
+
                         {/* Leave Guild Button */}
-                        <div className="mt-4 pt-4 border-t border-slate-700/50">
+                        <div className="pt-4 border-t border-slate-700/50">
                             <button
                                 onClick={handleLeave}
                                 disabled={isLeaving || membership.role === 'leader'}
@@ -1344,6 +1748,9 @@ export const Guild: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+
+
             {/* Donation Modal */}
             <DonationModal
                 isOpen={isDonating}
@@ -1352,6 +1759,66 @@ export const Guild: React.FC = () => {
                 userGems={stats.gems || 0}
                 onDonate={handleDonate}
             />
+
+            {/* Announcement Detail Modal */}
+            {viewingAnnouncement && (
+                <div
+                    className="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+                    onClick={() => setViewingAnnouncement(null)}
+                >
+                    <div
+                        className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="bg-gradient-to-r from-amber-600/20 to-amber-900/20 p-6 border-b border-amber-500/20 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                                    <Megaphone className="text-amber-400" size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white uppercase tracking-wider">Announcement</h3>
+                                    <p className="text-slate-400 text-sm">Posted by {viewingAnnouncement.userName} • {new Date(viewingAnnouncement._creationTime).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setViewingAnnouncement(null)}
+                                className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar announcement-modal-reader">
+                            <ReactQuill
+                                value={viewingAnnouncement.content}
+                                readOnly={true}
+                                theme="bubble"
+                                modules={{ toolbar: false }}
+                                className="h-full"
+                            />
+                        </div>
+
+                        <div className="p-6 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                            <button
+                                onClick={() => toggleLike({ guildId: guild._id, messageId: viewingAnnouncement._id })}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${viewingAnnouncement.isLiked ? 'text-red-500 bg-red-500/10' : 'text-slate-400 hover:text-red-400 hover:bg-slate-800'}`}
+                            >
+                                <Heart className={viewingAnnouncement.isLiked ? 'fill-current' : ''} />
+                                <span className="font-bold">{viewingAnnouncement.likeCount || 0} Likes</span>
+                            </button>
+
+                            <button
+                                onClick={() => setViewingAnnouncement(null)}
+                                className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+export default Guild;

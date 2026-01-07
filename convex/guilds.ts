@@ -47,7 +47,45 @@ export const MAX_GUILD_MEMBERS = 50;
 // QUERIES
 // ============================================
 
-// Get current user's guild membership
+// Get all guild memberships for the current user
+export const getMyGuilds = query({
+    args: {},
+    handler: async (ctx) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) return [];
+
+        const memberships = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .collect();
+
+        if (memberships.length === 0) return [];
+
+        // Fetch guild details for each membership
+        const guildsWithDetails = await Promise.all(
+            memberships.map(async (membership) => {
+                const guild = await ctx.db.get(membership.guildId);
+                if (!guild) return null;
+
+                const members = await ctx.db
+                    .query("guildMembers")
+                    .withIndex("by_guild", (q) => q.eq("guildId", membership.guildId))
+                    .collect();
+
+                return {
+                    guild,
+                    membership,
+                    memberCount: members.length,
+                };
+            })
+        );
+
+        return guildsWithDetails.filter((g) => g !== null);
+    },
+});
+
+// Deprecated (kept for backward compatibility lightly, but ideally should switch frontend)
+// This will just return the first one found, or null
 export const getMyGuild = query({
     args: {},
     handler: async (ctx) => {
@@ -64,7 +102,6 @@ export const getMyGuild = query({
         const guild = await ctx.db.get(membership.guildId);
         if (!guild) return null;
 
-        // Get member count
         const members = await ctx.db
             .query("guildMembers")
             .withIndex("by_guild", (q) => q.eq("guildId", membership.guildId))
@@ -221,21 +258,14 @@ export const createGuild = mutation({
         const userId = await getCurrentUserId(ctx);
         if (!userId) throw new Error("Not authenticated");
 
-        // Check if user is already in a guild
-        const existingMembership = await ctx.db
+        // Check max guilds (5)
+        const myMemberships = await ctx.db
             .query("guildMembers")
             .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
+            .collect();
 
-        if (existingMembership) {
-            // Self-healing for ghost memberships
-            const existingGuild = await ctx.db.get(existingMembership.guildId);
-            if (!existingGuild) {
-                console.log("Found ghost membership (create). Deleting...");
-                await ctx.db.delete(existingMembership._id);
-            } else {
-                throw new Error("You must leave your current guild before creating a new one");
-            }
+        if (myMemberships.length >= 5) {
+            throw new Error("You have joined the maximum number of guilds (5). Leave one to create a new one.");
         }
 
         // Create the guild
@@ -282,21 +312,25 @@ export const joinGuild = mutation({
         const userId = await getCurrentUserId(ctx);
         if (!userId) throw new Error("Not authenticated");
 
-        // Check if already in a guild
+        // Check if already in THIS guild
         const existing = await ctx.db
             .query("guildMembers")
             .withIndex("by_user", (q) => q.eq("userId", userId))
+            .filter(q => q.eq(q.field("guildId"), args.guildId))
             .first();
 
         if (existing) {
-            // Check if the guild actually exists (Self-healing for ghost memberships)
-            const existingGuild = await ctx.db.get(existing.guildId);
-            if (!existingGuild) {
-                console.log("Found ghost membership for non-existent guild. Deleting...");
-                await ctx.db.delete(existing._id);
-            } else {
-                throw new Error("You must leave your current guild first");
-            }
+            throw new Error("You are already a member of this guild");
+        }
+
+        // Check max guilds (5)
+        const allMyMemberships = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .collect();
+
+        if (allMyMemberships.length >= 5) {
+            throw new Error("You have reached the maximum number of guilds (5).");
         }
 
         const guild = await ctx.db.get(args.guildId);
@@ -338,17 +372,18 @@ export const joinGuild = mutation({
 
 // Leave guild
 export const leaveGuild = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: { guildId: v.id("guilds") },
+    handler: async (ctx, args) => {
         const userId = await getCurrentUserId(ctx);
         if (!userId) throw new Error("Not authenticated");
 
         const membership = await ctx.db
             .query("guildMembers")
             .withIndex("by_user", (q) => q.eq("userId", userId))
+            .filter(q => q.eq(q.field("guildId"), args.guildId))
             .first();
 
-        if (!membership) throw new Error("You are not in a guild");
+        if (!membership) throw new Error("You are not in this guild");
 
         const guild = await ctx.db.get(membership.guildId);
 
@@ -589,6 +624,14 @@ export const createProject = mutation({
             gold: v.number(),
             gems: v.optional(v.number()),
         }),
+        tasks: v.optional(v.array(v.object({
+            id: v.string(),
+            name: v.string(),
+            description: v.optional(v.string()),
+            xpReward: v.number(),
+            goldReward: v.number(),
+            difficulty: v.string(),
+        }))),
     },
     handler: async (ctx, args) => {
         const userId = await getCurrentUserId(ctx);
@@ -624,10 +667,12 @@ export const createProject = mutation({
             title: args.title,
             description: args.description,
             status: "active",
-            targetTasks: args.targetTasks,
+            targetTasks: args.targetTasks || args.tasks?.length || 100, // Use task count or fallback
             completedTasks: 0,
             contributors: [],
             rewards: args.rewards,
+            storedTasks: args.tasks, // Store the specific tasks
+            joinedUserIds: [], // Init empty
             createdAt: Date.now(),
         });
 
@@ -638,6 +683,37 @@ export const createProject = mutation({
         });
 
         return projectId;
+    },
+});
+
+export const joinProject = mutation({
+    args: {
+        guildId: v.id("guilds"),
+        projectId: v.id("guildProjects"),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) throw new Error("Project not found");
+
+        if (project.joinedUserIds?.includes(userId)) {
+            throw new Error("Already joined this project");
+        }
+
+        // Add user to joined list
+        await ctx.db.patch(args.projectId, {
+            joinedUserIds: [...(project.joinedUserIds || []), userId]
+        });
+
+        await logGuildActivity(ctx, args.guildId, userId, "project_contribution", { // Reusing type or add 'project_join' later
+            projectTitle: project.title,
+            action: "joined"
+        });
+
+        // Return the stored tasks so the client can add them to their personal state
+        return project.storedTasks || [];
     },
 });
 
