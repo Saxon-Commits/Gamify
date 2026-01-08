@@ -686,6 +686,67 @@ export const createProject = mutation({
     },
 });
 
+export const updateProject = mutation({
+    args: {
+        projectId: v.id("guildProjects"),
+        title: v.optional(v.string()),
+        description: v.optional(v.string()),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) throw new Error("Project not found");
+
+        const hasPerms = await hasPermission(ctx, project.guildId, userId, "officer");
+        if (!hasPerms) throw new Error("Only officers can update projects");
+
+        const updates: any = {};
+        if (args.title) updates.title = args.title;
+        if (args.description) updates.description = args.description;
+
+        await ctx.db.patch(args.projectId, updates);
+        return true;
+    },
+});
+
+export const deleteProject = mutation({
+    args: {
+        projectId: v.id("guildProjects"),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) throw new Error("Project not found");
+
+        const hasPerms = await hasPermission(ctx, project.guildId, userId, "officer");
+        if (!hasPerms) throw new Error("Only officers can delete projects");
+
+        // Refund Treasury
+        const guild = await ctx.db.get(project.guildId);
+        if (guild && project.status === "active") {
+            await ctx.db.patch(project.guildId, {
+                treasury: {
+                    ...guild.treasury,
+                    gold: (guild.treasury.gold || 0) + (project.rewards.gold || 0),
+                    gems: (guild.treasury.gems || 0) + (project.rewards.gems || 0),
+                }
+            });
+        }
+
+        await ctx.db.delete(args.projectId);
+
+        await logGuildActivity(ctx, project.guildId, userId, "project_deleted", {
+            projectTitle: project.title
+        });
+
+        return true;
+    },
+});
+
 export const joinProject = mutation({
     args: {
         guildId: v.id("guilds"),

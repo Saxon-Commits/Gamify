@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../convex/_generated/api';
-import { Id } from '../convex/_generated/dataModel';
+import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 import { Send, User as UserIcon } from 'lucide-react';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore } from '../../store/useGameStore';
 
 interface GuildChatProps {
     guildId: Id<"guilds">;
@@ -85,8 +85,8 @@ export const GuildChat: React.FC<GuildChatProps> = ({ guildId, currentUserId }) 
                                         <span className="text-[10px] text-slate-600">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                     <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed ${isMe
-                                            ? 'bg-indigo-600 text-white rounded-tr-none'
-                                            : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
+                                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                                        : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'
                                         }`}>
                                         {msg.content}
                                     </div>
