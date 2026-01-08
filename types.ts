@@ -206,6 +206,10 @@ export interface GameState {
   addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'date'>) => void;
   deleteJournalEntry: (id: string) => void;
   updateJournalEntry: (entry: JournalEntry) => void;
+
+  // UI State
+  isSidePanelOpen: boolean;
+  setSidePanelOpen: (isOpen: boolean) => void;
 }
 
 export interface JournalEntry {

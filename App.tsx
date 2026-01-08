@@ -18,6 +18,7 @@ import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
 import { Grindstone } from './pages/tools/Grindstone';
 import { MindWipe } from './pages/tools/MindWipe';
+import { InvitePage } from './pages/InvitePage';
 
 
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
@@ -125,11 +126,21 @@ const App: React.FC = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
 
-        {/* Full Screen Tools - Nested under /app? Or separate? 
-            Let's keep them separate but protected if desired. For now, open.
-        */}
+        {/* Full Screen Tools */}
         <Route path="/app/tools/grindstone" element={<Grindstone />} />
         <Route path="/app/tools/mind-wipe" element={<MindWipe />} />
+
+        {/* Invite Route - Requires Auth */}
+        <Route path="/invite/:code" element={
+          <>
+            <SignedIn>
+              <InvitePage />
+            </SignedIn>
+            <SignedOut>
+              <RedirectToSignIn />
+            </SignedOut>
+          </>
+        } />
 
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

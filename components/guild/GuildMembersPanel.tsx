@@ -64,6 +64,7 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
             setInviteCode(code);
         } catch (error) {
             console.error("Failed to create invite:", error);
+            alert("Failed to create invite link. You may not have permission.");
         } finally {
             setIsGeneratingInvite(false);
         }

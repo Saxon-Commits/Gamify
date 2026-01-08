@@ -211,85 +211,98 @@ export const Guild: React.FC = () => {
             <div className="w-full flex flex-col lg:flex-row gap-8 items-start">
                 {/* Main Content - Left/Center */}
                 <div className="flex-1 min-w-0 space-y-8">
-                    {/* Header Section */}
-                    <GuildHeader guild={guild} onDonateClick={() => setIsDonating(true)} />
-                    {/* Navigation Tabs */}
-                    <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-4">
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                        >
-                            Overview
-                        </button>
-                        <button
-                            onClick={() => {
-                                setActiveTab('projects');
-                                setSelectedGuildProjectId(null); // Reset selection when clicking tab
-                            }}
-                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'projects' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                        >
-                            Projects
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('chat')}
-                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                        >
-                            <MessageCircle size={16} />
-                            Chat
-                        </button>
-                        {isOfficer && (
-                            <button
-                                onClick={() => setActiveTab('settings')}
-                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
-                            >
-                                <Sliders size={16} />
-                                Settings
-                            </button>
-                        )}
-                    </div>
 
-                    {activeTab === 'chat' ? (
-                        <GuildChat guildId={guild._id} currentUserId={membership.userId} />
-                    ) : activeTab === 'projects' ? (
+                    {selectedGuildProjectId ? (
+                        // Full Page Project Detail View
                         <GuildProjectsView
                             guildId={guild._id}
                             isOfficer={isOfficer}
                             forceCreate={triggerProjectCreation}
                             onResetForceCreate={() => setTriggerProjectCreation(false)}
                             viewProjectId={selectedGuildProjectId}
+                            onSelectProject={setSelectedGuildProjectId}
                         />
-                    ) : activeTab === 'settings' && isOfficer ? (
-                        <GuildSettings guild={guild} membership={membership} members={guildMembers || []} />
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {/* Announcements Section */}
-                            <AnnouncementsCard guildId={guild._id} isOfficer={isOfficer} />
+                        // Standard Layout with Header & Tabs
+                        <>
+                            {/* Header Section */}
+                            <GuildHeader guild={guild} onDonateClick={() => setIsDonating(true)} />
+                            {/* Navigation Tabs */}
+                            <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+                                <button
+                                    onClick={() => setActiveTab('overview')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                    Overview
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('projects');
+                                        setSelectedGuildProjectId(null); // Reset selection when clicking tab
+                                    }}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'projects' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                    Projects
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('chat')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                    <MessageCircle size={16} />
+                                    Chat
+                                </button>
+                                {isOfficer && (
+                                    <button
+                                        onClick={() => setActiveTab('settings')}
+                                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                    >
+                                        <Sliders size={16} />
+                                        Settings
+                                    </button>
+                                )}
+                            </div>
 
-                            {/* Projects Card */}
-                            <ProjectsCard
-                                guildId={guild._id}
-                                isOfficer={isOfficer}
-                                onViewAll={() => {
-                                    setActiveTab('projects');
-                                    setSelectedGuildProjectId(null);
-                                }}
-                                onCreate={() => {
-                                    setActiveTab('projects');
-                                    setTriggerProjectCreation(true);
-                                }}
-                                onProjectClick={(projectId) => {
-                                    setSelectedGuildProjectId(projectId);
-                                    setActiveTab('projects');
-                                }}
-                            />
+                            {activeTab === 'chat' ? (
+                                <GuildChat guildId={guild._id} currentUserId={membership.userId} />
+                            ) : activeTab === 'projects' ? (
+                                <GuildProjectsView
+                                    guildId={guild._id}
+                                    isOfficer={isOfficer}
+                                    forceCreate={triggerProjectCreation}
+                                    onResetForceCreate={() => setTriggerProjectCreation(false)}
+                                    viewProjectId={selectedGuildProjectId}
+                                    onSelectProject={setSelectedGuildProjectId}
+                                />
+                            ) : activeTab === 'settings' && isOfficer ? (
+                                <GuildSettings guild={guild} membership={membership} members={guildMembers || []} />
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {/* Announcements Section */}
+                                    <AnnouncementsCard guildId={guild._id} isOfficer={isOfficer} />
 
-                            {/* Activity Feed - Orphaned for now 
-                            <GuildActivityFeed guildId={guild._id} /> 
-                            */}
+                                    {/* Projects Card */}
+                                    <ProjectsCard
+                                        guildId={guild._id}
+                                        isOfficer={isOfficer}
+                                        onViewAll={() => {
+                                            setActiveTab('projects');
+                                            setSelectedGuildProjectId(null);
+                                        }}
+                                        onCreate={() => {
+                                            setActiveTab('projects');
+                                            setTriggerProjectCreation(true);
+                                        }}
+                                        onProjectClick={(projectId) => {
+                                            setSelectedGuildProjectId(projectId);
+                                            // setActiveTab('projects'); // No longer needed as we render based on selectedGuildProjectId
+                                        }}
+                                    />
 
-                            {/* Bounty Board */}
-                            <BountyBoardCard isOfficer={isOfficer} />
-                        </div>
+                                    {/* Bounty Board */}
+                                    <BountyBoardCard isOfficer={isOfficer} />
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 

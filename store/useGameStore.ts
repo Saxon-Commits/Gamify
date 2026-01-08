@@ -188,6 +188,7 @@ export const useGameStore = create<GameState>()(
       skillEdges: INITIAL_EDGES,
       vitality: INITIAL_VITALITY,
       isTutorialActive: false,
+      isSidePanelOpen: false,
       journalEntries: [],
 
       addJournalEntry: (entry) => {
@@ -198,6 +199,8 @@ export const useGameStore = create<GameState>()(
         };
         set((state) => ({ journalEntries: [newEntry, ...state.journalEntries] }));
       },
+
+      setSidePanelOpen: (isOpen) => set({ isSidePanelOpen: isOpen }),
 
       deleteJournalEntry: (id) => {
         set((state) => ({

@@ -7,6 +7,8 @@ import { AnnouncementListItem } from './AnnouncementListItem';
 import { AnnouncementModal } from './AnnouncementModal';
 import { AnnouncementEditor } from './AnnouncementEditor';
 
+import { useGameStore } from '../../store/useGameStore';
+
 interface AnnouncementsCardProps {
     guildId: Id<"guilds">;
     isOfficer: boolean;
@@ -25,11 +27,13 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
 
     // Local state
     const [announcementText, setAnnouncementText] = useState("");
-    const [isPostPanelOpen, setIsPostPanelOpen] = useState(false);
+    const { isSidePanelOpen, setSidePanelOpen } = useGameStore();
+    // const [isPostPanelOpen, setIsPostPanelOpen] = useState(false); // REMOVED
     const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
     const [viewingAnnouncement, setViewingAnnouncement] = useState<any>(null);
 
-    // Handlers
+    // ... (handlers unchanged for now, skipping to problematic part) ...
+
     const handlePostAnnouncement = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!announcementText.trim() || announcementText === "<p><br></p>") return;
@@ -46,7 +50,7 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
             }
             setAnnouncementText("");
             setEditingAnnouncementId(null);
-            setIsPostPanelOpen(false);
+            setSidePanelOpen(false);
         } catch (error) {
             console.error("Failed to post/update announcement", error);
         }
@@ -72,7 +76,7 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
                     </h3>
                     {isOfficer && (
                         <button
-                            onClick={() => setIsPostPanelOpen(true)}
+                            onClick={() => setSidePanelOpen(true)}
                             className="text-xs font-bold text-indigo-400 hover:text-indigo-300"
                         >
                             + Post
@@ -81,18 +85,18 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
                 </div>
 
                 {/* Editor Panel */}
-                {isPostPanelOpen && (
+                {isSidePanelOpen && (
                     <AnnouncementEditor
                         isEditing={!!editingAnnouncementId}
                         content={announcementText}
                         onContentChange={setAnnouncementText}
                         onSubmit={handlePostAnnouncement}
                         onDiscard={() => {
-                            setIsPostPanelOpen(false);
+                            setSidePanelOpen(false);
                             setEditingAnnouncementId(null);
                             setAnnouncementText("");
                         }}
-                        onClose={() => setIsPostPanelOpen(false)}
+                        onClose={() => setSidePanelOpen(false)}
                     />
                 )}
 
@@ -115,7 +119,7 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
                                 onEdit={() => {
                                     setEditingAnnouncementId(msg._id);
                                     setAnnouncementText(msg.content);
-                                    setIsPostPanelOpen(true);
+                                    setSidePanelOpen(true);
                                 }}
                                 onDelete={() => handleDeleteAnnouncement(msg._id)}
                                 onToggleLike={() => toggleLike({ guildId, messageId: msg._id })}

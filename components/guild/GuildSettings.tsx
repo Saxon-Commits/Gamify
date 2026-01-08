@@ -1,13 +1,93 @@
 import React, { useState } from 'react';
-import { Sliders, Users, Shield } from 'lucide-react';
-import { useMutation } from "convex/react";
+import { Sliders, Users, Shield, Link as LinkIcon, Copy, Trash2, Plus } from 'lucide-react';
+import { useMutation, useQuery } from "convex/react";
 import { api } from '../../convex/_generated/api';
+import { Id } from '../../convex/_generated/dataModel';
 
 interface GuildSettingsProps {
     guild: any;
     membership: any;
     members: any[];
 }
+
+const InviteManagement = ({ guildId }: { guildId: Id<"guilds"> }) => {
+    const invites = useQuery(api.guilds.getGuildInvites, { guildId }) || [];
+    const createInvite = useMutation(api.guilds.createInvite);
+    const revokeInvite = useMutation(api.guilds.revokeInvite);
+    const [isCreating, setIsCreating] = useState(false);
+
+    const handleCreate = async () => {
+        setIsCreating(true);
+        try {
+            await createInvite({ guildId });
+        } catch (error) {
+            console.error("Failed to create invite:", error);
+            alert("Failed to create invite.");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleCopy = (code: string) => {
+        const url = `${window.location.origin}/#/invite/${code}`;
+        navigator.clipboard.writeText(url);
+        alert("Invite link copied to clipboard!");
+    };
+
+    return (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <LinkIcon className="text-slate-400" />
+                    Invite Links
+                </h3>
+                <button
+                    onClick={handleCreate}
+                    disabled={isCreating}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+                >
+                    <Plus size={16} />
+                    Create Link
+                </button>
+            </div>
+
+            <div className="space-y-3">
+                {invites.length === 0 ? (
+                    <p className="text-slate-500 text-sm italic">No active invite links.</p>
+                ) : (
+                    invites.map((invite) => (
+                        <div key={invite._id} className="flex items-center justify-between bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                            <div className="flex flex-col">
+                                <span className="font-mono text-indigo-400 font-bold tracking-wider">{invite.inviteCode}</span>
+                                <span className="text-[10px] text-slate-500">Expires: {new Date(invite.expiresAt!).toLocaleDateString()}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleCopy(invite.inviteCode!)}
+                                    className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                                    title="Copy Link"
+                                >
+                                    <Copy size={16} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (confirm("Revoke this invite link?")) {
+                                            revokeInvite({ inviteId: invite._id });
+                                        }
+                                    }}
+                                    className="p-2 hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                                    title="Revoke Link"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
 
 export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership, members }) => {
     const updateGuild = useMutation(api.guilds.updateGuild);
@@ -20,6 +100,13 @@ export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership,
     const [description, setDescription] = useState(guild.description || "");
     const [isPublic, setIsPublic] = useState(guild.settings.isPublic);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Sync state when guild prop changes (e.g. switching guilds)
+    React.useEffect(() => {
+        setName(guild.name);
+        setDescription(guild.description || "");
+        setIsPublic(guild.settings.isPublic);
+    }, [guild]);
 
     const isLeader = membership.role === 'leader';
 
@@ -198,6 +285,11 @@ export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership,
                     ))}
                 </div>
             </div>
+
+            {/* Invite Management */}
+            {(isLeader || membership.role === 'officer') && (
+                <InviteManagement guildId={guild._id} />
+            )}
 
             {/* Danger Zone */}
             {isLeader && (

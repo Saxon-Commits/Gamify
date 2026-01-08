@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Users, Plus, Search, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Plus, Search, Trophy, KeyRound, ArrowRight } from 'lucide-react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from '../../convex/_generated/api';
 
@@ -13,6 +14,8 @@ export const GuildBrowser: React.FC<GuildBrowserProps> = ({ onCreateClick, onJoi
     const publicGuilds = useQuery(api.guilds.getPublicGuilds);
     const joinGuild = useMutation(api.guilds.joinGuild);
     const [search, setSearch] = useState('');
+    const [inviteCode, setInviteCode] = useState('');
+    const navigate = useNavigate();
 
     const handleJoin = async (guildId: any) => {
         if (!confirm("Join this guild?")) return;
@@ -24,10 +27,10 @@ export const GuildBrowser: React.FC<GuildBrowserProps> = ({ onCreateClick, onJoi
         }
     };
 
-    const handleJoinByCode = async (e: React.FormEvent) => {
+    const handleJoinByCode = (e: React.FormEvent) => {
         e.preventDefault();
-        // Implement invite code join later if needed or via URL
-        alert("Invite code joining via URL is supported. Please use the full link.");
+        if (!inviteCode.trim()) return;
+        navigate(`/invite/${inviteCode.trim()}`);
     };
 
     const filteredGuilds = publicGuilds?.filter(g =>
@@ -37,14 +40,14 @@ export const GuildBrowser: React.FC<GuildBrowserProps> = ({ onCreateClick, onJoi
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center">
-                <Users size={48} className="mx-auto text-indigo-400 mb-4" />
-                <h2 className="text-3xl font-bold text-white mb-2">Find Your Community</h2>
-                <p className="text-slate-400 mb-8 max-w-lg mx-auto">
-                    Join an existing guild to find like-minded players, or establish your own order.
-                </p>
-
-                <div className="flex gap-4 justify-center">
+            <div className="grid md:grid-cols-2 gap-6">
+                {/* Create New Guild Call to Action */}
+                <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                    <Users size={40} className="text-indigo-400 mb-4" />
+                    <h2 className="text-2xl font-bold text-white mb-2">Create Community</h2>
+                    <p className="text-slate-400 mb-6 text-sm">
+                        Establish your own order and invite others to join your cause.
+                    </p>
                     <button
                         onClick={onCreateClick}
                         className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2 rounded-lg font-bold transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center gap-2"
@@ -52,7 +55,31 @@ export const GuildBrowser: React.FC<GuildBrowserProps> = ({ onCreateClick, onJoi
                         <Plus size={18} />
                         Create New Guild
                     </button>
-                    {/* Add Invite Code Input Trigger if needed */}
+                </div>
+
+                {/* Join by Code Call to Action */}
+                <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 text-center flex flex-col items-center justify-center">
+                    <KeyRound size={40} className="text-emerald-400 mb-4" />
+                    <h2 className="text-2xl font-bold text-white mb-2">Have an Invite?</h2>
+                    <p className="text-slate-400 mb-6 text-sm">
+                        Enter your private invite code below to join a hidden guild.
+                    </p>
+                    <form onSubmit={handleJoinByCode} className="flex gap-2 w-full max-w-xs">
+                        <input
+                            type="text"
+                            placeholder="Enter Code (e.g. X8J2P)"
+                            value={inviteCode}
+                            onChange={(e) => setInviteCode(e.target.value)}
+                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-center font-mono uppercase tracking-widest focus:ring-2 focus:ring-emerald-500 text-sm"
+                        />
+                        <button
+                            type="submit"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg transition-colors"
+                            title="Join"
+                        >
+                            <ArrowRight size={18} />
+                        </button>
+                    </form>
                 </div>
             </div>
 

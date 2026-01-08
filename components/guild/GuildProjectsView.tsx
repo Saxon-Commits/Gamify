@@ -11,11 +11,12 @@ interface GuildProjectsViewProps {
     forceCreate?: boolean;
     onResetForceCreate?: () => void;
     viewProjectId?: Id<"guildProjects"> | null;
+    onSelectProject: (projectId: Id<"guildProjects"> | null) => void;
 }
 
 import { GuildProjectDetail } from './GuildProjectDetail';
 
-export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, isOfficer, forceCreate, onResetForceCreate, viewProjectId }) => {
+export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, isOfficer, forceCreate, onResetForceCreate, viewProjectId, onSelectProject }) => {
     const projects = useQuery(api.guilds.getGuildProjects, { guildId });
     const guildData = useQuery(api.guilds.getGuild, { guildId });
     const createProject = useMutation(api.guilds.createProject);
@@ -25,18 +26,11 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     const [contributionAmount, setContributionAmount] = useState<Record<string, number>>({});
     const [rewardGold, setRewardGold] = useState(100);
     const [rewardGems, setRewardGems] = useState(0);
-    const [selectedProjectId, setSelectedProjectId] = useState<Id<"guildProjects"> | null>(null);
 
     const [projectTasks, setProjectTasks] = useState<any[]>([]);
     const [newTaskName, setNewTaskName] = useState('');
     const [newTaskXp, setNewTaskXp] = useState(50);
     const [newTaskDiff, setNewTaskDiff] = useState('EASY');
-
-    useEffect(() => {
-        if (viewProjectId) {
-            setSelectedProjectId(viewProjectId);
-        }
-    }, [viewProjectId]);
 
     useEffect(() => {
         if (forceCreate && isOfficer) {
@@ -136,7 +130,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     const handleDeleteProject = async (projectId: Id<"guildProjects">) => {
         try {
             await deleteProject({ projectId });
-            setSelectedProjectId(null); // Return to list view
+            onSelectProject(null); // Return to list view
         } catch (e: any) {
             alert("Failed to delete project: " + e.message);
         }
@@ -151,14 +145,14 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     };
 
     // --- RENDER DETAIL VIEW IF SELECTED ---
-    if (selectedProjectId) {
-        const selectedProject = projects?.find(p => p._id === selectedProjectId);
+    if (viewProjectId) {
+        const selectedProject = projects?.find(p => p._id === viewProjectId);
         if (selectedProject) {
             const isJoined = me && selectedProject.joinedUserIds?.includes(me._id);
             return (
                 <GuildProjectDetail
                     project={selectedProject}
-                    onBack={() => setSelectedProjectId(null)}
+                    onBack={() => onSelectProject(null)}
                     isOfficer={isOfficer}
                     isJoined={!!isJoined}
                     onJoin={() => handleJoin(selectedProject._id)}
@@ -299,7 +293,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                         return (
                             <div
                                 key={project._id}
-                                onClick={() => setSelectedProjectId(project._id)}
+                                onClick={() => onSelectProject(project._id as Id<"guildProjects">)}
                                 className="bg-slate-800 border border-slate-700 rounded-xl p-5 hover:border-slate-600 hover:bg-slate-800/80 transition-all cursor-pointer group"
                             >
                                 <div className="flex items-start justify-between mb-4">

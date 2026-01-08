@@ -16,7 +16,7 @@ const PLAYLIST = [
 
 export const BackgroundMusicPlayer: React.FC = () => {
     const audioRef = useRef<HTMLAudioElement>(null);
-    const { settings } = useGameStore();
+    const { settings, isSidePanelOpen } = useGameStore();
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(() => Math.floor(Math.random() * PLAYLIST.length));
     const [hasInteracted, setHasInteracted] = useState(false);
@@ -83,7 +83,9 @@ export const BackgroundMusicPlayer: React.FC = () => {
                 onError={(e) => console.error("Audio error:", e)}
             />
 
-            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+            <div
+                className={`fixed bottom-6 z-50 flex items-center gap-2 transition-all duration-500 ease-in-out ${isSidePanelOpen ? 'right-[38rem]' : 'right-6'}`}
+            >
                 {/* Track Info (Hover to see) */}
                 <div className="hidden group-hover:block absolute bottom-full right-0 mb-2 whitespace-nowrap bg-slate-900 border border-slate-700 px-3 py-1 rounded-lg text-xs text-slate-400">
                     Now Playing: {PLAYLIST[currentTrackIndex].split('/').pop()?.split(' - ')[0]?.replace('ES_', '')}

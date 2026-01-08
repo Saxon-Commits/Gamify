@@ -891,10 +891,13 @@ export const createInvite = mutation({
         if (!userId) throw new Error("Not authenticated");
 
         // Check if member
-        const member = await ctx.db
+        // Check if member
+        const members = await ctx.db
             .query("guildMembers")
             .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
+            .collect();
+
+        const member = members.find(m => m.guildId === args.guildId);
 
         if (!member || member.guildId !== args.guildId) throw new Error("Not a member of this guild");
 
@@ -929,19 +932,19 @@ export const joinGuildByCode = mutation({
         if (invite.expiresAt && invite.expiresAt < Date.now()) throw new Error("Invite expired");
 
         // Check if already in a guild
-        const existing = await ctx.db
+        // Check existing memberships
+        const existingMemberships = await ctx.db
             .query("guildMembers")
             .withIndex("by_user", (q) => q.eq("userId", userId))
-            .first();
+            .collect();
 
-        if (existing) {
-            // Self-healing
-            const existingGuild = await ctx.db.get(existing.guildId);
-            if (!existingGuild) {
-                await ctx.db.delete(existing._id);
-            } else {
-                throw new Error("You must leave your current guild first");
-            }
+        // Idempotency: If already in THIS guild, just return success
+        if (existingMemberships.some(m => m.guildId === invite.guildId)) {
+            return invite.guildId;
+        }
+
+        if (existingMemberships.length >= 5) {
+            throw new Error("You have reached the maximum limit of 5 guilds.");
         }
 
         // Check member limit
@@ -968,6 +971,43 @@ export const joinGuildByCode = mutation({
         await logGuildActivity(ctx, invite.guildId, userId, "joined", { userName: user?.name ?? "Unknown", method: "invite" });
 
         return invite.guildId;
+    },
+});
+
+export const getGuildInvites = query({
+    args: { guildId: v.id("guilds") },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) return [];
+
+        // Check if user is officer+
+        const hasPerms = await hasPermission(ctx, args.guildId, userId, "officer");
+        if (!hasPerms) return [];
+
+        const invites = await ctx.db
+            .query("guildInvites")
+            .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
+            .filter((q) => q.eq(q.field("status"), "active"))
+            .collect();
+
+        return invites;
+    },
+});
+
+export const revokeInvite = mutation({
+    args: { inviteId: v.id("guildInvites") },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const invite = await ctx.db.get(args.inviteId);
+        if (!invite) throw new Error("Invite not found");
+
+        const hasPerms = await hasPermission(ctx, invite.guildId, userId, "officer");
+        if (!hasPerms) throw new Error("Permission denied");
+
+        await ctx.db.delete(args.inviteId);
+        return true;
     },
 });
 // Debugging/Admin: Add XP manually
@@ -1104,3 +1144,5 @@ export const donateToTreasury = mutation({
         return { success: true, newBalance: args.currency === 'gold' ? currentStats.gold : currentStats.gems };
     },
 });
+
+
