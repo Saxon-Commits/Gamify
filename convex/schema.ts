@@ -130,6 +130,9 @@ export default defineSchema({
         joinedUserIds: v.optional(v.array(v.id("users"))),
         createdAt: v.number(),
         completedAt: v.optional(v.number()),
+        // Editor Tracking
+        lastEditedByName: v.optional(v.string()),
+        lastEditedAt: v.optional(v.number()),
     }).index("by_guild", ["guildId"]),
 
     // Guild messages - simple chat/announcements

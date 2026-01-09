@@ -24,13 +24,19 @@ async function getCurrentUserId(ctx: any): Promise<Id<"users"> | null> {
 }
 
 // Helper to check if user has permission (officer or leader)
+// Helper to check if user has permission (officer or leader)
 async function hasPermission(ctx: any, guildId: Id<"guilds">, userId: Id<"users">, requiredRole: 'leader' | 'officer' | 'member' = 'officer'): Promise<boolean> {
-    const member = await ctx.db
+    const members = await ctx.db
         .query("guildMembers")
         .withIndex("by_user", (q: any) => q.eq("userId", userId))
-        .first();
+        .collect();
 
-    if (!member || member.guildId !== guildId) return false;
+    const member = members.find((m: any) => m.guildId.toString() === guildId.toString());
+
+    if (!member) {
+        console.log(`hasPermission FAIL: User ${userId} is not in guild ${guildId}. Memberships:`, members.map((m: any) => m.guildId));
+        return false;
+    }
 
     if (requiredRole === 'leader') return member.role === 'leader';
     if (requiredRole === 'officer') return member.role === 'leader' || member.role === 'officer';
@@ -699,12 +705,26 @@ export const updateProject = mutation({
         const project = await ctx.db.get(args.projectId);
         if (!project) throw new Error("Project not found");
 
-        const hasPerms = await hasPermission(ctx, project.guildId, userId, "officer");
-        if (!hasPerms) throw new Error("Only officers can update projects");
+        const hasPerms = await hasPermission(ctx, project.guildId, userId, "member");
+        if (!hasPerms) {
+            const members = await ctx.db
+                .query("guildMembers")
+                .withIndex("by_user", (q: any) => q.eq("userId", userId))
+                .collect();
+            const memberGuilds = members.map(m => m.guildId).join(", ");
+            throw new Error(`Permission denied. User ${userId} is not in guild ${project.guildId}. User memberships: [${memberGuilds}]`);
+        }
 
         const updates: any = {};
         if (args.title) updates.title = args.title;
         if (args.description) updates.description = args.description;
+
+        // Add Editor Metadata
+        const user = await ctx.db.get(userId);
+        if (user) {
+            updates.lastEditedByName = user.username || "Unknown Member";
+            updates.lastEditedAt = Date.now();
+        }
 
         await ctx.db.patch(args.projectId, updates);
         return true;
@@ -872,11 +892,31 @@ export const contributeToProject = mutation({
 export const getGuildProjects = query({
     args: { guildId: v.id("guilds") },
     handler: async (ctx, args) => {
-        return await ctx.db
+        const projects = await ctx.db
             .query("guildProjects")
             .withIndex("by_guild", (q) => q.eq("guildId", args.guildId))
             .filter(q => q.neq(q.field("status"), "archived"))
             .collect();
+
+        // Enrich with preview of joined users (up to 3)
+        return await Promise.all(projects.map(async (p) => {
+            const joinedIds = p.joinedUserIds || [];
+            const previewIds = joinedIds.slice(0, 3);
+
+            const previewUsers = await Promise.all(previewIds.map(async (id) => {
+                const user = await ctx.db.get(id);
+                return {
+                    name: user?.name || "Unknown",
+                    pictureUrl: user?.pictureUrl
+                };
+            }));
+
+            return {
+                ...p,
+                joinedMemberCount: joinedIds.length,
+                previewMembers: previewUsers
+            };
+        }));
     },
 });
 

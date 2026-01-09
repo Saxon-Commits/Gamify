@@ -144,6 +144,14 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         }
     };
 
+    // Helper to strip HTML for preview
+    const stripHtml = (html: string) => {
+        if (!html) return "";
+        const tmp = document.createElement("DIV");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    };
+
     // --- RENDER DETAIL VIEW IF SELECTED ---
     if (viewProjectId) {
         const selectedProject = projects?.find(p => p._id === viewProjectId);
@@ -297,66 +305,56 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                                 className="bg-slate-800 border border-slate-700 rounded-xl p-5 hover:border-slate-600 hover:bg-slate-800/80 transition-all cursor-pointer group"
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">{project.title}</h3>
-                                        <p className="text-slate-400 text-sm line-clamp-2">{project.description}</p>
-                                        <div className="flex gap-2 mt-2">
-                                            <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">
-                                                {project.rewards.gold} Gold
-                                            </span>
-                                            {project.rewards.gems ? (
-                                                <span className="text-xs bg-cyan-900/30 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20">
-                                                    {project.rewards.gems} Gems
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors mb-1">{project.title}</h3>
+                                                <p className="text-xs text-slate-500 mb-2">Created: {new Date(project.createdAt).toLocaleDateString()}</p>
 
-                                    {isJoined ? (
-                                        <div className="flex flex-col items-end">
-                                            <span className="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-600/30 flex items-center gap-1">
-                                                <CheckCircle size={12} /> Active
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleJoin(project._id);
-                                            }}
-                                            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg shadow-indigo-600/20"
-                                        >
-                                            Join Quest
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Progress Bar */}
-                                <div className="mb-4">
-                                    <div className="flex justify-between text-xs text-slate-400 mb-1">
-                                        <span>Progress</span>
-                                        <span>{project.completedTasks} / {project.targetTasks}</span>
-                                    </div>
-                                    <div className="h-4 bg-slate-900 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500"
-                                            style={{ width: `${Math.min(100, (project.completedTasks / project.targetTasks) * 100)}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Contributors */}
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-700">
-                                    <div className="flex -space-x-2">
-                                        {project.contributors.map((c: any, i: number) => (
-                                            <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-white" title="Contributor">
-                                                <Users size={12} />
+                                                <div className="flex gap-2">
+                                                    <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
+                                                        {project.rewards.gold} Gold
+                                                    </span>
+                                                    {project.rewards.gems ? (
+                                                        <span className="text-xs bg-cyan-900/30 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">
+                                                            {project.rewards.gems} Gems
+                                                        </span>
+                                                    ) : null}
+                                                </div>
                                             </div>
-                                        ))}
-                                        {project.contributors.length === 0 && <span className="text-xs text-slate-500 italic">No contributors yet</span>}
-                                    </div>
 
-                                    <span className="text-xs text-indigo-400 font-bold group-hover:underline">View Details →</span>
+                                            {isJoined ? (
+                                                <span className="bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-600/30 flex items-center gap-1">
+                                                    <CheckCircle size={12} /> Joined
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleJoin(project._id);
+                                                    }}
+                                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded-lg font-bold text-xs shadow-lg shadow-indigo-600/20"
+                                                >
+                                                    Join
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Joined Members */}
+                                        <div className="mt-4 pt-3 border-t border-slate-700/50 flex items-center gap-2 text-xs text-slate-400">
+                                            <Users size={14} className="text-slate-500" />
+                                            {project.joinedMemberCount > 0 ? (
+                                                <span>
+                                                    {project.previewMembers?.map((m: any) => m.name).join(", ")}
+                                                    {project.joinedMemberCount > (project.previewMembers?.length || 0) && (
+                                                        <span className="text-slate-500 ml-1"> + {project.joinedMemberCount - (project.previewMembers?.length || 0)} more</span>
+                                                    )}
+                                                </span>
+                                            ) : (
+                                                <span className="italic text-slate-600">No members joined yet</span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );
