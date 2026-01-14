@@ -34,6 +34,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (user && isAuthenticated) {
+      // Sync Name
+      const currentName = useGameStore.getState().stats.name;
+      const newName = user.fullName || user.firstName || user.username;
+      if (newName && newName !== currentName) {
+        useGameStore.getState().setName(newName);
+      }
+
       // Only attempt to store if we are truly authenticated with Convex
       storeUser().catch(e => console.error("Sync failed:", e));
     }

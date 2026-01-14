@@ -197,6 +197,7 @@ export interface GameState {
 
   resetEnergy: () => void;
   updateSettings: (settings: Partial<GameSettings>) => void;
+  setName: (name: string) => void;
   setMusicVolume: (volume: number) => void;
   toggleMusicMute: () => void;
   toggleTheme: () => void;

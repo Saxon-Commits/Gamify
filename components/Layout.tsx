@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Sword, Network, User, Users, Settings, Coins, Zap, Sparkles, ShoppingBag, Package, Book, Diamond } from 'lucide-react';
+import { LayoutDashboard, Sword, Network, User, Users, Settings, Coins, Zap, Sparkles, ShoppingBag, Package, Book, Diamond, Menu, X } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -119,6 +119,79 @@ import { RewardToastContainer } from './ui/RewardToastContainer';
 
 import { StarterSelectionModal } from './StarterSelectionModal';
 
+const MobileHamburgerNav = ({ NavLinks, stats }: { NavLinks: any[], stats: any }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const location = useLocation();
+
+  return (
+    <div className="md:hidden sticky top-0 z-50">
+      {/* Mobile Header Bar */}
+      <div className="h-14 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <Sword size={18} className="text-white" />
+          </div>
+          <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{stats.name}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Level Indicator Mobile */}
+          <div className="flex flex-col items-end mr-2">
+            <span className="text-xs font-black text-slate-800 dark:text-white leading-none">Lvl {stats.level}</span>
+          </div>
+          <button onClick={() => setIsOpen(!isOpen)} className="p-2 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl"
+          >
+            <nav className="flex flex-col p-4 space-y-2">
+              {/* Mobile Resources */}
+              <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl mb-4">
+                <ResourceItem imageUrl="/images/currency/gold_coin.png" value={stats.gold} label="Gold" description="" color="text-amber-500" />
+                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                <ResourceItem imageUrl="/images/currency/skill_point.png" value={stats.skillPoints} label="Shards" description="" color="text-blue-500" imageClassName="w-8 h-8" />
+                <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                <ResourceItem imageUrl="/images/currency/gem icon.png" value={stats.gems} label="Gems" description="" color="text-cyan-400" imageClassName="w-10 h-10" />
+              </div>
+
+              {NavLinks.map(link => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center space-x-4 p-3 rounded-xl transition-all ${location.pathname === link.to ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                >
+                  <link.icon size={20} />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+              {/* Mobile Settings */}
+              <Link
+                to="/app/settings"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center space-x-4 p-3 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border-t border-slate-100 dark:border-slate-800 mt-2"
+              >
+                <Settings size={20} />
+                <span>Settings</span>
+              </Link>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export const Layout: React.FC = () => {
   const { stats } = useGameStore();
   const location = useLocation();
@@ -136,6 +209,8 @@ export const Layout: React.FC = () => {
     { to: "/app/character", icon: User, label: "Character" },
   ];
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <HonorPledgeModal />
@@ -143,8 +218,11 @@ export const Layout: React.FC = () => {
       <RewardToastContainer />
       {needsStarter && <StarterSelectionModal onComplete={() => { }} />}
 
-      {/* Top Navigation Bar - Shrunk for space */}
-      <header className="h-16 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-6 flex items-center justify-between sticky top-0 z-50 transition-colors duration-300">
+      {needsStarter && <StarterSelectionModal onComplete={() => { }} />}
+      <MobileHamburgerNav NavLinks={NavLinks} stats={stats} />
+
+      {/* Top Navigation Bar - Desktop Only (Hidden on Mobile) */}
+      <header className="hidden md:flex h-16 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 px-6 items-center justify-between sticky top-0 z-50 transition-colors duration-300">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Sword size={18} className="text-white" />

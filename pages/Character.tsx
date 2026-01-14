@@ -10,6 +10,7 @@ import { ConsistencyGraph } from '../components/character/ConsistencyGraph';
 import { LoadoutPanel } from '../components/character/LoadoutPanel';
 import { DevControls } from '../components/character/DevControls';
 import { CharacterDisplayCard } from '../components/character/CharacterDisplayCard';
+import { MobileStatsPanel } from '../components/character/MobileStatsPanel';
 
 import { EquipmentOffset } from '../src/utils/EquipmentConfig';
 import { AVAILABLE_AVATARS, MASTERY_AVATARS } from '../components/character/CharacterData';
@@ -65,14 +66,14 @@ export const Character: React.FC = () => {
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-32 transition-colors duration-500 font-sans selection:bg-amber-100 dark:selection:bg-amber-900/30">
 
-            <div className="max-w-7xl mx-auto pt-8 px-6 mb-8 flex items-center justify-between">
-                <div>
+            <div className="max-w-7xl mx-auto pt-0 md:pt-8 px-6 mb-0 md:mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="text-center md:text-left hidden md:block">
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-2">
                         Character
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 font-medium">Customize your legend.</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 w-full md:w-auto justify-center hidden md:flex">
                     <Link to="/" className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800 flex items-center gap-2 group">
                         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
                         Back to Hub
@@ -84,16 +85,47 @@ export const Character: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 relative items-start">
+            <div className="max-w-7xl mx-auto px-0 md:px-2 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-8 relative items-start">
 
-                {/* LEFT COLUMN: STATS (3 cols) */}
-                <div className="lg:col-span-3 space-y-6">
+                {/* MOBILE LAYOUT: Split Top Section */}
+                <div className="flex md:hidden w-full gap-3">
+                    {/* Left: Character Card (Scaled Down) */}
+                    <div className="w-[55%]">
+                        <CharacterDisplayCard
+                            selectedAvatarPath={selectedAvatarPath}
+                            devPanelOpen={devPanelOpen}
+                            devEditMode={devEditMode}
+                            devBackdropScale={devBackdropScale}
+                            devBackdropOffsetX={devBackdropOffsetX}
+                            devBackdropOffsetY={devBackdropOffsetY}
+                            devAvatarScale={devAvatarScale}
+                            devAvatarOffsetX={devAvatarOffsetX}
+                            devAvatarOffsetY={devAvatarOffsetY}
+                            devCompanionTop={devCompanionTop}
+                            devCompanionRight={devCompanionRight}
+                            devCompanionScale={devCompanionScale}
+                            devCompanionRotation={devCompanionRotation}
+                            isDevMode={isDevMode}
+                            devActiveItem={devActiveItem}
+                            devOffset={devOffset}
+                        />
+                    </div>
+
+                    {/* Right: Mobile Stats */}
+                    <div className="w-[45%]">
+                        <MobileStatsPanel />
+                    </div>
+                </div>
+
+
+                {/* LEFT COLUMN: STATS (Desktop) */}
+                <div className="hidden lg:block lg:col-span-3 space-y-6 lg:order-1">
                     <AttributesPanel />
                     <MasteryAvatarSelector />
                 </div>
 
-                {/* CENTER COLUMN: DISPLAY (6 cols) */}
-                <div className="lg:col-span-6 flex flex-col items-center">
+                {/* CENTER COLUMN: DISPLAY (Desktop) */}
+                <div className="hidden md:flex lg:col-span-6 flex-col items-center lg:order-2">
                     <CharacterDisplayCard
                         selectedAvatarPath={selectedAvatarPath}
                         devPanelOpen={devPanelOpen}
@@ -114,8 +146,12 @@ export const Character: React.FC = () => {
                     />
                 </div>
 
-                {/* RIGHT COLUMN: LOADOUT (3 cols) */}
-                <div className="lg:col-span-3 space-y-6">
+                {/* RIGHT COLUMN: LOADOUT (Shared but moved below on mobile) */}
+                <div className="lg:col-span-3 space-y-6 lg:order-3">
+                    {/* Mastery Selector shown here on mobile for flow - HIDDEN per user request */}
+                    <div className="hidden md:block lg:hidden">
+                        <MasteryAvatarSelector />
+                    </div>
                     <LoadoutPanel
                         selectedAvatarPath={selectedAvatarPath}
                         setSelectedAvatarPath={setSelectedAvatarPath}
@@ -123,29 +159,28 @@ export const Character: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 mt-6">
-                <ConsistencyGraph />
-            </div>
 
-            {/* DEV CONTROLS OVERLAY */}
-            <DevControls
-                devPanelOpen={devPanelOpen} setDevPanelOpen={setDevPanelOpen}
-                devEditMode={devEditMode} setDevEditMode={setDevEditMode}
-                devCompanionTop={devCompanionTop} setDevCompanionTop={setDevCompanionTop}
-                devCompanionRight={devCompanionRight} setDevCompanionRight={setDevCompanionRight}
-                devCompanionScale={devCompanionScale} setDevCompanionScale={setDevCompanionScale}
-                devCompanionRotation={devCompanionRotation} setDevCompanionRotation={setDevCompanionRotation}
-                devAvatarScale={devAvatarScale} setDevAvatarScale={setDevAvatarScale}
-                devAvatarOffsetX={devAvatarOffsetX} setDevAvatarOffsetX={setDevAvatarOffsetX}
-                devAvatarOffsetY={devAvatarOffsetY} setDevAvatarOffsetY={setDevAvatarOffsetY}
-                devBackdropScale={devBackdropScale} setDevBackdropScale={setDevBackdropScale}
-                devBackdropOffsetX={devBackdropOffsetX} setDevBackdropOffsetX={setDevBackdropOffsetX}
-                devBackdropOffsetY={devBackdropOffsetY} setDevBackdropOffsetY={setDevBackdropOffsetY}
-                devActiveItem={devActiveItem} setDevActiveItem={setDevActiveItem}
-                devOffset={devOffset} setDevOffset={setDevOffset}
-                isDevMode={isDevMode} setIsDevMode={setIsDevMode}
-                activeBackdropId={stats.activeBackdropId}
-            />
+            {/* DEV CONTROLS OVERLAY - Hidden on Mobile */}
+            <div className="hidden md:block">
+                <DevControls
+                    devPanelOpen={devPanelOpen} setDevPanelOpen={setDevPanelOpen}
+                    devEditMode={devEditMode} setDevEditMode={setDevEditMode}
+                    devCompanionTop={devCompanionTop} setDevCompanionTop={setDevCompanionTop}
+                    devCompanionRight={devCompanionRight} setDevCompanionRight={setDevCompanionRight}
+                    devCompanionScale={devCompanionScale} setDevCompanionScale={setDevCompanionScale}
+                    devCompanionRotation={devCompanionRotation} setDevCompanionRotation={setDevCompanionRotation}
+                    devAvatarScale={devAvatarScale} setDevAvatarScale={setDevAvatarScale}
+                    devAvatarOffsetX={devAvatarOffsetX} setDevAvatarOffsetX={setDevAvatarOffsetX}
+                    devAvatarOffsetY={devAvatarOffsetY} setDevAvatarOffsetY={setDevAvatarOffsetY}
+                    devBackdropScale={devBackdropScale} setDevBackdropScale={setDevBackdropScale}
+                    devBackdropOffsetX={devBackdropOffsetX} setDevBackdropOffsetX={setDevBackdropOffsetX}
+                    devBackdropOffsetY={devBackdropOffsetY} setDevBackdropOffsetY={setDevBackdropOffsetY}
+                    devActiveItem={devActiveItem} setDevActiveItem={setDevActiveItem}
+                    devOffset={devOffset} setDevOffset={setDevOffset}
+                    isDevMode={isDevMode} setIsDevMode={setIsDevMode}
+                    activeBackdropId={stats.activeBackdropId}
+                />
+            </div>
 
         </div>
     );

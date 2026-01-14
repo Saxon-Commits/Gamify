@@ -728,6 +728,12 @@ export const useGameStore = create<GameState>()(
         }));
       },
 
+      setName: (name: string) => {
+        set(state => ({
+          stats: { ...state.stats, name }
+        }))
+      },
+
       setMusicVolume: (volume: number) => {
         set(state => ({
           settings: { ...state.settings, musicVolume: volume }
