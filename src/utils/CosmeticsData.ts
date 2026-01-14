@@ -24,7 +24,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/avatars/cyber_knight/base.png',
+        imageUrl: '/avatars/cyber_knight/base.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -37,7 +37,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 2000,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/dark_wizard_base.png',
+        imageUrl: '/avatars/premium/dark_wizard_base.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -50,7 +50,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 800,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/benevolent_wizard.png',
+        imageUrl: '/avatars/premium/benevolent_wizard.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -63,7 +63,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 2500,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/seraph_knight.png',
+        imageUrl: '/avatars/premium/seraph_knight.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -76,7 +76,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 1800,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/warlord.png',
+        imageUrl: '/avatars/premium/warlord.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -89,7 +89,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 1200,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/geisha_android.png',
+        imageUrl: '/avatars/premium/geisha_android.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -102,7 +102,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 1000,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/xv_android.png',
+        imageUrl: '/avatars/premium/xv_android.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -115,7 +115,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         cost: 0,
         premiumPrice: 900,
         currency: 'GEMS',
-        imageUrl: '/assets/avatars/premium/toxic_alchemist.png',
+        imageUrl: '/avatars/premium/toxic_alchemist.png',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
     {
@@ -130,8 +130,8 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/avatars/grand_wizard/grand_wizard_a_void_cloak.png',
-        videoUrl: '/assets/grand_wizard_idle.mp4',
+        imageUrl: '/avatars/grand_wizard/grand_wizard_a_void_cloak.png',
+        videoUrl: '/avatars/grand_wizard/idle.mp4',
         flavor: 'Unlimited power.',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
@@ -149,7 +149,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS', // Not purchasable, but field required
         acquiredAt: '',
         quantity: 1, // Will be 0 until unlocked
-        imageUrl: '/assets/skill_tree_avatars/scribe_master.png',
+        imageUrl: '/avatars/mastery/scribe_master.png',
         flavor: 'Written in stone.',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
@@ -164,7 +164,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/skill_tree_avatars/master_blacksmith.png',
+        imageUrl: '/avatars/mastery/master_blacksmith.png',
         flavor: 'Strike while hot.',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
@@ -179,7 +179,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/skill_tree_avatars/master_bounty_hunter.png',
+        imageUrl: '/avatars/mastery/master_bounty_hunter.png',
         flavor: 'Paid in full.',
         slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
     },
@@ -199,7 +199,8 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/themes/code_rain.mp4'
+        image: '/images/ui/heart_icon.png',
+        imageUrl: '/backgrounds/code_rain.mp4'
     },
     {
         id: 'theme-pixel-dungeon',
@@ -212,7 +213,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/avatar_background.png'
+        imageUrl: '/backgrounds/pixel_dungeon.png'
     },
     // Premium Backdrops
     {
@@ -226,7 +227,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/apocalyptic ruins.png'
+        imageUrl: '/backgrounds/apocalyptic ruins.png'
     },
     {
         id: 'theme-crystal-cavern',
@@ -239,7 +240,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/crystal cavern.png'
+        imageUrl: '/backgrounds/crystal cavern.png'
     },
     {
         id: 'theme-digital-city',
@@ -252,7 +253,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/digital city.png'
+        imageUrl: '/backgrounds/digital city.png'
     },
     {
         id: 'theme-frozen-tundra',
@@ -265,8 +266,53 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/frozen tundra.png'
+        imageUrl: '/backgrounds/frozen tundra.png'
     },
+    // --- REUSED ITEM DEFINITIONS ---
+    {
+        id: 'acc_holo_drone',
+        name: 'Holo Drone',
+        description: 'A floating AI companion.',
+        lore: 'Always watching.',
+        type: 'ACCESSORY',
+        rarity: 'RARE',
+        cost: 0,
+        premiumPrice: 500,
+        currency: 'GEMS',
+        acquiredAt: '',
+        quantity: 1,
+        imageUrl: '/companions/holo drone companion.png'
+    },
+    {
+        id: 'acc_void_whisp',
+        name: 'Void Whisp',
+        description: 'A spectral entity from the void.',
+        lore: 'It whispers secrets of the deep.',
+        type: 'ACCESSORY',
+        rarity: 'EPIC',
+        cost: 0,
+        premiumPrice: 800,
+        currency: 'GEMS',
+        acquiredAt: '',
+        quantity: 1,
+        imageUrl: '/companions/void whisp companion.png'
+    },
+    /*
+    {
+        id: 'a_adapt_cloak',
+        name: 'Adaptive Cloak',
+        description: 'Shimmers with dark energy.',
+        lore: 'Woven from shadows.',
+        type: 'ARMOR',
+        rarity: 'EPIC',
+        cost: 0,
+        premiumPrice: 1000,
+        currency: 'GEMS',
+        acquiredAt: '',
+        quantity: 1,
+        imageUrl: '/items/void_cloak.png'
+    },
+    */
     {
         id: 'theme-mushroom-grove',
         name: 'Mushroom Grove',
@@ -278,7 +324,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/mushroom grove.png'
+        imageUrl: '/backgrounds/mushroom grove.png'
     },
     {
         id: 'theme-ocean-depths',
@@ -291,7 +337,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/ocean depths.png'
+        imageUrl: '/backgrounds/ocean depths.png'
     },
     {
         id: 'theme-sakura-temple',
@@ -304,7 +350,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/sakura temple.png'
+        imageUrl: '/backgrounds/sakura temple.png'
     },
     {
         id: 'theme-space-station',
@@ -317,7 +363,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/space station.png'
+        imageUrl: '/backgrounds/space station.png'
     },
     {
         id: 'theme-sunset-mountain',
@@ -330,7 +376,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/sunset mountain.png'
+        imageUrl: '/backgrounds/sunset mountain.png'
     },
     {
         id: 'theme-volcanic-hellscape',
@@ -343,7 +389,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/premium backdrops/volcanic hellscape.png'
+        imageUrl: '/backgrounds/volcanic hellscape.png'
     },
     {
         id: 'theme-wizards-library',
@@ -356,11 +402,13 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: "/assets/premium backdrops/wizard's library.png"
+        imageUrl: "/backgrounds/wizard's library.png"
     }
 ] as InventoryItem[];
 
 export const NEW_WEAPONS: InventoryItem[] = [
+    // Weapons Orphaned/Hidden as per request
+    /*
     {
         id: 'weapon-iron-broadsword',
         name: 'Iron Broadsword',
@@ -372,7 +420,7 @@ export const NEW_WEAPONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/basic items assets/iron broadsword.png'
+        imageUrl: '/items/iron broadsword.png',
     },
     {
         id: 'weapon-oak-longbow',
@@ -385,7 +433,7 @@ export const NEW_WEAPONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/basic items assets/oak longbow.png'
+        imageUrl: '/items/oak longbow.png'
     },
     {
         id: 'weapon-battle-axe',
@@ -398,7 +446,7 @@ export const NEW_WEAPONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/basic items assets/battle axe.png'
+        imageUrl: '/items/battle axe.png',
     },
     {
         id: 'weapon-crystal-staff',
@@ -411,7 +459,7 @@ export const NEW_WEAPONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/basic items assets/crystal staff.png'
+        imageUrl: '/items/crystal staff.png',
     },
     {
         id: 'weapon-rogues-dagger',
@@ -424,9 +472,9 @@ export const NEW_WEAPONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: "/assets/basic items assets/rogue's dagger.png"
+        imageUrl: "/items/rogue's dagger.png",
     },
-
+    */
 ];
 
 export const NEW_COMPANIONS: InventoryItem[] = [
@@ -444,7 +492,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/data serpent companion.png'
+        imageUrl: '/companions/data serpent companion.png'
     },
     {
         id: 'companion-digital-ghost',
@@ -457,7 +505,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/digital ghost companion.png'
+        imageUrl: '/companions/digital ghost companion.png'
     },
     {
         id: 'companion-floating-grimoire',
@@ -470,7 +518,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/floating grimoire companion.png'
+        imageUrl: '/companions/floating grimoire companion.png'
     },
     {
         id: 'companion-medic-drone',
@@ -483,7 +531,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/medic drone companion.png'
+        imageUrl: '/companions/medic drone companion.png'
     },
     {
         id: 'companion-pebble-golem',
@@ -496,7 +544,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/pebble golem companion.png'
+        imageUrl: '/companions/pebble golem companion.png'
     },
     {
         id: 'companion-phoenix-hatchling',
@@ -509,7 +557,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/companion assets/phoenix hatchling companion.png'
+        imageUrl: '/companions/phoenix hatchling companion.png'
     },
     {
         id: 'companion-holo-drone',
@@ -522,7 +570,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/items/acc_holo_drone.png',
+        imageUrl: '/companions/holo drone companion.png',
         flavor: 'Beep boop.'
     },
     {
@@ -536,7 +584,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         currency: 'GOLD',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/assets/items/acc_void_whisp.png',
+        imageUrl: '/companions/void whisp companion.png',
         flavor: 'It hums with unknown energy.'
     },
     {
@@ -551,9 +599,10 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['ARMOR'],
-        imageUrl: '/assets/items/a_seraph_wings.png',
+        imageUrl: '/items/seraph_wings.png',
         flavor: 'Ascend.'
     },
+    /*
     {
         id: 'w_photon_blaster',
         name: 'Photon Blaster',
@@ -565,7 +614,7 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/items/w_photon_blaster.png'
+        imageUrl: '/items/photon_blaster.png',
     },
     {
         id: 'w_gnarled_red_staff',
@@ -578,8 +627,9 @@ export const NEW_COMPANIONS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         slots: ['WEAPON'],
-        imageUrl: '/assets/items/w_gnarled_red_staff.png'
+        imageUrl: '/items/gnarled_red_staff.png',
     }
+    */
 ];
 
 export const STARTER_AVATARS: InventoryItem[] = [
@@ -590,7 +640,7 @@ export const STARTER_AVATARS: InventoryItem[] = [
         type: 'AVATAR',
         rarity: 'COMMON',
         cost: 0,
-        imageUrl: '/assets/avatars/starters/starter_elf_male.png',
+        imageUrl: '/avatars/starters/starter_elf_male.png',
         quantity: 1,
         currency: 'GOLD',
         acquiredAt: new Date().toISOString()
@@ -602,7 +652,7 @@ export const STARTER_AVATARS: InventoryItem[] = [
         type: 'AVATAR',
         rarity: 'COMMON',
         cost: 0,
-        imageUrl: '/assets/avatars/starters/starter_elf_female.png',
+        imageUrl: '/avatars/starters/starter_elf_female.png',
         quantity: 1,
         currency: 'GOLD',
         acquiredAt: new Date().toISOString()
@@ -614,7 +664,7 @@ export const STARTER_AVATARS: InventoryItem[] = [
         type: 'AVATAR',
         rarity: 'COMMON',
         cost: 0,
-        imageUrl: '/assets/avatars/starters/starter_villager_male.png',
+        imageUrl: '/avatars/starters/starter_villager_male.png',
         quantity: 1,
         currency: 'GOLD',
         acquiredAt: new Date().toISOString()
@@ -626,7 +676,7 @@ export const STARTER_AVATARS: InventoryItem[] = [
         type: 'AVATAR',
         rarity: 'COMMON',
         cost: 0,
-        imageUrl: '/assets/avatars/starters/starter_villager_female.png',
+        imageUrl: '/avatars/starters/starter_villager_female.png',
         quantity: 1,
         currency: 'GOLD',
         acquiredAt: new Date().toISOString()

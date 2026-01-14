@@ -94,14 +94,17 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon: Icon, label, active, varian
   );
 };
 
-const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; value: number; label: string; description: string; color: string }> = ({ icon: Icon, imageUrl, value, label, description, color }) => (
-  <div className="group relative flex items-center space-x-1.5 cursor-help">
+const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; value: number; label: string; description: string; color: string; imageClassName?: string }> = ({ icon: Icon, imageUrl, value, label, description, color, imageClassName }) => (
+  <div className="group relative flex items-center gap-2 cursor-help hover:bg-slate-100 dark:hover:bg-slate-800/50 p-1.5 rounded-lg transition-colors">
     {imageUrl ? (
-      <img src={imageUrl} alt={label} className="w-8 h-8 object-contain pixelated" />
+      <img src={imageUrl} alt={label} className={`${imageClassName || "w-10 h-10"} object-contain`} />
     ) : (
       Icon && <Icon size={14} className={color} />
     )}
-    <span className="text-xs font-bold text-slate-200">{value}</span>
+    <div className="flex flex-col leading-none">
+      <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 mb-0.5">{label}</span>
+      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 font-mono">{value}</span>
+    </div>
 
     <div className="absolute top-full right-0 mt-3 w-32 p-2 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
       <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-0.5">{label}</div>
@@ -112,6 +115,7 @@ const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; valu
 
 import { HonorPledgeModal } from './HonorPledgeModal';
 import { TutorialOverlay } from './TutorialOverlay';
+import { RewardToastContainer } from './ui/RewardToastContainer';
 
 import { StarterSelectionModal } from './StarterSelectionModal';
 
@@ -127,6 +131,7 @@ export const Layout: React.FC = () => {
     { to: "/app/skills", icon: Network, label: "Skills" },
     { to: "/app/guild", icon: Users, label: "Guild" },
     { to: "/app/shop", icon: ShoppingBag, label: "Shop" },
+    { to: "/app/journal", icon: Book, label: "Journal" },
     { to: "/app/inventory", icon: Package, label: "Inventory" },
     { to: "/app/character", icon: User, label: "Character" },
   ];
@@ -135,6 +140,7 @@ export const Layout: React.FC = () => {
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <HonorPledgeModal />
       <TutorialOverlay />
+      <RewardToastContainer />
       {needsStarter && <StarterSelectionModal onComplete={() => { }} />}
 
       {/* Top Navigation Bar - Shrunk for space */}
@@ -176,12 +182,12 @@ export const Layout: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 transition-colors duration-300">
-            <ResourceItem icon={Coins} value={stats.gold} label="Gold" description="Currency for items and gear." color="text-amber-500 dark:text-amber-400" />
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />
-            <ResourceItem icon={Zap} value={stats.skillPoints} label="Skill Points" description="Unlock standard skill nodes." color="text-blue-500 dark:text-blue-400" />
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-800" />
-            <ResourceItem imageUrl="/assets/gem assets/gem icon.png" value={stats.gems} label="Gems" description="Premium Currency." color="text-cyan-400" />
+          <div className="flex items-center">
+            <ResourceItem imageUrl="/images/currency/gold_coin.png" value={stats.gold} label="Gold" description="Currency for items and gear." color="text-amber-500 dark:text-amber-400" />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2" />
+            <ResourceItem imageUrl="/images/currency/skill_point.png" value={stats.skillPoints} label="Realm Shards" description="Unlock standard skill nodes." color="text-blue-500 dark:text-blue-400" imageClassName="w-10 h-10" />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2" />
+            <ResourceItem imageUrl="/images/currency/gem icon.png" value={stats.gems} label="Gems" description="Premium Currency." color="text-cyan-400" imageClassName="w-12 h-12" />
           </div>
 
           {/* Settings Icon (Moved from main nav) */}

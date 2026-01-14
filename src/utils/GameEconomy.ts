@@ -20,7 +20,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: '+20 Energy immediately.',
         flavor: 'Synthesized caffeine equivalent. Stabilizes focus levels.',
-        imageUrl: '/assets/items/stim_pack.png'
+        imageUrl: '/items/stim_pack.png'
     },
     {
         id: 'chronos_key',
@@ -30,7 +30,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Extend a Quest deadline by 24h.',
         flavor: 'A glitched fragment of time. Delays the inevitable.',
-        imageUrl: '/assets/items/chronos_key.png'
+        imageUrl: '/items/chronos_key.png'
     },
     {
         id: 'data_scrub',
@@ -40,7 +40,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Removes 1 "Missed Task" penalty from history.',
         flavor: 'Erases failure from the logs. It never happened.',
-        imageUrl: '/assets/items/data_scrub.png'
+        imageUrl: '/items/data_scrub.png'
     },
     {
         id: 'overclock_mode',
@@ -50,7 +50,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: '2x XP for the next 4 hours.',
         flavor: 'Push the hardware to its limits. Warning: Heat generation imminent.',
-        imageUrl: '/assets/items/overclock_mode.png'
+        imageUrl: '/items/overclock_mode.png'
     },
     {
         id: 'stasis_pod',
@@ -113,6 +113,7 @@ export const SHOP_ITEMS: ShopItem[] = [
 
 
     // D. Equipment & Accessories
+    /*
     {
         id: 'w_cursed_staff',
         name: 'Cursed Void Staff',
@@ -121,10 +122,12 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GEMS',
         description: 'A staff corrupted by forbidden spaghetti code.',
         flavor: 'It whispers optimization tips.',
-        imageUrl: '/assets/items/w_cursed_staff.png',
+        imageUrl: '/items/cursed_staff.png',
         slots: ['WEAPON']
     },
-    // --- WEAPONS ---
+    */
+    // --- WEAPONS - ORPHANED/HIDDEN ---
+    /*
     {
         id: 'w_thunder_hammer',
         name: 'Thunder Hammer',
@@ -133,7 +136,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Heavy impact with a shockwave finish.',
         flavor: 'Stop. Hammer time.',
-        imageUrl: '/assets/items/w_thunder_hammer.png',
+        imageUrl: '/items/thunder_hammer.png',
         slots: ['WEAPON']
     },
     {
@@ -144,7 +147,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Silent but deadly. Disconnects neural links.',
         flavor: 'Did you feel that? No? Good.',
-        imageUrl: '/assets/items/w_neural_dagger.png',
+        imageUrl: '/items/neural_dagger.png',
         slots: ['WEAPON']
     },
     {
@@ -155,7 +158,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Forged in the core of a dying server.',
         flavor: 'Hotfix incoming.',
-        imageUrl: '/assets/items/w_molten_sword.png',
+        imageUrl: '/items/molten_sword.png',
         slots: ['WEAPON']
     },
     {
@@ -166,22 +169,23 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'A blade of pure energy.',
         flavor: 'Sharp enough to cut through firewalls.',
-        imageUrl: '/assets/items/w_cyber_sword.png',
+        imageUrl: '/items/cyber_sword.png',
         slots: ['WEAPON']
     },
+    */
 
     // --- ARMOR ---
 
 
     {
-        id: 'a_void_cloak',
-        name: 'Void Cloak',
+        id: 'a_adapt_cloak',
+        name: 'Adaptive Cloak',
         cost: 1200,
         type: 'BLACK_MARKET',
         currency: 'GEMS',
         description: 'Shimmering fabric from the null sector.',
         flavor: 'Now you see me...',
-        imageUrl: '/assets/items/a_void_cloak.png',
+        imageUrl: '/items/void_cloak.png',
         slots: ['ARMOR']
     },
 
@@ -195,12 +199,13 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Strike fear into the hearts of daemons.',
         flavor: 'Demon mode engaged.',
-        imageUrl: '/assets/items/h_oni_mask.png',
+        imageUrl: '/items/oni_mask.png',
         slots: ['ARMOR']
     },
 
 
     // --- ACCESSORIES ---
+    /*
     {
         id: 'a_grav_boots',
         name: 'Grav-Boots',
@@ -209,11 +214,13 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Defy gravity. Walk on walls (metaphorically).',
         flavor: 'One small step.',
-        imageUrl: '/assets/items/a_grav_boots.png',
+        imageUrl: '/items/grav_boots.png',
         slots: ['ARMOR']
     },
+    */
 
 
+    /*
     {
         id: 'w_data_gauntlet',
         name: 'Data Gauntlet',
@@ -222,9 +229,10 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Hack the planet with a wave of your hand.',
         flavor: 'Power glove on.',
-        imageUrl: '/assets/items/w_data_gauntlet.png',
+        imageUrl: '/items/data_gauntlet.png',
         slots: ['WEAPON']
     },
+    */
 
 
     // --- CONSUMABLES ---
@@ -236,7 +244,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'Instantly learn something useless.',
         flavor: 'Downloading kung fu...',
-        imageUrl: '/assets/items/c_memory_chip.png'
+        imageUrl: '/items/memory_chip.png'
     },
     {
         id: 'c_phoenix_feather',
@@ -246,7 +254,7 @@ export const SHOP_ITEMS: ShopItem[] = [
         currency: 'GOLD',
         description: 'A rare artifact of revival.',
         flavor: 'Rise from the ashes.',
-        imageUrl: '/assets/items/c_phoenix_feather.png'
+        imageUrl: '/items/phoenix_feather.png'
     },
 
 ];

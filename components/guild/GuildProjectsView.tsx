@@ -12,36 +12,85 @@ interface GuildProjectsViewProps {
     onResetForceCreate?: () => void;
     viewProjectId?: Id<"guildProjects"> | null;
     onSelectProject: (projectId: Id<"guildProjects"> | null) => void;
+    members?: any[];
+    draftProject?: any;
+    setDraftProject?: (draft: any) => void;
 }
 
 import { GuildProjectDetail } from './GuildProjectDetail';
 
-export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, isOfficer, forceCreate, onResetForceCreate, viewProjectId, onSelectProject }) => {
+export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, isOfficer, forceCreate, onResetForceCreate, viewProjectId, onSelectProject, members, draftProject, setDraftProject }) => {
     const projects = useQuery(api.guilds.getGuildProjects, { guildId });
     const guildData = useQuery(api.guilds.getGuild, { guildId });
     const createProject = useMutation(api.guilds.createProject);
     const contribute = useMutation(api.guilds.contributeToProject);
 
-    const [isCreating, setIsCreating] = useState(false);
     const [contributionAmount, setContributionAmount] = useState<Record<string, number>>({});
-    const [rewardGold, setRewardGold] = useState(100);
-    const [rewardGems, setRewardGems] = useState(0);
+    // Local state removed, using props
 
-    const [projectTasks, setProjectTasks] = useState<any[]>([]);
-    const [newTaskName, setNewTaskName] = useState('');
-    const [newTaskXp, setNewTaskXp] = useState(50);
-    const [newTaskDiff, setNewTaskDiff] = useState('EASY');
+    // Direct Draft Creation Logic (Local State)
+    const handleAddProject = () => {
+        if (!isOfficer || !setDraftProject) return;
 
+        setDraftProject({
+            _id: "draft-id",
+            title: "Untitled Project",
+            description: "<p>Describe the project goals and requirements here...</p>",
+            targetTasks: 10,
+            rewards: { xp: 0, gold: 0, gems: 0 },
+            tasks: [],
+            allowSubmissions: false,
+            createdAt: Date.now(),
+            rankedRewards: {
+                firstPlace: { xp: 0, gold: 0, gems: 0 },
+                secondPlace: { xp: 0, gold: 0, gems: 0 },
+                thirdPlace: { xp: 0, gold: 0, gems: 0 },
+            },
+            consolidateRewards: false,
+        });
+        onSelectProject("draft-id" as any); // Use draft-id to trigger detail view
+    };
+
+    const handleLaunchProject = async (data: any) => {
+        try {
+            const newProjectId = await createProject({
+                guildId,
+                title: data.title || "New Project",
+                description: data.description,
+                targetTasks: 10,
+                rewards: { xp: 0, gold: 0, gems: 0 },
+                tasks: [],
+                allowSubmissions: data.allowSubmissions,
+                submissionDeadline: data.submissionDeadline,
+            });
+
+            // Update immediately with extra settings if needed
+            if (data.consolidateRewards || data.rankedRewards) {
+                await updateProject({
+                    projectId: newProjectId,
+                    consolidateRewards: data.consolidateRewards,
+                    rankedRewards: data.rankedRewards,
+                });
+            }
+
+            if (setDraftProject) setDraftProject(null);
+            onSelectProject(newProjectId);
+            alert("Project Launched Successfully!");
+        } catch (error) {
+            console.error("Failed to launch project:", error);
+            alert("Failed to create project.");
+        }
+    };
+
+    // Auto-trigger if forceCreate is true
     useEffect(() => {
         if (forceCreate && isOfficer) {
-            setIsCreating(true);
+            handleAddProject();
             onResetForceCreate?.();
         }
     }, [forceCreate, isOfficer, onResetForceCreate]);
 
-
     const treasury = guildData?.treasury || { gold: 0, gems: 0 };
-    const canAfford = (treasury.gold || 0) >= rewardGold && (treasury.gems || 0) >= rewardGems;
 
     const joinProject = useMutation(api.guilds.joinProject);
     const addTasks = useGameStore(state => state.addTasks);
@@ -50,52 +99,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
 
     const me = useQuery(api.users.getMe);
 
-    const handleQuickComplete = async (userTaskId: string, projectId: any) => {
-        completeTask(userTaskId);
-        try {
-            await contribute({
-                projectId,
-                amount: 1
-            });
-        } catch (e) {
-            console.error("Contribution failed", e);
-        }
-    };
-
-    const handleAddTask = () => {
-        if (!newTaskName) return;
-        setProjectTasks([...projectTasks, {
-            id: `t-${Date.now()}`,
-            name: newTaskName,
-            xpReward: newTaskXp,
-            goldReward: 0,
-            difficulty: newTaskDiff
-        }]);
-        setNewTaskName('');
-    }
-
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const form = e.target as HTMLFormElement;
-        const title = (form.elements.namedItem('title') as HTMLInputElement).value;
-        const description = (form.elements.namedItem('description') as HTMLTextAreaElement).value;
-
-        if (!canAfford) {
-            alert("Insufficient funds in Guild Treasury!");
-            return;
-        }
-
-        await createProject({
-            guildId,
-            title,
-            description,
-            targetTasks: projectTasks.length,
-            rewards: { xp: projectTasks.length * 10, gold: rewardGold, gems: rewardGems },
-            tasks: projectTasks
-        });
-        setIsCreating(false);
-        setProjectTasks([]);
-    };
+    // ... (rest of hooks)
 
     const handleJoin = async (projectId: any) => {
         try {
@@ -128,6 +132,11 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     const updateProject = useMutation(api.guilds.updateProject);
 
     const handleDeleteProject = async (projectId: Id<"guildProjects">) => {
+        if (projectId === "draft-id" as any) {
+            if (setDraftProject) setDraftProject(null);
+            onSelectProject(null);
+            return;
+        }
         try {
             await deleteProject({ projectId });
             onSelectProject(null); // Return to list view
@@ -136,7 +145,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         }
     };
 
-    const handleUpdateProject = async (projectId: Id<"guildProjects">, data: { title?: string, description?: string }) => {
+    const handleUpdateProject = async (projectId: Id<"guildProjects">, data: any) => {
         try {
             await updateProject({ projectId, ...data });
         } catch (e: any) {
@@ -152,8 +161,45 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         return tmp.textContent || tmp.innerText || "";
     };
 
+    const leaveProject = useMutation(api.guilds.leaveProject);
+
+    const handleLeaveProject = async (projectId: Id<"guildProjects">) => {
+        try {
+            await leaveProject({ guildId, projectId });
+            alert("Left Project.");
+            onSelectProject(null); // Go back to list
+        } catch (e: any) {
+            alert("Failed to leave: " + e.message);
+        }
+    };
+
     // --- RENDER DETAIL VIEW IF SELECTED ---
     if (viewProjectId) {
+        // Check for draft first
+        if (viewProjectId === "draft-id" as any && draftProject) {
+            return (
+                <GuildProjectDetail
+                    project={draftProject}
+                    onBack={() => {
+                        if (confirm("Discard draft?")) {
+                            if (setDraftProject) setDraftProject(null);
+                            onSelectProject(null);
+                        }
+                    }}
+                    isOfficer={isOfficer}
+                    isJoined={true}
+                    onDelete={() => {
+                        if (setDraftProject) setDraftProject(null);
+                        onSelectProject(null);
+                    }}
+                    onUpdate={(pid, data) => setDraftProject && setDraftProject({ ...draftProject, ...data })}
+                    members={members}
+                    isDraft={true}
+                    onCreate={handleLaunchProject}
+                />
+            );
+        }
+
         const selectedProject = projects?.find(p => p._id === viewProjectId);
         if (selectedProject) {
             const isJoined = me && selectedProject.joinedUserIds?.includes(me._id);
@@ -164,113 +210,23 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                     isOfficer={isOfficer}
                     isJoined={!!isJoined}
                     onJoin={() => handleJoin(selectedProject._id)}
+                    onLeave={() => handleLeaveProject(selectedProject._id)}
                     onDelete={handleDeleteProject}
                     onUpdate={handleUpdateProject}
+                    members={members}
                 />
             );
         }
     }
 
-    if (isCreating) {
-        return (
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-white mb-4">Start New Project</h3>
-                <div className="bg-amber-900/20 border border-amber-500/20 p-4 rounded-lg mb-4 flex justify-between items-center">
-                    <div>
-                        <p className="text-xs text-amber-400 font-bold uppercase tracking-wider">Treasury Funds Available</p>
-                        <p className="text-white font-mono text-sm">Use these funds to incentivize completion.</p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-amber-400 font-mono font-bold">{treasury.gold?.toLocaleString() ?? 0} Gold</p>
-                        <p className="text-cyan-400 font-mono font-bold">{treasury.gems?.toLocaleString() ?? 0} Gems</p>
-                    </div>
-                </div>
 
-                <form onSubmit={handleCreate} className="space-y-4">
-                    <div>
-                        <label className="block text-slate-400 text-xs font-bold mb-1">Project Title</label>
-                        <input name="title" type="text" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" required />
-                    </div>
-                    <div>
-                        <label className="block text-slate-400 text-xs font-bold mb-1">Description</label>
-                        <textarea name="description" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white h-20 resize-none" />
-                    </div>
-
-                    {/* Dynamic Task Creator */}
-                    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                        <label className="block text-slate-400 text-xs font-bold mb-2">Project Tasks ({projectTasks.length})</label>
-                        <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
-                            {projectTasks.map((t, i) => (
-                                <div key={i} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
-                                    <span className="text-white">{t.name}</span>
-                                    <span className="text-xs text-slate-400">{t.difficulty} | {t.xpReward} XP</span>
-                                </div>
-                            ))}
-                            {projectTasks.length === 0 && <p className="text-slate-600 text-sm italic">No tasks added yet.</p>}
-                        </div>
-
-                        <div className="flex gap-2">
-                            <input
-                                value={newTaskName}
-                                onChange={e => setNewTaskName(e.target.value)}
-                                placeholder="Task Name"
-                                className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white"
-                            />
-                            <select
-                                value={newTaskDiff}
-                                onChange={e => setNewTaskDiff(e.target.value)}
-                                className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-white"
-                            >
-                                <option value="EASY">Easy</option>
-                                <option value="MEDIUM">Medium</option>
-                                <option value="HARD">Hard</option>
-                            </select>
-                            <button type="button" onClick={handleAddTask} className="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">+</button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-700/50">
-                        <div>
-                            <label className="block text-amber-400 text-xs font-bold mb-1">Gold Reward Pool</label>
-                            <input
-                                type="number"
-                                value={rewardGold}
-                                onChange={e => setRewardGold(Math.max(0, parseInt(e.target.value) || 0))}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
-                            />
-                            <p className="text-[10px] text-slate-500 mt-1">
-                                {(treasury.gold || 0) < rewardGold ? <span className="text-red-400">Insufficient Funds</span> : "Allocated from Treasury"}
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-cyan-400 text-xs font-bold mb-1">Gems Reward Pool</label>
-                            <input
-                                type="number"
-                                value={rewardGems}
-                                onChange={e => setRewardGems(Math.max(0, parseInt(e.target.value) || 0))}
-                                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white"
-                            />
-                            <p className="text-[10px] text-slate-500 mt-1">
-                                {(treasury.gems || 0) < rewardGems ? <span className="text-red-400">Insufficient Funds</span> : "Allocated from Treasury"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2 pt-4">
-                        <button type="button" onClick={() => setIsCreating(false)} className="flex-1 bg-slate-700 text-white py-2 rounded-lg font-bold">Cancel</button>
-                        <button type="submit" disabled={!canAfford} className="flex-1 bg-indigo-600 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed hover:bg-indigo-500 text-white py-2 rounded-lg font-bold">Start Project</button>
-                    </div>
-                </form>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-end">
                 {isOfficer && (
                     <button
-                        onClick={() => setIsCreating(true)}
+                        onClick={handleAddProject}
                         className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2"
                     >
                         <Plus size={16} /> New Project
@@ -288,7 +244,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                     <h3 className="text-xl font-bold text-white mb-2">No Active Projects</h3>
                     <p className="text-slate-500 mb-4">Start a collaborative project to earn guild rewards!</p>
                     {isOfficer && (
-                        <button onClick={() => setIsCreating(true)} className="text-indigo-400 hover:text-indigo-300 font-bold">
+                        <button onClick={handleAddProject} className="text-indigo-400 hover:text-indigo-300 font-bold">
                             + Start First Project
                         </button>
                     )}

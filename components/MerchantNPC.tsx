@@ -34,7 +34,7 @@ export const MerchantNPC: React.FC<MerchantNPCProps> = ({
             {/* mix-blend-screen removes the black background */}
             <div className="relative z-10 w-full h-full flex justify-center items-center">
                 <video
-                    src="/assets/merchant_idle.mp4"
+                    src="/avatars/merchant/idle.mp4"
                     autoPlay
                     loop
                     muted

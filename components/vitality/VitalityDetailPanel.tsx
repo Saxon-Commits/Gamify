@@ -434,7 +434,7 @@ export const VitalityDetailPanel: React.FC<VitalityDetailPanelProps> = ({ active
                                 initial="hidden"
                                 animate="visible"
                                 onAnimationStart={() => {
-                                    const audio = new Audio('/assets/protocol active level up sound.mp3');
+                                    const audio = new Audio('/audio/sfx/level_up.mp3');
                                     audio.volume = 0.5;
                                     audio.play().catch(e => console.error("Audio play failed", e));
                                 }}

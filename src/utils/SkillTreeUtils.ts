@@ -36,7 +36,7 @@ const getPos = (angleDeg: number, radius: number) => {
 };
 
 // Node Definitions for specific branches
-const NODE_DEFINITIONS: Record<string, Record<number, { label: string; description: string; icon?: string; flavor?: string; image?: string }>> = {
+export const NODE_DEFINITIONS: Record<string, Record<number, { label: string; description: string; icon?: string; flavor?: string; image?: string }>> = {
     'branch_1': {
         1: { label: 'Clarity', description: '+5% XP from Journal Entries', icon: 'BookOpen', flavor: '"A sharp mind cuts through the fog of chaos."' },
         2: { label: 'Memory', description: '+10% Chance to find a "Lost Item" (Gold) when saving a journal entry.', icon: 'Search', flavor: '"The past holds treasures for those who bother to look."' },
@@ -47,7 +47,7 @@ const NODE_DEFINITIONS: Record<string, Record<number, { label: string; descripti
         7: { label: 'Golden Ink', description: '5% Chance to find a Gem when submitting a journal entry.', icon: 'Diamond', flavor: '"Sometimes, the words themselves carry a weight in gold."' },
         8: { label: 'The Haggler', description: 'All Shop items cost 7% less Gold.', icon: 'ShoppingBag', flavor: '"Wisdom is knowing the true value of things."' },
         9: { label: 'Legacy', description: '+1% XP gain per 10,000 words written (Max +20%).', icon: 'Feather', flavor: '"We are defined by the history we write. Let your volume be heavy."' },
-        10: { label: 'Scribe Master', description: 'Unlocks the "Scribe Master" Avatar.', icon: 'Crown', flavor: '"The pen is not a tool. It is a weapon against oblivion."', image: '/assets/skill_tree_avatars/scribe_master.png' },
+        10: { label: 'Scribe Master', description: 'Unlocks the "Scribe Master" Avatar.', icon: 'Crown', flavor: '"The pen is not a tool. It is a weapon against oblivion."', image: '/avatars/mastery/scribe_master.png' },
     },
     'branch_2': {
         1: { label: 'Heat I', description: '+5% XP for sessions longer than 25 minutes.', icon: 'Flame', flavor: '"The metal is cold. It resists. Apply the fire."' },
@@ -59,7 +59,7 @@ const NODE_DEFINITIONS: Record<string, Record<number, { label: string; descripti
         7: { label: 'The Heat III', description: 'Double XP for minutes beyond 45m in a session.', icon: 'Zap', flavor: '"Ignore the safety warning. Push past the red line."' },
         8: { label: 'Slag Sifting', description: '+1% XP per Account Level.', icon: 'Filter', flavor: '"Strength grows with the weight of the tool. Experience hardens the strike."' },
         9: { label: 'Residual Heat', description: 'Recover 50% XP / 25% Gold on cancelled timer.', icon: 'RefreshCw', flavor: '"Explosions are wasted energy. Even in failure, we recover the fuel."' },
-        10: { label: 'Master Blacksmith', description: 'Unlocks the "Master Blacksmith" Avatar.', icon: 'Hammer', flavor: '"I do not wait for the iron to be hot. I make it hot."', image: '/assets/skill_tree_avatars/master_blacksmith.png' },
+        10: { label: 'Master Blacksmith', description: 'Unlocks the "Master Blacksmith" Avatar.', icon: 'Hammer', flavor: '"I do not wait for the iron to be hot. I make it hot."', image: '/avatars/mastery/master_blacksmith.png' },
     },
     'branch_3': {
         1: { label: 'Greed I', description: '+5% Gold from all Tasks.', icon: 'CircleDollarSign', flavor: '"A coin in the hand is worth two in the corpse."' },
@@ -71,7 +71,7 @@ const NODE_DEFINITIONS: Record<string, Record<number, { label: string; descripti
         7: { label: 'Streak Economy', description: '+1% Gold Gen per streak day (Max 20%).', icon: 'BarChart', flavor: '"Success breeds wealth. Consistency compounds the reward."' },
         8: { label: 'Greed II', description: '+10% Gold from all Tasks.', icon: 'DollarSign', flavor: '"The heavier the purse, the sharper the aim."' },
         9: { label: 'Dealer\'s Choice', description: 'Daily Bounties have a 5% chance to include Gems.', icon: 'Dices', flavor: '"Fate favors the bold."' },
-        10: { label: 'Master Bounty Hunter', description: 'Unlocks the "Master Bounty Hunter" Avatar.', icon: 'Skull', flavor: '"The prey is infinite. The hunt is forever."', image: '/assets/skill_tree_avatars/master_bounty_hunter.png' },
+        10: { label: 'Master Bounty Hunter', description: 'Unlocks the "Master Bounty Hunter" Avatar.', icon: 'Skull', flavor: '"The prey is infinite. The hunt is forever."', image: '/avatars/mastery/master_bounty_hunter.png' },
     }
 };
 

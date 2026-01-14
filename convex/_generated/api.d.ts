@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as documents from "../documents.js";
 import type * as gameState from "../gameState.js";
 import type * as guildChat from "../guildChat.js";
 import type * as guilds from "../guilds.js";
@@ -15,6 +16,7 @@ import type * as http from "../http.js";
 import type * as pay from "../pay.js";
 import type * as storeUser from "../storeUser.js";
 import type * as users from "../users.js";
+import type * as vitality from "../vitality.js";
 
 import type {
   ApiFromModules,
@@ -23,6 +25,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  documents: typeof documents;
   gameState: typeof gameState;
   guildChat: typeof guildChat;
   guilds: typeof guilds;
@@ -30,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   pay: typeof pay;
   storeUser: typeof storeUser;
   users: typeof users;
+  vitality: typeof vitality;
 }>;
 
 /**

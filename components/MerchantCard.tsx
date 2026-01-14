@@ -59,7 +59,7 @@ export const MerchantCard: React.FC<MerchantCardProps> = ({
 
                     <div className="w-full h-full transform scale-x-[-1]">
                         <video
-                            src="/assets/merchant_idle.mp4"
+                            src="/avatars/merchant/idle.mp4"
                             autoPlay
                             loop
                             muted
@@ -135,7 +135,7 @@ export const MerchantVideo: React.FC<{ className?: string }> = ({ className = ""
             <div className="absolute inset-0 bg-gradient-to-t from-amber-900/10 to-transparent opacity-50"></div>
 
             <video
-                src="/assets/merchant_idle.mp4"
+                src="/avatars/merchant/idle.mp4"
                 autoPlay
                 loop
                 muted

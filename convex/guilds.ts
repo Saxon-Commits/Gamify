@@ -624,12 +624,12 @@ export const createProject = mutation({
         guildId: v.id("guilds"),
         title: v.string(),
         description: v.optional(v.string()),
-        targetTasks: v.number(),
-        rewards: v.object({
+        targetTasks: v.optional(v.number()),
+        rewards: v.optional(v.object({
             xp: v.number(),
             gold: v.number(),
             gems: v.optional(v.number()),
-        }),
+        })),
         tasks: v.optional(v.array(v.object({
             id: v.string(),
             name: v.string(),
@@ -638,6 +638,14 @@ export const createProject = mutation({
             goldReward: v.number(),
             difficulty: v.string(),
         }))),
+        // New optional args for contest setup
+        allowSubmissions: v.optional(v.boolean()),
+        submissionDeadline: v.optional(v.number()),
+        rankedRewards: v.optional(v.object({
+            firstPlace: v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) }),
+            secondPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+            thirdPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+        })),
     },
     handler: async (ctx, args) => {
         const userId = await getCurrentUserId(ctx);
@@ -650,42 +658,74 @@ export const createProject = mutation({
         const guild = await ctx.db.get(args.guildId);
         if (!guild) throw new Error("Guild not found");
 
-        const goldCost = args.rewards.gold || 0;
-        const gemsCost = args.rewards.gems || 0;
+        const standardGold = args.rewards?.gold || 0;
+        const standardGems = args.rewards?.gems || 0;
 
-        const currentGold = guild.treasury.gold || 0;
-        const currentGems = guild.treasury.gems || 0;
+        // Calculate Ranked Rewards Cost
+        // NOTE: We assume these are ONE-TIME payouts from the treasury pool.
+        let rankedGold = 0;
+        let rankedGems = 0;
 
-        if (currentGold < goldCost) throw new Error(`Insufficient Treasury Gold (Has: ${currentGold}, Needs: ${goldCost})`);
-        if (currentGems < gemsCost) throw new Error(`Insufficient Treasury Gems (Has: ${currentGems}, Needs: ${gemsCost})`);
+        if (args.rankedRewards) {
+            rankedGold += (args.rankedRewards.firstPlace?.gold || 0);
+            rankedGems += (args.rankedRewards.firstPlace?.gems || 0);
 
-        // DEDUCT FUNDS
-        await ctx.db.patch(args.guildId, {
-            treasury: {
-                ...guild.treasury,
-                gold: currentGold - goldCost,
-                gems: currentGems - gemsCost,
+            if (args.rankedRewards.secondPlace) {
+                rankedGold += (args.rankedRewards.secondPlace.gold || 0);
+                rankedGems += (args.rankedRewards.secondPlace.gems || 0);
             }
-        });
+            if (args.rankedRewards.thirdPlace) {
+                rankedGold += (args.rankedRewards.thirdPlace.gold || 0);
+                rankedGems += (args.rankedRewards.thirdPlace.gems || 0);
+            }
+        }
+
+        const totalGoldCost = standardGold + rankedGold;
+        const totalGemsCost = standardGems + rankedGems;
+
+        if (totalGoldCost > 0 || totalGemsCost > 0) {
+            const currentGold = guild.treasury.gold || 0;
+            const currentGems = guild.treasury.gems || 0;
+
+            if (currentGold < totalGoldCost) throw new Error(`Insufficient Treasury Gold (Has: ${currentGold}, Needs: ${totalGoldCost})`);
+            if (currentGems < totalGemsCost) throw new Error(`Insufficient Treasury Gems (Has: ${currentGems}, Needs: ${totalGemsCost})`);
+
+            // DEDUCT FUNDS
+            await ctx.db.patch(args.guildId, {
+                treasury: {
+                    ...guild.treasury,
+                    gold: currentGold - totalGoldCost,
+                    gems: currentGems - totalGemsCost,
+                }
+            });
+        }
 
         const projectId = await ctx.db.insert("guildProjects", {
             guildId: args.guildId,
-            title: args.title,
-            description: args.description,
+            title: args.title || "New Project",
+            description: args.description || "",
             status: "active",
-            targetTasks: args.targetTasks || args.tasks?.length || 100, // Use task count or fallback
+            targetTasks: args.targetTasks || args.tasks?.length || 100,
             completedTasks: 0,
             contributors: [],
-            rewards: args.rewards,
-            storedTasks: args.tasks, // Store the specific tasks
-            joinedUserIds: [], // Init empty
+            rewards: args.rewards || { xp: 0, gold: 0, gems: 0 },
+            rankedRewards: args.rankedRewards,
+            totalEscrowed: {
+                gold: totalGoldCost,
+                gems: totalGemsCost
+            },
+            storedTasks: args.tasks,
+            allowSubmissions: args.allowSubmissions ?? false,
+            submissionDeadline: args.submissionDeadline,
+            joinedUserIds: [userId], // Auto-join creator
             createdAt: Date.now(),
+            creatorId: userId,
         });
 
         await logGuildActivity(ctx, args.guildId, userId, "project_started", {
             projectTitle: args.title,
             projectId,
-            cost: { gold: goldCost, gems: gemsCost }
+            cost: { gold: totalGoldCost, gems: totalGemsCost }
         });
 
         return projectId;
@@ -697,6 +737,19 @@ export const updateProject = mutation({
         projectId: v.id("guildProjects"),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
+        allowSubmissions: v.optional(v.boolean()),
+        submissionDeadline: v.optional(v.number()),
+        consolidateRewards: v.optional(v.boolean()),
+        rankedRewards: v.optional(v.object({
+            firstPlace: v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) }),
+            secondPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+            thirdPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+        })),
+        rewards: v.optional(v.object({
+            xp: v.number(),
+            gold: v.number(),
+            gems: v.optional(v.number()),
+        })),
     },
     handler: async (ctx, args) => {
         const userId = await getCurrentUserId(ctx);
@@ -705,28 +758,93 @@ export const updateProject = mutation({
         const project = await ctx.db.get(args.projectId);
         if (!project) throw new Error("Project not found");
 
-        const hasPerms = await hasPermission(ctx, project.guildId, userId, "member");
+        const hasPerms = await hasPermission(ctx, project.guildId, userId, "officer"); // Only officers can update settings
         if (!hasPerms) {
-            const members = await ctx.db
-                .query("guildMembers")
-                .withIndex("by_user", (q: any) => q.eq("userId", userId))
-                .collect();
-            const memberGuilds = members.map(m => m.guildId).join(", ");
-            throw new Error(`Permission denied. User ${userId} is not in guild ${project.guildId}. User memberships: [${memberGuilds}]`);
+            // Check if just editing description (allowed for members?) - NO, only officers should change project settings
+            // But members might collaboratively edit the "About" doc? 
+            // For now, restrict settings updates to officers.
+            throw new Error("Only officers can update project settings");
         }
 
         const updates: any = {};
-        if (args.title) updates.title = args.title;
-        if (args.description) updates.description = args.description;
+
+        // HANDLE ESCROW UPDATES
+        // Calculate New Total Cost
+        const newStandardGold = args.rewards?.gold ?? project.rewards.gold;
+        const newStandardGems = args.rewards?.gems ?? project.rewards.gems ?? 0;
+
+        let newRankedGold = 0;
+        let newRankedGems = 0;
+
+        // Use new ranked rewards if provided, otherwise use existing
+        const activeRankedRewards = args.rankedRewards !== undefined ? args.rankedRewards : project.rankedRewards;
+
+        if (activeRankedRewards) {
+            newRankedGold += (activeRankedRewards.firstPlace?.gold || 0);
+            newRankedGems += (activeRankedRewards.firstPlace?.gems || 0);
+            if (activeRankedRewards.secondPlace) {
+                newRankedGold += (activeRankedRewards.secondPlace.gold || 0);
+                newRankedGems += (activeRankedRewards.secondPlace.gems || 0);
+            }
+            if (activeRankedRewards.thirdPlace) {
+                newRankedGold += (activeRankedRewards.thirdPlace.gold || 0);
+                newRankedGems += (activeRankedRewards.thirdPlace.gems || 0);
+            }
+        }
+
+        const newTotalGold = newStandardGold + newRankedGold;
+        const newTotalGems = newStandardGems + newRankedGems;
+
+        const oldEscrowGold = project.totalEscrowed?.gold || 0;
+        const oldEscrowGems = project.totalEscrowed?.gems || 0;
+
+        const goldDelta = newTotalGold - oldEscrowGold;
+        const gemsDelta = newTotalGems - oldEscrowGems;
+
+        if (goldDelta !== 0 || gemsDelta !== 0) {
+            const guild = await ctx.db.get(project.guildId);
+            if (!guild) throw new Error("Guild not found");
+
+            // If cost increased, check treasury
+            if (goldDelta > 0 && (guild.treasury.gold || 0) < goldDelta) {
+                throw new Error(`Insufficient Treasury Gold for update (Needs: ${goldDelta})`);
+            }
+            if (gemsDelta > 0 && (guild.treasury.gems || 0) < gemsDelta) {
+                throw new Error(`Insufficient Treasury Gems for update (Needs: ${gemsDelta})`);
+            }
+
+            // Apply Treasury Patch
+            await ctx.db.patch(project.guildId, {
+                treasury: {
+                    ...guild.treasury,
+                    gold: (guild.treasury.gold || 0) - goldDelta,
+                    gems: (guild.treasury.gems || 0) - gemsDelta
+                }
+            });
+
+            // Update Project Escrow
+            updates.totalEscrowed = {
+                gold: newTotalGold,
+                gems: newTotalGems
+            };
+        }
+
+        const updatesToApply: any = { ...updates };
+        if (args.title !== undefined) updatesToApply.title = args.title;
+        if (args.description !== undefined) updatesToApply.description = args.description;
+        if (args.allowSubmissions !== undefined) updatesToApply.allowSubmissions = args.allowSubmissions;
+        if (args.submissionDeadline !== undefined) updatesToApply.submissionDeadline = args.submissionDeadline;
+        if (args.consolidateRewards !== undefined) updatesToApply.consolidateRewards = args.consolidateRewards;
+        if (args.rankedRewards !== undefined) updatesToApply.rankedRewards = args.rankedRewards;
 
         // Add Editor Metadata
         const user = await ctx.db.get(userId);
         if (user) {
-            updates.lastEditedByName = user.username || "Unknown Member";
-            updates.lastEditedAt = Date.now();
+            updatesToApply.lastEditedByName = user.username || "Unknown Member";
+            updatesToApply.lastEditedAt = Date.now();
         }
 
-        await ctx.db.patch(args.projectId, updates);
+        await ctx.db.patch(args.projectId, updatesToApply);
         return true;
     },
 });
@@ -748,13 +866,18 @@ export const deleteProject = mutation({
         // Refund Treasury
         const guild = await ctx.db.get(project.guildId);
         if (guild && project.status === "active") {
-            await ctx.db.patch(project.guildId, {
-                treasury: {
-                    ...guild.treasury,
-                    gold: (guild.treasury.gold || 0) + (project.rewards.gold || 0),
-                    gems: (guild.treasury.gems || 0) + (project.rewards.gems || 0),
-                }
-            });
+            const refundGold = project.totalEscrowed?.gold ?? project.rewards.gold ?? 0;
+            const refundGems = project.totalEscrowed?.gems ?? project.rewards.gems ?? 0;
+
+            if (refundGold > 0 || refundGems > 0) {
+                await ctx.db.patch(project.guildId, {
+                    treasury: {
+                        ...guild.treasury,
+                        gold: (guild.treasury.gold || 0) + refundGold,
+                        gems: (guild.treasury.gems || 0) + refundGems,
+                    }
+                });
+            }
         }
 
         await ctx.db.delete(args.projectId);
@@ -780,21 +903,49 @@ export const joinProject = mutation({
         if (!project) throw new Error("Project not found");
 
         if (project.joinedUserIds?.includes(userId)) {
-            throw new Error("Already joined this project");
+            throw new Error("Already joined");
         }
 
-        // Add user to joined list
         await ctx.db.patch(args.projectId, {
             joinedUserIds: [...(project.joinedUserIds || []), userId]
         });
 
-        await logGuildActivity(ctx, args.guildId, userId, "project_contribution", { // Reusing type or add 'project_join' later
-            projectTitle: project.title,
-            action: "joined"
+        await logGuildActivity(ctx, project.guildId, userId, "project_joined", {
+            projectTitle: project.title
         });
 
-        // Return the stored tasks so the client can add them to their personal state
-        return project.storedTasks || [];
+        return true;
+    },
+});
+
+export const leaveProject = mutation({
+    args: {
+        guildId: v.id("guilds"),
+        projectId: v.id("guildProjects"),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) throw new Error("Project not found");
+
+        if (!project.joinedUserIds?.includes(userId)) {
+            throw new Error("You are not part of this project");
+        }
+
+        // Remove user from joined list
+        const newJoinedIds = project.joinedUserIds.filter((id: string) => id !== userId);
+        await ctx.db.patch(args.projectId, {
+            joinedUserIds: newJoinedIds
+        });
+
+        await logGuildActivity(ctx, args.guildId, userId, "project_contribution", {
+            projectTitle: project.title,
+            action: "left"
+        });
+
+        return true;
     },
 });
 
@@ -1186,3 +1337,112 @@ export const donateToTreasury = mutation({
 });
 
 
+
+export const awardContestWinners = mutation({
+    args: {
+        projectId: v.id("guildProjects"),
+        firstPlaceUserId: v.optional(v.id("users")),
+        secondPlaceUserId: v.optional(v.id("users")),
+        thirdPlaceUserId: v.optional(v.id("users")),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getCurrentUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        const project = await ctx.db.get(args.projectId);
+        if (!project) throw new Error("Project not found");
+
+        const hasPerms = await hasPermission(ctx, project.guildId, userId, "officer");
+        if (!hasPerms) throw new Error("Only officers can award winners");
+
+        // 1. Distribute Prizes
+        const winners: { place: number, userId: Id<"users">, rewards: any }[] = [];
+        
+        // Helper to process winner
+        const processWinner = async (uid: Id<"users"> | undefined, rank: 'firstPlace' | 'secondPlace' | 'thirdPlace', placeVal: number) => {
+            if (!uid) return;
+            
+            const reward = project.rankedRewards?.[rank];
+            if (!reward) return;
+
+            const user = await ctx.db.get(uid);
+            if (!user) return; // Users might disappear?
+
+            // Standardize reward addition
+            const clerkId = user.tokenIdentifier.split('|')[1];
+            if (!clerkId) return;
+
+            const gameState = await ctx.db
+                .query("gameState")
+                .withIndex("by_user", (q) => q.eq("userId", clerkId))
+                .first();
+
+            if (gameState) {
+                const newState = { ...gameState.state };
+                if (!newState.stats) newState.stats = {};
+                newState.stats.gold = (newState.stats.gold || 0) + (reward.gold || 0);
+                newState.stats.xp = (newState.stats.xp || 0) + (reward.xp || 0);
+                
+                await ctx.db.patch(gameState._id, { state: newState });
+            }
+
+            // Update Gems on User Table
+            if (reward.gems && reward.gems > 0) {
+                 await ctx.db.patch(uid, {
+                    gems: (user.gems || 0) + reward.gems
+                 });
+            }
+
+            winners.push({ place: placeVal, userId: uid, rewards: reward });
+        };
+
+        if (args.firstPlaceUserId) await processWinner(args.firstPlaceUserId, 'firstPlace', 1);
+        if (args.secondPlaceUserId) await processWinner(args.secondPlaceUserId, 'secondPlace', 2);
+        if (args.thirdPlaceUserId) await processWinner(args.thirdPlaceUserId, 'thirdPlace', 3);
+
+        // 2. Refund Unused Escrow
+        const spentGold = winners.reduce((acc, w) => acc + (w.rewards.gold || 0), 0);
+        const spentGems = winners.reduce((acc, w) => acc + (w.rewards.gems || 0), 0);
+
+        const totalEscrowedGold = project.totalEscrowed?.gold || 0;
+        const totalEscrowedGems = project.totalEscrowed?.gems || 0;
+
+        const standardReservedGold = (project.rewards?.gold || 0); 
+        const rankedEscrowGold = totalEscrowedGold - standardReservedGold;
+        const rankedEscrowGems = totalEscrowedGems - (project.rewards?.gems || 0);
+
+        const refundGold = Math.max(0, rankedEscrowGold - spentGold);
+        const refundGems = Math.max(0, rankedEscrowGems - spentGems);
+
+        if (refundGold > 0 || refundGems > 0) {
+            const guild = await ctx.db.get(project.guildId);
+            if (guild) {
+                 await ctx.db.patch(project.guildId, {
+                    treasury: {
+                        ...guild.treasury,
+                        gold: (guild.treasury.gold || 0) + refundGold,
+                        gems: (guild.treasury.gems || 0) + refundGems,
+                    }
+                });
+            }
+        }
+
+        // 3. Mark as Completed & Store Winners
+        await ctx.db.patch(args.projectId, {
+            status: "completed",
+            completedAt: Date.now(),
+            winners: {
+                firstPlaceUserId: args.firstPlaceUserId,
+                secondPlaceUserId: args.secondPlaceUserId,
+                thirdPlaceUserId: args.thirdPlaceUserId,
+            }
+        });
+
+        await logGuildActivity(ctx, project.guildId, userId, "project_awarded", {
+            projectTitle: project.title,
+            winners: winners.map(w => ({ place: w.place, userId: w.userId }))
+        });
+
+        return true;
+    },
+});

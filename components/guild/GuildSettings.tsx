@@ -8,6 +8,7 @@ interface GuildSettingsProps {
     guild: any;
     membership: any;
     members: any[];
+    onDisband?: () => void;
 }
 
 const InviteManagement = ({ guildId }: { guildId: Id<"guilds"> }) => {
@@ -89,7 +90,7 @@ const InviteManagement = ({ guildId }: { guildId: Id<"guilds"> }) => {
     );
 };
 
-export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership, members }) => {
+export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership, members, onDisband }) => {
     const updateGuild = useMutation(api.guilds.updateGuild);
     const kickMember = useMutation(api.guilds.kickMember);
     const promoteMember = useMutation(api.guilds.promoteMember);
@@ -163,6 +164,7 @@ export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership,
 
         try {
             await disbandGuild({ guildId: guild._id });
+            onDisband?.();
         } catch (error) {
             console.error("Failed to disband guild:", error);
             alert("Failed to disband guild.");

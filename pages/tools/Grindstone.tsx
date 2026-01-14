@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Hammer, Clock, Trophy, Play, Square, CheckCircle, Gift, Sparkles } from 'lucide-react';
+import { Hammer, Clock, Trophy, Play, Square, CheckCircle, Gift, Sparkles, ArrowLeft } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
 import { useNavigate } from 'react-router-dom';
 import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
@@ -111,6 +111,17 @@ export const Grindstone: React.FC = () => {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-slate-950 to-slate-950 pointer-events-none" />
 
             {/* Header */}
+            <div className="absolute top-6 left-6 z-20">
+                <button
+                    onClick={() => navigate('/app')}
+                    className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                    <span className="font-bold uppercase tracking-wider text-sm">Back to Quests</span>
+                </button>
+            </div>
+
+            {/* Header Content */}
             {!isActive && !isCompleted && (
                 <div className="text-center mb-12 relative z-10">
                     <div className="inline-flex p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-6 animate-pulse">
@@ -297,13 +308,13 @@ export const Grindstone: React.FC = () => {
                             Again
                         </button>
                         <button
-                            onClick={() => navigate('/journal')}
+                            onClick={() => navigate('/app/journal')}
                             className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
                         >
                             View Journal
                         </button>
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('/app')}
                             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-colors"
                         >
                             Return Home

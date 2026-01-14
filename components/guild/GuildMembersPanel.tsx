@@ -15,6 +15,7 @@ interface GuildMember {
     armorId?: string;
     companionId?: string;
     backdropId?: string;
+    userId: string; // Add explicit userId for identification
 }
 
 interface MyGuild {
@@ -39,6 +40,7 @@ interface GuildMembersPanelProps {
     onBrowseGuilds: () => void;
     onLeaveGuild: () => void;
     isLeaving: boolean;
+    currentUserId?: string;
 }
 
 export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
@@ -52,6 +54,7 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
     onBrowseGuilds,
     onLeaveGuild,
     isLeaving,
+    currentUserId
 }) => {
     const createInvite = useMutation(api.guilds.createInvite);
     const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -70,6 +73,22 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
         }
     };
 
+    const sortedMembers = React.useMemo(() => {
+        if (!members) return null;
+
+        const me = members.find(m => m.userName === currentUserId || (m as any).userId === currentUserId);
+        const leader = members.find(m => m.role === 'leader');
+
+        // Filter out me and leader from the 'rest'
+        const rest = members.filter(m => m !== me && m !== leader);
+
+        const result = [];
+        if (me) result.push(me);
+        if (leader && leader !== me) result.push(leader);
+
+        return [...result, ...rest];
+    }, [members, currentUserId]);
+
     return (
         <div className="w-full lg:w-80 shrink-0">
             <div className="sticky top-4 space-y-6">
@@ -83,10 +102,10 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
 
                 {/* Member Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                    {!members ? (
+                    {!sortedMembers ? (
                         <div className="col-span-2 text-center py-8 text-slate-500">Loading members...</div>
                     ) : (
-                        members.map((member) => (
+                        sortedMembers.map((member) => (
                             <GuildMemberCard
                                 key={member._id}
                                 member={{
@@ -100,7 +119,7 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
                                     companionId: member.companionId,
                                     backdropId: member.backdropId
                                 }}
-                                isUser={false}
+                                isUser={currentUserId === member.userId}
                             />
                         ))
                     )}

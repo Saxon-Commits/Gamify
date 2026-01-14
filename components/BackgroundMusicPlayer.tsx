@@ -3,15 +3,8 @@ import { Volume2, VolumeX, SkipForward, Music } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 
 const PLAYLIST = [
-    '/assets/background music/ES_Across the Sea of Japan - Mandala Dreams.mp3',
-    '/assets/background music/ES_April Snow - Gavin Luke.mp3',
-    '/assets/background music/ES_Leaves on Cinder Moor - Jay Taylor.mp3',
-    '/assets/background music/ES_Once in a Life - Howard Harper-Barnes.mp3',
-    '/assets/background music/ES_Quiet Colors - Gavin Luke.mp3',
-    '/assets/background music/ES_Shades of Fukushima - Mandala Dreams.mp3',
-    '/assets/background music/ES_The Green - Ruiqi Zhao.mp3',
-    '/assets/background music/ES_The Lonely Traveler - Franz Gordon.mp3',
-    '/assets/background music/ES_Flight at Dawn - Jay Taylor.mp3'
+    '/audio/music/Penumbra.mp3',
+    '/audio/music/EchoesOfHome.mp3'
 ];
 
 export const BackgroundMusicPlayer: React.FC = () => {

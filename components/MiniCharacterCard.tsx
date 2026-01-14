@@ -1,6 +1,7 @@
 import React from 'react';
 import { ALL_COSMETIC_ITEMS, STARTER_AVATARS, COSMETIC_SHOP_ITEMS } from '../src/utils/CosmeticsData';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
+import { EQUIPMENT_CONFIGS } from '../src/utils/EquipmentConfig';
 
 interface MiniCharacterCardProps {
     avatarId: string;
@@ -19,7 +20,7 @@ const getAvatarUrl = (avatarId: string): string => {
     const cosmetic = ALL_COSMETIC_ITEMS.find(i => i.id === avatarId && i.type === 'AVATAR');
     if (cosmetic?.imageUrl) return cosmetic.imageUrl;
 
-    return '/assets/avatars/starters/starter_villager_male.png';
+    return '/avatars/starters/starter_villager_male.png';
 };
 
 // Get item image URL from ID
@@ -93,9 +94,38 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
     avatarId,
     companionId,
     backdropId,
+    weaponId,
+    armorId,
     className = '',
 }) => {
-    const avatarUrl = getAvatarUrl(avatarId);
+    let avatarUrl = getAvatarUrl(avatarId);
+
+    // --- ADAPTIVE CLOAK COMPOSITE OVERRIDE ---
+    if (armorId === 'a_adapt_cloak') {
+        const cloakMap: Record<string, string> = {
+            'grand_wizard': 'grand_wizard.png',
+            'hero_cyber_knight': 'hero_cyber_knight.png',
+            'dark_wizard': 'dark_wizard.png',
+            'warlord': 'warlord.png',
+            'avatar_master_blacksmith': 'avatar_master_blacksmith.png',
+            'avatar_master_bounty_hunter': 'avatar_master_bounty_hunter.png',
+            'avatar_scribe_master': 'avatar_scribe_master.png',
+            'seraph_knight': 'seraph_knight.png',
+            'toxic_alchemist': 'toxic_alchemist.png',
+            'xv_android': 'xv_android.png',
+            'geisha_android': 'geisha_android.png',
+            'benevolent_wizard': 'benevolent_wizard.png',
+        };
+
+        // Check for direct match or normalized IDs
+        let key = avatarId;
+        if (avatarId.includes('grand_wizard')) key = 'grand_wizard';
+        if (avatarId.includes('cyber_knight')) key = 'hero_cyber_knight';
+
+        if (cloakMap[key]) {
+            avatarUrl = `/avatars/composites/adaptive_cloak/${cloakMap[key]}`;
+        }
+    }
     const companionUrl = getItemUrl(companionId);
     const backdropUrl = getItemUrl(backdropId);
 
@@ -183,6 +213,59 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
                         height: `${avatarHeight}%`,
                     }}
                 />
+
+                {/* DYNAMIC EQUIPMENT LAYER */}
+                {(() => {
+                    const itemsToRender: { id: string, src: string, offset: any }[] = [];
+                    // Check Weapon & Armor from PROPS
+                    [weaponId, armorId].forEach(itemId => {
+                        if (!itemId) return;
+
+                        let src = '';
+                        if (itemId === 'a_seraph_wings') src = '/items/seraph_wings.png';
+
+                        if (!src) {
+                            const found = [...ALL_COSMETIC_ITEMS, ...STARTER_AVATARS].find(i => i.id === itemId);
+                            if (found) src = found.imageUrl || '';
+                            else {
+                                const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+                                if (shopItem) src = shopItem.imageUrl;
+                            }
+                        }
+
+                        if (src) {
+                            let configKey = avatarId;
+                            if (avatarId.includes('grand_wizard')) configKey = 'grand_wizard';
+                            if (avatarId.includes('cyber_knight')) configKey = 'hero_cyber_knight';
+
+                            // Attempt exact match first, then fallback
+                            const config = EQUIPMENT_CONFIGS[itemId]?.[configKey] || EQUIPMENT_CONFIGS[itemId]?.[avatarId];
+
+                            if (config) {
+                                itemsToRender.push({ id: itemId, src, offset: config });
+                            }
+                        }
+                    });
+
+                    return itemsToRender.map((item, idx) => (
+                        <img
+                            key={item.id + idx}
+                            src={item.src}
+                            alt="Equip"
+                            className="absolute pointer-events-none pixelated"
+                            style={{
+                                imageRendering: 'pixelated',
+                                top: `${item.offset.top}%`,
+                                left: `${item.offset.left}%`,
+                                transform: `scale(${item.offset.scale}) rotate(${item.offset.rotation}deg)`,
+                                width: 'auto',
+                                height: 'auto',
+                                maxWidth: 'none',
+                                zIndex: item.offset.zIndex ? item.offset.zIndex + 10 : 15
+                            }}
+                        />
+                    ));
+                })()}
 
                 {/* COMPANION OVERLAY */}
                 {companionId && companionUrl && companionConfig && (

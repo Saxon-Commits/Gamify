@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
-import { Book, Folder, FileText, Trash2, Calendar, Search, Tag } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Book, Folder, FileText, Trash2, Calendar, Search, Save, X, Plus } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 import { JournalEntry } from '../types';
+import { RichTextEditor } from '../components/RichTextEditor';
 
 export const Journal: React.FC = () => {
-    const navigate = useNavigate();
-    const { journalEntries, deleteJournalEntry } = useGameStore();
+    const { journalEntries, deleteJournalEntry, addJournalEntry, updateJournalEntry } = useGameStore();
     const [selectedFolder, setSelectedFolder] = useState<string | 'All'>('All');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
 
-    const folders = ['All', 'Journal', 'Mind Wipes', 'Grindstone Log'];
+    // Edit Mode State
+    const [isEditing, setIsEditing] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [editContent, setEditContent] = useState('');
+
+    const folders = ['All', 'Journal', 'Grindstone Log'];
 
     const filteredEntries = journalEntries.filter(entry => {
         const matchesFolder = selectedFolder === 'All' || entry.folder === selectedFolder;
@@ -24,16 +28,61 @@ export const Journal: React.FC = () => {
         e.stopPropagation();
         if (confirm('Are you sure you want to delete this entry?')) {
             deleteJournalEntry(id);
-            if (selectedEntry?.id === id) setSelectedEntry(null);
+            if (selectedEntry?.id === id) {
+                setSelectedEntry(null);
+                setIsEditing(false);
+            }
         }
     };
 
     const handleEdit = (entry: JournalEntry) => {
-        navigate('/tools/mind-wipe', { state: { entry } });
+        setSelectedEntry(entry);
+        setEditTitle(entry.title);
+        setEditContent(entry.content);
+        setIsEditing(true);
     };
 
     const handleNewEntry = () => {
-        navigate('/tools/mind-wipe');
+        setSelectedEntry(null);
+        setEditTitle('');
+        setEditContent('');
+        setIsEditing(true);
+    };
+
+    const handleSave = () => {
+        if (!editTitle.trim()) return;
+
+        if (selectedEntry) {
+            // Update Existing
+            const updated = {
+                ...selectedEntry,
+                title: editTitle,
+                content: editContent,
+                // optimized: could update date here if desired
+            };
+            updateJournalEntry(updated);
+            setSelectedEntry(updated); // Update local selection to show changes
+        } else {
+            // Create New
+            addJournalEntry({
+                title: editTitle || `Journal Entry - ${new Date().toLocaleDateString()}`,
+                content: editContent,
+                folder: 'Journal', // Default folder
+                tags: []
+            });
+            // Auto-select the new entry? 
+            // Since we don't get the ID back synchronously from addJournalEntry easily without refactor, 
+            // we'll just close edit mode. The new entry will appear at the top.
+            // Ideally we'd select it. For now, just reset.
+            setSelectedEntry(null);
+        }
+        setIsEditing(false);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        // If we were creating new, selectedEntry is null, so we go back to empty.
+        // If we were editing, we go back to read view of that entry.
     };
 
     return (
@@ -47,7 +96,7 @@ export const Journal: React.FC = () => {
                     onClick={handleNewEntry}
                     className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-900/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                    <Book size={18} />
+                    <Plus size={18} />
                     <span>New Entry</span>
                 </button>
 
@@ -98,7 +147,13 @@ export const Journal: React.FC = () => {
                             filteredEntries.map(entry => (
                                 <button
                                     key={entry.id}
-                                    onClick={() => setSelectedEntry(entry)}
+                                    onClick={() => {
+                                        if (isEditing && entry.id !== selectedEntry?.id) {
+                                            if (!confirm("Discard unsaved changes?")) return;
+                                        }
+                                        setIsEditing(false);
+                                        setSelectedEntry(entry);
+                                    }}
                                     className={`w-full text-left p-3 rounded-xl border transition-all group relative ${selectedEntry?.id === entry.id
                                         ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/50'
                                         : 'bg-white dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -130,7 +185,44 @@ export const Journal: React.FC = () => {
                 {/* Paper Texture Overlay */}
                 <div className="absolute inset-0 pointer-events-none opacity-30 dark:opacity-10 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] mix-blend-multiply dark:mix-blend-overlay"></div>
 
-                {selectedEntry ? (
+                {isEditing ? (
+                    <div className="relative z-10 flex flex-col h-full text-stone-900 dark:text-stone-300 font-serif">
+                        {/* Editing Header */}
+                        <div className="p-4 border-b-2 border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-black/20 flex justify-between items-center gap-4">
+                            <input
+                                type="text"
+                                placeholder="Entry Title"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                className="flex-1 bg-transparent text-3xl font-bold text-stone-900 dark:text-stone-100 outline-none placeholder:text-stone-400 dark:placeholder:text-stone-600"
+                                autoFocus
+                            />
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleCancel}
+                                    className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-lg text-stone-500 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold font-sans transition-colors"
+                                >
+                                    <Save size={18} />
+                                    <span>Save</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Editor */}
+                        <div className="flex-1 overflow-hidden p-4">
+                            <RichTextEditor
+                                value={editContent}
+                                onChange={setEditContent}
+                            />
+                        </div>
+                    </div>
+                ) : selectedEntry ? (
                     <div className="relative z-10 flex flex-col h-full text-stone-900 dark:text-stone-300 font-serif">
                         {/* Header */}
                         <div className="p-8 border-b-2 border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-black/20 flex justify-between items-start">
@@ -159,18 +251,30 @@ export const Journal: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                            <button
-                                onClick={() => handleEdit(selectedEntry)}
-                                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-sm font-bold font-sans transition-colors flex items-center gap-2"
-                            >
-                                <FileText size={16} />
-                                <span>Edit</span>
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={(e) => handleDelete(selectedEntry.id, e)}
+                                    className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg text-sm font-bold font-sans transition-colors flex items-center gap-2"
+                                >
+                                    <Trash2 size={16} />
+                                    <span>Delete</span>
+                                </button>
+                                <button
+                                    onClick={() => handleEdit(selectedEntry)}
+                                    className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-sm font-bold font-sans transition-colors flex items-center gap-2"
+                                >
+                                    <FileText size={16} />
+                                    <span>Edit</span>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-8 prose prose-stone dark:prose-invert max-w-none prose-lg [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_h1]:text-4xl [&_h2]:text-3xl [&_a]:text-blue-600 [&_a]:underline [&_input[type='checkbox']]:mr-2 [&_input[type='checkbox']]:scale-125">
-                            <div dangerouslySetInnerHTML={{ __html: selectedEntry.content }} />
+                        <div className="flex-1 overflow-hidden p-4">
+                            <RichTextEditor
+                                value={selectedEntry.content}
+                                readOnly={true}
+                            />
                         </div>
                     </div>
                 ) : (
@@ -178,7 +282,7 @@ export const Journal: React.FC = () => {
                         <Book size={64} className="mb-4 opacity-20" />
                         <h2 className="text-2xl font-bold opacity-50 font-sans uppercase tracking-widest">Select an Entry</h2>
                         <p className="max-w-md mt-2 opacity-60">
-                            Choose a chronicle from the archives on the left to read its contents.
+                            Choose a chronicle from the archives on the left to read its contents or create a new entry.
                         </p>
                     </div>
                 )}

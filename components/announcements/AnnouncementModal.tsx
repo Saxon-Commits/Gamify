@@ -48,7 +48,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                     <div className="flex items-center gap-4">
                         <div className="hidden md:block w-20 h-20 hover:scale-105 transition-transform duration-300">
                             <img
-                                src="/assets/skill_tree_avatars/scribe_master.png"
+                                src="/avatars/mastery/scribe_master.png"
                                 alt="Scribe Master"
                                 className="w-full h-full object-contain drop-shadow-lg"
                             />

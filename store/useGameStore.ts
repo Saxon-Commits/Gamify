@@ -6,6 +6,7 @@ import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/g
 import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { ITEM_EFFECTS } from '../src/utils/itemEffects';
+import { useToastStore } from './useToastStore';
 
 const INITIAL_STATS: Stats = {
   name: "Adventurer",
@@ -52,12 +53,13 @@ import { generateSkillTree } from '../src/utils/SkillTreeUtils';
 const { nodes: INITIAL_NODES, edges: INITIAL_EDGES } = generateSkillTree();
 
 export const INITIAL_PROJECTS: Project[] = [
-  { id: 'p-titan-1', name: 'Vitality Peak', description: 'Focus on five pillars: Physical, Nutrition, Sleep, Mental & Social.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500, icon: '/assets/heart icon.png' },
-  { id: 'p-tycoon-1', name: 'Financial Vault', description: 'Audit Net Worth.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
-  { id: 'p-tech-1', name: "Scholar's Library", description: 'Foundation of Technomancer branch.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
+  { id: 'col-todo', name: 'To-Do', description: 'General Tasks.', completed: false, difficulty: 'EASY', hp: 500, maxHp: 500, icon: '/images/ui/heart_icon.png', backgroundImage: '/backgrounds/vitality_bg.png' },
+  { id: 'col-habit', name: 'Habits', description: 'Daily Routines.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100, backgroundImage: '/backgrounds/vault_bg.png' },
 
-  // --- TYCOON PATHWAY PROJECTS ---
-  { id: 'p-tycoon-2', name: "Steward's Castle", description: 'Cash Flow Control.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
+  // Guild Column (Pseudo-Project)
+  { id: 'col-guild', name: "Guild", description: 'Community Tasks.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100, backgroundImage: '/backgrounds/castle_bg.png' },
+
+  // --- TYCOON PATHWAY PROJECTS (Legacy/Active) ---
   { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false, difficulty: 'MEDIUM', hp: 300, maxHp: 300 },
   { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
   { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
@@ -76,12 +78,12 @@ export const INITIAL_PROJECTS: Project[] = [
 ];
 
 export const INITIAL_TASKS: Task[] = [
-  { id: 't-1', projectId: 'p-titan-1', name: 'Track calories for 7 days', completed: false, xpReward: 200, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-2', projectId: 'p-titan-1', name: 'Drink 3L water daily (streak 1/3)', completed: false, xpReward: 100, goldReward: 20, energyCost: 5, type: 'main', difficulty: 'EASY' },
-  { id: 't-3', projectId: 'p-tycoon-1', name: 'Setup budget in Notion/Excel', completed: false, xpReward: 150, goldReward: 30, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-4', projectId: 'p-tycoon-1', name: 'Identify 3 unnecessary subscriptions', completed: false, xpReward: 50, goldReward: 100, energyCost: 5, type: 'main', difficulty: 'EASY' },
-  { id: 't-5', projectId: 'p-tech-1', name: 'Build a basic static site (index.html)', completed: false, xpReward: 300, goldReward: 75, energyCost: 25, type: 'main', difficulty: 'HARD' },
-  { id: 't-6', projectId: 'p-tech-1', name: 'Configure VS Code shortcuts', completed: false, xpReward: 50, goldReward: 10, energyCost: 5, type: 'main', difficulty: 'TRIVIAL' },
+  { id: 't-1', projectId: 'col-todo', name: 'Track calories for 7 days', completed: false, xpReward: 200, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-2', projectId: 'col-todo', name: 'Drink 3L water daily (streak 1/3)', completed: false, xpReward: 100, goldReward: 20, energyCost: 5, type: 'main', difficulty: 'EASY' },
+  { id: 't-3', projectId: 'col-habit', name: 'Setup budget in Notion/Excel', completed: false, xpReward: 150, goldReward: 30, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-4', projectId: 'col-habit', name: 'Identify 3 unnecessary subscriptions', completed: false, xpReward: 50, goldReward: 100, energyCost: 5, type: 'main', difficulty: 'EASY' },
+  // Removed static tech tasks
+
 
   // --- HEALTH / TITAN PATHWAY (User Added) ---
   // Stabilization & Assessment
@@ -341,6 +343,11 @@ export const useGameStore = create<GameState>()(
           newActivityLog.push({ date: today, xp: xpGained });
         }
 
+        // Trigger Toasts
+        const { addToast } = useToastStore.getState();
+        if (xpGained > 0) addToast({ type: 'xp', amount: xpGained, message: 'XP Gained' });
+        if (gold > 0) addToast({ type: 'gold', amount: gold, message: 'Gold Earned' });
+
         set({
           stats: {
             ...stats,
@@ -360,6 +367,11 @@ export const useGameStore = create<GameState>()(
 
       completeProject: (projectId) => {
         const { projects, stats, activityLog } = get();
+
+        // Toast
+        const { addToast } = useToastStore.getState();
+        addToast({ type: 'gold', amount: 500, message: 'Project Complete' });
+        addToast({ type: 'gems', amount: 2, message: 'Realm Shards' });
 
         // Log Activity (Heatmap)
         const today = new Date().toISOString().split('T')[0];
@@ -535,13 +547,17 @@ export const useGameStore = create<GameState>()(
           newInventory = [...inventory, newItem];
         }
 
+        // Toast
+        const { addToast } = useToastStore.getState();
+        addToast({ type: 'item', amount: quantity, message: itemDef.name, icon: itemDef.imageUrl });
+
         set({ inventory: newInventory });
       },
 
       // --- CUSTOM TASKS & DND ---
       createTask: (task) => {
         set((state) => ({
-          tasks: [...state.tasks, { ...task, id: `t-custom-${Date.now()}`, completed: false }]
+          tasks: [...state.tasks, { ...task, id: `t-custom-${crypto.randomUUID()}`, completed: false }]
         }));
       },
 
@@ -561,6 +577,12 @@ export const useGameStore = create<GameState>()(
 
       reorderTasks: (newTasks) => {
         set({ tasks: newTasks });
+      },
+
+      updateTask: (updatedTask) => {
+        set((state) => ({
+          tasks: state.tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+        }));
       },
 
       unlockNode: (nodeId) => {
@@ -622,6 +644,10 @@ export const useGameStore = create<GameState>()(
                 acquiredAt: new Date().toISOString(),
                 quantity: 1
               } as any);
+
+              // Toast Mastery Reward
+              const { addToast } = useToastStore.getState();
+              addToast({ type: 'item', amount: 1, message: rewardItem.name, icon: rewardItem.imageUrl });
             }
           }
         }
@@ -756,6 +782,11 @@ export const useGameStore = create<GameState>()(
         });
       },
       addRewards: (xpAmount, goldAmount) => {
+        // Trigger Toasts
+        const { addToast } = useToastStore.getState();
+        if (xpAmount > 0) addToast({ type: 'xp', amount: xpAmount, message: 'XP Gained' });
+        if (goldAmount > 0) addToast({ type: 'gold', amount: goldAmount, message: 'Gold Earned' });
+
         set((state) => {
           const { stats, activityLog } = state;
 

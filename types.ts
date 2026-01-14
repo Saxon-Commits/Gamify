@@ -15,7 +15,21 @@ export interface Task {
   energyCost: number;
   gems?: number; // Added Gems reward
 
+  // Enhanced Bounty Fields
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
+  penalty?: {
+    gold?: number;
+    xp?: number;
+  };
+
   dueDate?: string;
+  deadline?: string; // ISO String for hard cutoff
+
+  subtasks?: {
+    id: string;
+    text: string;
+    completed: boolean;
+  }[];
 }
 
 export interface Project {
@@ -27,6 +41,15 @@ export interface Project {
   hp?: number;
   maxHp?: number;
   icon?: string; // Custom icon image path
+  backgroundImage?: string; // For Foundations Carousel
+  allowSubmissions?: boolean;
+  submissionDeadline?: number;
+  consolidateRewards?: boolean;
+  rankedRewards?: {
+    firstPlace: { xp: number, gold: number, gems?: number };
+    secondPlace?: { xp: number, gold: number, gems?: number };
+    thirdPlace?: { xp: number, gold: number, gems?: number };
+  };
 }
 
 export type VerificationType = 'HONOR_SYSTEM' | 'INPUT_VALUE' | 'LINK_SUBMISSION';
@@ -100,6 +123,7 @@ export interface Stats {
   activeHeadId?: string;     // Helmet/Mask
   activeAccessoryId?: string; // Wings/Boots/etc
   activeBackdropId?: string; // Background Theme/Video
+  activeCompanionId?: string; // Companion
 }
 
 export interface GameSettings {
@@ -181,6 +205,7 @@ export interface GameState {
   deleteTask: (taskId: string) => void;
   moveTask: (taskId: string, targetProjectId: string) => void;
   reorderTasks: (newTasks: Task[]) => void;
+  updateTask: (task: Task) => void;
   addProjects: (newProjects: Project[]) => void;
 
   buyItem: (item: any) => boolean;
@@ -218,5 +243,5 @@ export interface JournalEntry {
   content: string;
   date: string;
   tags: string[];
-  folder: 'Journal' | 'Mind Wipes' | 'Grindstone Log';
+  folder: 'Journal' | 'Grindstone Log';
 }

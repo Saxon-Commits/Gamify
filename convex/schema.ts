@@ -127,12 +127,32 @@ export default defineSchema({
             goldReward: v.number(),
             difficulty: v.string(),
         }))),
+        // Contest / Submission Features
+        allowSubmissions: v.optional(v.boolean()),
+        submissionDeadline: v.optional(v.number()), // Timestamp
+        consolidateRewards: v.optional(v.boolean()), // If 2nd/3rd not awarded, give all to 1st
+        rankedRewards: v.optional(v.object({
+            firstPlace: v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) }),
+            secondPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+            thirdPlace: v.optional(v.object({ gold: v.number(), xp: v.number(), gems: v.optional(v.number()) })),
+        })),
+        // Escrow & Winners
+        totalEscrowed: v.optional(v.object({
+            gold: v.number(),
+            gems: v.number(),
+        })),
+        winners: v.optional(v.object({
+            firstPlaceUserId: v.optional(v.id("users")),
+            secondPlaceUserId: v.optional(v.id("users")),
+            thirdPlaceUserId: v.optional(v.id("users")),
+        })),
         joinedUserIds: v.optional(v.array(v.id("users"))),
         createdAt: v.number(),
         completedAt: v.optional(v.number()),
         // Editor Tracking
         lastEditedByName: v.optional(v.string()),
         lastEditedAt: v.optional(v.number()),
+        creatorId: v.optional(v.id("users")),
     }).index("by_guild", ["guildId"]),
 
     // Guild messages - simple chat/announcements
@@ -144,4 +164,28 @@ export default defineSchema({
         likes: v.optional(v.array(v.id("users"))), // Array of user IDs who liked the message
         timestamp: v.number(),
     }).index("by_guild_time", ["guildId", "timestamp"]),
+
+    // Vitality Stats - Daily tracking
+    dailyStats: defineTable({
+        userId: v.id("users"),
+        date: v.string(), // YYYY-MM-DD
+        steps: v.number(),
+        calories: v.optional(v.number()),
+        activeMinutes: v.optional(v.number()),
+        goalMet: v.optional(v.boolean()),
+    })
+        .index("by_user_date", ["userId", "date"]),
+    // Project Documents (Command Center)
+    projectDocuments: defineTable({
+        projectId: v.string(), // e.g. 'p-titan-1'
+        userId: v.id("users"),
+        title: v.string(),
+        content: v.string(), // HTML or Markdown
+        type: v.string(), // 'doc', 'note', 'kanban_state' etc
+        isPrivate: v.optional(v.boolean()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+    })
+        .index("by_project", ["projectId"])
+        .index("by_user", ["userId"]),
 });

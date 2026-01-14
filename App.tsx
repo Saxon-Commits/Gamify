@@ -17,7 +17,7 @@ import { Guild } from './pages/Guild';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
 import { Grindstone } from './pages/tools/Grindstone';
-import { MindWipe } from './pages/tools/MindWipe';
+
 import { InvitePage } from './pages/InvitePage';
 
 
@@ -128,7 +128,7 @@ const App: React.FC = () => {
 
         {/* Full Screen Tools */}
         <Route path="/app/tools/grindstone" element={<Grindstone />} />
-        <Route path="/app/tools/mind-wipe" element={<MindWipe />} />
+
 
         {/* Invite Route - Requires Auth */}
         <Route path="/invite/:code" element={

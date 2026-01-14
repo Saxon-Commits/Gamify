@@ -64,13 +64,24 @@ export const Guild: React.FC = () => {
     const [view, setView] = useState<'dashboard' | 'browse' | 'create'>('dashboard');
     const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'chat' | 'settings'>('overview');
     const [selectedGuildProjectId, setSelectedGuildProjectId] = useState<Id<"guildProjects"> | null>(null);
+    const [draftProject, setDraftProject] = useState<any>(null);
 
     useEffect(() => {
-        if (myGuilds && myGuilds.length > 0 && !activeGuildId) {
+        if (!myGuilds) return;
+
+        // 1. No guilds exist -> Go to Browse
+        if (myGuilds.length === 0) {
+            setView('browse');
+            if (activeGuildId) setActiveGuildId(null);
+            return;
+        }
+
+
+
+        // 3. No Active ID set -> Auto-select first
+        if (!activeGuildId) {
             setActiveGuildId(myGuilds[0].guild._id);
             setView('dashboard');
-        } else if (myGuilds && myGuilds.length === 0) {
-            setView('browse');
         }
     }, [myGuilds, activeGuildId]);
 
@@ -221,6 +232,9 @@ export const Guild: React.FC = () => {
                             onResetForceCreate={() => setTriggerProjectCreation(false)}
                             viewProjectId={selectedGuildProjectId}
                             onSelectProject={setSelectedGuildProjectId}
+                            members={guildMembers}
+                            draftProject={draftProject}
+                            setDraftProject={setDraftProject}
                         />
                     ) : (
                         // Standard Layout with Header & Tabs
@@ -272,9 +286,17 @@ export const Guild: React.FC = () => {
                                     onResetForceCreate={() => setTriggerProjectCreation(false)}
                                     viewProjectId={selectedGuildProjectId}
                                     onSelectProject={setSelectedGuildProjectId}
+                                    members={guildMembers}
+                                    draftProject={draftProject}
+                                    setDraftProject={setDraftProject}
                                 />
                             ) : activeTab === 'settings' && isOfficer ? (
-                                <GuildSettings guild={guild} membership={membership} members={guildMembers || []} />
+                                <GuildSettings
+                                    guild={guild}
+                                    membership={membership}
+                                    members={guildMembers || []}
+                                    onDisband={() => setActiveGuildId(null)}
+                                />
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {/* Announcements Section */}
@@ -318,6 +340,7 @@ export const Guild: React.FC = () => {
                     onBrowseGuilds={() => setView('browse')}
                     onLeaveGuild={handleLeave}
                     isLeaving={isLeaving}
+                    currentUserId={membership.userId}
                 />
             </div>
 

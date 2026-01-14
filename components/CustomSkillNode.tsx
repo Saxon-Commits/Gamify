@@ -1,32 +1,18 @@
-
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import * as Icons from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
+import { NODE_DEFINITIONS } from '../src/utils/SkillTreeUtils';
 
 export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
   const { stats, skillEdges, skillNodes, setHoveredNode, unlockNode, setAvatar } = useGameStore();
 
+  // Resolve Image from Static Definition directly (Prefer Static to fix stale state)
+  const [branchId, nodeIndex] = id.split('-');
+  const definition = NODE_DEFINITIONS[branchId as any]?.[parseInt(nodeIndex)];
+  const resolvedImage = definition?.image || data.image; // fallback to data.image if definition missing
+
   const Icon = (Icons as any)[data.icon] || Icons.HelpCircle;
-
-  // ... (existing dependency logic) ... 
-  // Omitted for brevity, but I just need to update the onClick handler below.
-  // Wait, I can't emit "Omitted" in replace_file_content if I'm replacing lines.
-  // I need to be precise.
-  // But wait, the previous tool call showed line 1-100.
-  // I will target the specific blocks.
-
-  // No, I need to recalculate `activeColors` etc if I replace everything.
-  // I will just replace the top destructuring and the onClick.
-
-
-  // ... (existing dependency logic) ... 
-
-  // Inside onClick:
-  // onClick={(e) => {
-  //   e.stopPropagation();
-  //   if (isUnlockable) setVerificationNode({ id, data });
-  // }}
 
   // Dependency Logic
   const parentEdges = skillEdges.filter(e => e.target === id);
@@ -60,7 +46,7 @@ export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
   // Visual Styles based on Type
   const typeStyles = {
     minor: 'w-12 h-12 rounded-full border-2 overflow-hidden',
-    major: 'w-20 h-20 rounded-2xl border-4 shadow-xl overflow-hidden', // Removed shadow color to be dynamic
+    major: 'w-20 h-20 rounded-2xl border-4 shadow-xl overflow-hidden',
     hybrid: 'w-16 h-16 rotate-45 border-4 overflow-hidden',
     apex: 'w-24 h-24 rotate-45 border-4 z-20 overflow-hidden'
   };
@@ -118,7 +104,7 @@ export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
           }
         }
       }}
-      onMouseEnter={() => setHoveredNode({ ...data, isUnlockable, canAfford, isParentUnlocked, isJumpUnlockable })}
+      onMouseEnter={() => setHoveredNode({ ...data, image: resolvedImage, isUnlockable, canAfford, isParentUnlocked, isJumpUnlockable })}
       onMouseLeave={() => setHoveredNode(null)}
     >
       <Handle type="target" position={Position.Top} className="opacity-0 w-0 h-0 top-1/2 left-1/2" style={{ transform: 'translate(-50%, -50%)' }} />
@@ -134,11 +120,11 @@ export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
         `}
       >
         <div className={data.type === 'hybrid' || data.type === 'apex' ? '-rotate-45' : ''}>
-          {data.image ? (
+          {resolvedImage ? (
             <img
-              src={data.image}
+              src={resolvedImage}
               alt={data.label}
-              className={`w-full h-full object-cover ${data.type === 'apex' ? 'scale-150' : ''} ${iconColorClass /* Apply text color to alt text or fallback, though img won't use it directly */}`}
+              className={`w-full h-full object-cover ${data.type === 'apex' ? 'scale-150' : ''} ${iconColorClass}`}
               style={{ imageRendering: 'pixelated' }}
             />
           ) : (

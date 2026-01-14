@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore, INITIAL_PROJECTS, INITIAL_TASKS } from '../store/useGameStore';
 import { generateDailyQuests } from '../src/utils/aiQuestGenerator';
-import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2 } from 'lucide-react';
+import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle } from 'lucide-react';
 import { QuestDifficulty, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -10,8 +10,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { MerchantCard, MerchantModal } from '../components/MerchantCard';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ProjectDetailView } from '../components/ProjectDetailView';
+import { MiniCharacterCard } from '../components/MiniCharacterCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from "convex/react";
+import { PenSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from "../convex/_generated/api";
 
 const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty }) => {
@@ -30,69 +32,155 @@ const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty
   );
 };
 
-const QuestCard: React.FC<{ task: Task; completeTask: (id: string) => void; deleteTask: (id: string) => void }> = ({ task, completeTask, deleteTask }) => {
+export const QuestCard: React.FC<{
+  task: Task;
+  completeTask: (id: string) => void;
+  deleteTask: (id: string) => void;
+  updateTask: (task: Task) => void;
+  onEdit?: (task: Task) => void;
+}> = ({ task, completeTask, deleteTask, updateTask, onEdit }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!task) return null;
 
   return (
-    <div className={`
-      relative p-4 rounded-xl border transition-all duration-300 group
+    <div
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={`
+      relative p-3 rounded-xl border transition-all duration-300 group cursor-pointer
       ${task.completed ? 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 opacity-50' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10'}
     `}>
-      <div className="flex items-start justify-between mt-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            {task.type === 'daily' && <span className="text-[9px] font-bold text-sky-400 flex items-center gap-1"><Sparkles size={10} /> DAILY</span>}
-          </div>
-          <h4 className={`font-bold ${task.completed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white'}`}>
-            {task.name}
-          </h4>
-          {task.description && <p className="text-xs text-slate-500 mt-1 leading-relaxed">{task.description}</p>}
-
-          <div className="flex items-center gap-3 mt-3">
-            <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-900/50">
-              <span>+{task.xpReward} XP</span>
-            </div>
-            {task.goldReward > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
-                <Coins size={10} />
-                <span>+{task.goldReward}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="ml-4 flex flex-col items-center gap-2">
-          <button
-            onClick={() => !task.completed && completeTask(task.id)}
-            disabled={task.completed}
-            className={`
-              h-10 w-10 flex items-center justify-center rounded-xl border-2 transition-all duration-300
+      <div className="flex items-start gap-3">
+        {/* Checkbox */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (task.completed) {
+              updateTask({ ...task, completed: false });
+            } else {
+              completeTask(task.id);
+            }
+          }}
+          className={`
+              mt-0.5 h-5 w-5 flex-shrink-0 flex items-center justify-center rounded-full border-2 transition-all duration-300
               ${task.completed
-                ? 'bg-green-500/10 border-green-500/30 text-green-500'
-                : 'border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
+              ? 'bg-green-500/10 border-green-500/30 text-green-500'
+              : 'border-slate-300 dark:border-slate-600 text-transparent hover:border-indigo-500 hover:text-indigo-500 dark:hover:text-indigo-400 group-hover:scale-110'}
             `}
-          >
-            {task.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-          </button>
+        >
+          {task.completed && <CheckCircle2 size={12} />}
+        </button>
 
-          {/* Delete Button - Moved Here */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteTask(task.id);
-            }}
-            className="text-slate-700 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
-            title="Delete Task"
-          >
-            <Trash2 size={18} />
-          </button>
+        <div className="flex-1 min-w-0">
+          {/* Title and Icons Header */}
+          <div className="flex items-center gap-2">
+            <h4 className={`font-bold text-sm break-words leading-tight ${task.completed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-white'}`}>
+              {task.name}
+            </h4>
+            {/* Quick Indicators (Visible even when collapsed) */}
+            <div className="flex items-center gap-1 opacity-60">
+              {task.type === 'daily' && !task.frequency && <Sparkles size={10} className="text-sky-400" />}
+              {task.frequency && <Repeat size={10} className="text-slate-400" />}
+              {task.deadline && <Clock size={10} className="text-red-400" />}
+            </div>
+          </div>
+
+          {/* Subtasks (Always Visible if present) */}
+          {task.subtasks && task.subtasks.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {task.subtasks.map((subtask, index) => (
+                <div key={subtask.id || index} className="flex items-start gap-2 group/sub" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => {
+                      const newSubtasks = [...task.subtasks!];
+                      newSubtasks[index] = { ...subtask, completed: !subtask.completed };
+                      updateTask({ ...task, subtasks: newSubtasks });
+                    }}
+                    className={`mt-0.5 w-3 h-3 rounded-sm border flex items-center justify-center transition-colors ${subtask.completed ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600 hover:border-indigo-400'}`}
+                  >
+                    {subtask.completed && <CheckCircle2 size={8} className="text-white" />}
+                  </button>
+                  <span className={`text-[10px] leading-tight ${subtask.completed ? 'text-slate-400 line-through' : 'text-slate-600 dark:text-slate-400'}`}>{subtask.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Expanded Content */}
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
+
+                  {/* Description */}
+                  {task.description && <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{task.description}</p>}
+
+                  {/* Metadata Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {task.type === 'daily' && !task.frequency && <span className="text-[9px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-900/20 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800">DAILY</span>}
+                    {task.frequency && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{task.frequency.toUpperCase()}</span>}
+                    {task.deadline && <span className="text-[9px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">{new Date(task.deadline).toLocaleDateString()}</span>}
+                    {task.penalty && (task.penalty.gold || task.penalty.xp) ? <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">PENALTY</span> : null}
+                  </div>
+
+                  {/* Footer: Rewards & Edit */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-900/50">
+                        <span>+{task.xpReward} XP</span>
+                      </div>
+                      {task.goldReward > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-900/50">
+                          <Coins size={10} />
+                          <span>+{task.goldReward}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit && onEdit(task);
+                      }}
+                      className="text-xs text-slate-400 hover:text-indigo-500 flex items-center gap-1 font-medium transition-colors"
+                    >
+                      <PenSquare size={12} /> Edit
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Action Buttons: Delete (Absolute, Hover Only) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteTask(task.id);
+          }}
+          className="absolute top-2 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+          title="Delete Task"
+        >
+          <Trash2 size={14} />
+        </button>
       </div>
     </div>
   );
 };
 
-const SortableQuestCard: React.FC<{ task: Task; completeTask: (id: string) => void; deleteTask: (id: string) => void }> = ({ task, completeTask, deleteTask }) => {
+export const SortableQuestCard: React.FC<{
+  task: Task;
+  completeTask: (id: string) => void;
+  deleteTask: (id: string) => void;
+  updateTask: (task: Task) => void;
+  onEdit?: (task: Task) => void;
+}> = ({ task, completeTask, deleteTask, updateTask, onEdit }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   const style = {
@@ -106,14 +194,178 @@ const SortableQuestCard: React.FC<{ task: Task; completeTask: (id: string) => vo
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <QuestCard task={task} completeTask={completeTask} deleteTask={deleteTask} />
+      <QuestCard task={task} completeTask={completeTask} deleteTask={deleteTask} updateTask={updateTask} onEdit={onEdit} />
     </div>
   );
 };
 
-const CreateBountyCard = ({ projectId, onCreate }: { projectId: string; onCreate: (task: any) => void }) => {
-  const [name, setName] = useState('');
-  const [difficulty, setDifficulty] = useState<QuestDifficulty>('EASY');
+const FoundationsCarousel: React.FC<{ projects: any[], activeProjectId: string | null, onProjectClick: (id: string) => void }> = ({ projects, activeProjectId, onProjectClick }) => {
+  const [index, setIndex] = useState(0);
+
+  // Filter only foundation projects
+  const foundations = projects.filter(p => ['col-todo', 'col-habit', 'col-guild'].includes(p.id));
+
+  const nextSlide = () => {
+    setIndex((prev) => (prev + 1) % foundations.length);
+  };
+
+  const prevSlide = () => {
+    setIndex((prev) => (prev - 1 + foundations.length) % foundations.length);
+  };
+
+  const currentProject = foundations[index];
+
+  if (!currentProject) return null;
+
+  // Calculate Level
+  const level = Math.floor(currentProject.hp / 100) + 1; // Simplified level logic
+  const progress = (currentProject.hp % 100);
+
+  return (
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg select-none">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+          <Trophy size={12} />
+          <span>Foundations</span>
+        </h3>
+        {/* Dots */}
+        <div className="flex gap-1">
+          {foundations.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${i === index ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-700'}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="relative h-48 group">
+        <AnimatePresence mode='wait'>
+          <motion.div
+            key={currentProject.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => onProjectClick(currentProject.id)}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = offset.x; // Drag distance
+              if (swipe < -50) nextSlide();
+              else if (swipe > 50) prevSlide();
+            }}
+          >
+            {/* Background Image */}
+            {currentProject.backgroundImage ? (
+              <img
+                src={currentProject.backgroundImage}
+                alt={currentProject.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900" />
+            )}
+
+            {/* Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
+            {/* Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+              <div className="flex items-center gap-2 mb-1">
+                {currentProject.icon && <img src={currentProject.icon} className="w-5 h-5 object-contain" />}
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/70">Level {level}</span>
+              </div>
+              <h4 className="text-xl font-black leading-tight mb-2 tracking-wide font-sans">{currentProject.name}</h4>
+
+              {/* Progress Bar */}
+              <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                <div
+                  className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] text-white/60 font-medium">{progress} / 100 XP</span>
+                <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider">Active</span>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation Arrows (Visible on Hover / Mobile?) */}
+        <button
+          onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 text-white/70 hover:bg-black/50 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 text-white/70 hover:bg-black/50 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel }: { projectId: string; onCreate: (task: any) => void; initialData?: Task; onCancel?: () => void }) => {
+  const [isExpanded, setIsExpanded] = useState(!!initialData);
+  const [name, setName] = useState(initialData?.name || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [difficulty, setDifficulty] = useState<QuestDifficulty>(initialData?.difficulty || 'EASY');
+  const [category, setCategory] = useState<'col-todo' | 'col-habit' | 'col-guild'>((initialData?.projectId as any) || projectId || 'col-todo');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Enhanced Fields
+  const [frequency, setFrequency] = useState<'once' | 'daily' | 'weekly' | 'monthly' | 'custom'>(initialData?.frequency || 'once');
+
+  // Format deadline for input if it exists
+  const formatDeadline = (isoString?: string) => {
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      // datetime-local expects YYYY-MM-DDThh:mm
+      return date.toISOString().slice(0, 16);
+    } catch (e) { return ''; }
+  };
+
+  const [deadline, setDeadline] = useState(formatDeadline(initialData?.deadline));
+  const [hasPenalty, setHasPenalty] = useState(!!initialData?.penalty);
+  const [penaltyGold, setPenaltyGold] = useState(initialData?.penalty?.gold || 0);
+  const [penaltyXP, setPenaltyXP] = useState(initialData?.penalty?.xp || 0);
+
+  const [subtasks, setSubtasks] = useState<{ id: string, text: string, completed: boolean }[]>(initialData?.subtasks || []);
+  const [newSubtask, setNewSubtask] = useState('');
+
+  // Reset internal state if initialData changes (e.g. switching edit target)
+  useEffect(() => {
+    if (initialData) {
+      setIsExpanded(true);
+      setName(initialData.name);
+      setDescription(initialData.description || '');
+      setDifficulty(initialData.difficulty);
+      setCategory(initialData.projectId as any);
+      setFrequency(initialData.frequency || 'once');
+      setDeadline(formatDeadline(initialData.deadline));
+      setHasPenalty(!!initialData.penalty);
+      setPenaltyGold(initialData.penalty?.gold || 0);
+      setPenaltyXP(initialData.penalty?.xp || 0);
+      setSubtasks(initialData.subtasks || []);
+    }
+  }, [initialData]);
+
+  const categories = [
+    { id: 'col-todo', label: 'To-Do', icon: CheckCircle2, color: 'text-emerald-500' },
+    { id: 'col-habit', label: 'Habit', icon: Repeat, color: 'text-amber-500' },
+    { id: 'col-guild', label: 'Guild', icon: Users, color: 'text-purple-500' }
+  ];
+
+  const frequencies = ['once', 'daily', 'weekly', 'monthly'];
 
   // Default rewards based on difficulty
   const getRewards = (diff: QuestDifficulty) => {
@@ -127,47 +379,259 @@ const CreateBountyCard = ({ projectId, onCreate }: { projectId: string; onCreate
     }
   };
 
+
+
+  const addSubtask = () => {
+    if (!newSubtask.trim()) return;
+    setSubtasks([...subtasks, { id: crypto.randomUUID(), text: newSubtask, completed: false }]);
+    setNewSubtask('');
+  };
+
+  const removeSubtask = (id: string) => {
+    setSubtasks(subtasks.filter(s => s.id !== id));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
 
     const rewards = getRewards(difficulty);
 
-    onCreate({
-      projectId,
+    // Add subtasks bonus? Optional: increase reward based on subtasks count
+
+    const taskData: any = {
+      ...initialData, // Preserve ID if editing
+      projectId: category,
       name,
-      description: '',
-      type: 'main',
+      description,
+      type: frequency !== 'once' ? 'daily' : (category === 'col-guild' ? 'guild' : 'main'),
       difficulty,
       xpReward: rewards.xp,
       goldReward: rewards.gold,
-      energyCost: 0,
-      completed: false
-    });
-    setName('');
+      energyCost: initialData?.energyCost || 0,
+      completed: initialData?.completed || false,
+      frequency: frequency !== 'once' ? frequency : undefined,
+      deadline: deadline ? new Date(deadline).toISOString() : undefined,
+      penalty: hasPenalty ? { gold: penaltyGold, xp: penaltyXP } : undefined,
+      subtasks: subtasks.length > 0 ? subtasks : undefined
+    };
+
+    onCreate(taskData);
+
+    if (onCancel) {
+      onCancel(); // Close edit mode
+      setIsSubmitting(false); // Reset just in case, though component likely unmounts
+    } else {
+      // Reset form for create mode
+      setName('');
+      setDescription('');
+      setIsExpanded(false);
+      setFrequency('once');
+      setDeadline('');
+      setHasPenalty(false);
+      setPenaltyGold(0);
+      setPenaltyXP(0);
+      setSubtasks([]);
+      setNewSubtask('');
+
+      // Delay releasing the lock to prevent accidental double-clicks from creating duplicates
+      setTimeout(() => setIsSubmitting(false), 500);
+    }
   };
 
-  return (
+  if (!isExpanded) {
+    return (
+      <div
+        onClick={() => setIsExpanded(true)}
+        className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors cursor-pointer group"
+      >
+        <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
+          <PlusCircle size={20} className="group-hover:text-indigo-500 transition-colors" />
+          <span className="text-sm font-medium">Create a Bounty...</span>
+        </div>
+      </div>
+    );
+  }
 
-    <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-slate-100 dark:hover:bg-slate-900/50 transition-colors">
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="relative">
+  return (
+    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl relative animate-in fade-in zoom-in-95 duration-200">
+      <button
+        onClick={() => onCancel ? onCancel() : setIsExpanded(false)}
+        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+      >
+        <X size={16} />
+      </button>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-500 mb-2">{initialData ? 'Edit Bounty' : 'New Bounty'}</h3>
+
+        {/* Name Input */}
+        <div>
           <input
             type="text"
-            placeholder="Create new bounty..."
+            placeholder="Bounty Title"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-slate-200 focus:border-indigo-500 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 pr-10"
+            className="w-full bg-transparent text-lg font-bold text-slate-800 dark:text-slate-100 placeholder:text-slate-300 dark:placeholder:text-slate-600 focus:outline-none"
+            autoFocus
           />
-          <button
-            type="submit"
-            disabled={!name.trim()}
-            className="absolute right-1 top-1 bottom-1 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-0 disabled:pointer-events-none transition-all duration-200 flex items-center justify-center"
-          >
-            <Plus size={16} />
-          </button>
         </div>
 
+        {/* Category Selection */}
+        <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-950/50 rounded-lg">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setCategory(cat.id as any)}
+              className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap
+                ${category === cat.id
+                  ? 'bg-white dark:bg-slate-800 shadow-sm text-indigo-600 dark:text-indigo-400'
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+            >
+              <cat.icon size={12} />
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Details Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Difficulty */}
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-slate-400">Difficulty</label>
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value as QuestDifficulty)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs font-medium focus:border-indigo-500 outline-none"
+            >
+              {['TRIVIAL', 'EASY', 'MEDIUM', 'HARD', 'EPIC'].map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Recurrence */}
+          <div className="space-y-1">
+            <label className="text-[10px] uppercase font-bold text-slate-400">Recurrence</label>
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as any)}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs font-medium focus:border-indigo-500 outline-none"
+            >
+              {frequencies.map(f => (
+                <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Deadline */}
+        <div className="space-y-1">
+          <label className="text-[10px] uppercase font-bold text-slate-400">Deadline (Optional)</label>
+          <input
+            type="datetime-local"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs font-medium focus:border-indigo-500 outline-none block"
+            style={{ colorScheme: 'dark' }}
+          />
+        </div>
+
+        {/* Subtasks */}
+        <div className="space-y-2">
+          <label className="text-[10px] uppercase font-bold text-slate-400">Subtasks</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newSubtask}
+              onChange={(e) => setNewSubtask(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSubtask())}
+              placeholder="Add step..."
+              className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs focus:border-indigo-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={addSubtask}
+              className="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 transition-colors"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          {subtasks.length > 0 && (
+            <div className="space-y-1 pl-1">
+              {subtasks.map(st => (
+                <div key={st.id} className="flex items-center justify-between group/st text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                    <span className="text-slate-600 dark:text-slate-300">{st.text}</span>
+                  </div>
+                  <button type="button" onClick={() => removeSubtask(st.id)} className="opacity-0 group-hover/st:opacity-100 text-slate-400 hover:text-red-500">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Penalty Toggle */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50">
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              id="penaltyCheck"
+              checked={hasPenalty}
+              onChange={(e) => setHasPenalty(e.target.checked)}
+              className="rounded border-slate-300 dark:border-slate-700 text-red-500 focus:ring-red-500"
+            />
+            <label htmlFor="penaltyCheck" className="text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 cursor-pointer select-none">
+              <Flame size={12} className={hasPenalty ? "text-red-500" : "text-slate-400"} />
+              Enable Failure Penalty
+            </label>
+          </div>
+
+          {hasPenalty && (
+            <div className="grid grid-cols-2 gap-3 pl-6 animate-in slide-in-from-top-2 duration-200">
+              <div>
+                <label className="text-[9px] uppercase font-bold text-slate-400">Gold Loss</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={penaltyGold}
+                    onChange={(e) => setPenaltyGold(Number(e.target.value))}
+                    className="w-full pl-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg py-1 text-xs text-red-600 dark:text-red-400 focus:border-red-500 outline-none"
+                  />
+                  <Coins size={10} className="absolute left-2 top-1.5 text-red-400" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[9px] uppercase font-bold text-slate-400">XP Loss</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={penaltyXP}
+                    onChange={(e) => setPenaltyXP(Number(e.target.value))}
+                    className="w-full pl-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg py-1 text-xs text-red-600 dark:text-red-400 focus:border-red-500 outline-none"
+                  />
+                  <Brain size={10} className="absolute left-2 top-1.5 text-red-400" />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={!name.trim()}
+          className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-bold shadow-md shadow-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {initialData ? <PenSquare size={16} /> : <Plus size={16} />}
+          {initialData ? 'Save Changes' : 'Create Bounty'}
+        </button>
 
       </form>
     </div>
@@ -180,6 +644,8 @@ export const BountyColumn: React.FC<{
   bounties: Task[];
   completeTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  updateTask: (task: Task) => void;
+  onEdit: (task: Task) => void;
   onCreate: (task: any) => void
 }> = ({
   pid,
@@ -187,12 +653,21 @@ export const BountyColumn: React.FC<{
   bounties,
   completeTask,
   deleteTask,
+  updateTask,
+  onEdit,
   onCreate
 }) => {
-    const { setNodeRef } = useDroppable({ id: pid });
+
+    const { setNodeRef, isOver } = useDroppable({
+      id: pid,
+      data: { type: 'Column' }
+    });
 
     return (
-      <div ref={setNodeRef} className="h-full flex flex-col">
+      <div
+        ref={setNodeRef}
+        className={`w-full h-full min-h-[150px] flex flex-col transition-colors duration-200 rounded-xl ${isOver ? 'bg-indigo-50/50 dark:bg-indigo-900/20 ring-2 ring-indigo-400/30' : ''}`}
+      >
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</span>
           <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800" />
@@ -201,14 +676,10 @@ export const BountyColumn: React.FC<{
           </button>
         </div>
 
-        {pid === 'p-tycoon-2' && (
-          <div className="mb-4">
-            <CreateBountyCard projectId={pid} onCreate={onCreate} />
-          </div>
-        )}
+
 
         <SortableContext id={pid} items={bounties.map(t => t.id)} strategy={verticalListSortingStrategy}>
-          <div className="flex-1 min-h-[100px] space-y-3">
+          <div className="flex-1 min-h-[300px] flex flex-col gap-3">
             <AnimatePresence mode="popLayout">
               {bounties.map((quest) => (
                 <SortableQuestCard
@@ -216,12 +687,14 @@ export const BountyColumn: React.FC<{
                   task={quest}
                   completeTask={completeTask}
                   deleteTask={deleteTask}
+                  updateTask={updateTask}
+                  onEdit={onEdit}
                 />
               ))}
             </AnimatePresence>
             {bounties.length === 0 && (
-              <div className="py-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/10">
-                <p className="text-[10px] text-slate-400 dark:text-slate-600">Drag items here</p>
+              <div className="flex-1 min-h-[100px] flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/10 opacity-50">
+                <p className="text-xs font-medium text-slate-400 dark:text-slate-500">Drag items here</p>
               </div>
             )}
           </div>
@@ -232,15 +705,11 @@ export const BountyColumn: React.FC<{
 
 export const QuestLog: React.FC = () => {
   const navigate = useNavigate();
-  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart } = useGameStore();
+  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart, updateTask } = useGameStore();
 
   // Robust wrapper to ensure delete functionality
   const handleDeleteTask = (taskId: string) => {
-    const store = useGameStore.getState();
-    if (store.deleteTask) {
-      store.deleteTask(taskId);
-      console.error("deleteTask is missing from store state!", store);
-    }
+    useGameStore.getState().deleteTask(taskId);
   };
 
   // Guild Contribution Hook
@@ -276,6 +745,23 @@ export const QuestLog: React.FC = () => {
   const [expandedQuestId, setExpandedQuestId] = useState<string | null>(null);
   const [activeProtocolPillar, setActiveProtocolPillar] = useState<'physical' | 'mental' | 'nutrition' | 'social' | 'sleep'>('physical');
 
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+
+  // Edit Mode State
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditedTask = (updatedTask: any) => {
+    updateTask(updatedTask);
+    setIsEditModalOpen(false);
+    setEditingTask(null);
+  };
+
   // DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -285,28 +771,11 @@ export const QuestLog: React.FC = () => {
     })
   );
 
-  const customCollisionDetection: CollisionDetection = (args) => {
-    // 1. First, let's see if we are directly over a droppable using pointerWithin (precise)
-    const pointerCollisions = pointerWithin(args);
+  // Use standard rectIntersection for Kanban-style container dropping
+  // (We removed the complex customCollisionDetection to simplify behavior)
 
-    // If we have collisions, we need to decide if we want to return them or use closestCorners.
-    // Generally, if we are over a container (project column) that is empty or we are in the empty space of it,
-    // pointerWithin will return the container.
-    // closestCorners might return a neighbor if the container is large and empty (corners far away).
-
-    if (pointerCollisions.length > 0) {
-      // If we are over something physically, that's usually the best match.
-      // However, closestCorners is nice for smooth sorting between items.
-      // Strategy:
-      // If pointerWithin hits a container (and no tasks inside it, or we want container to win if in empty space), return it.
-
-      return pointerCollisions;
-    }
-
-    // 2. Fallback to closestCorners for "magnetic" feel when near but not over?
-    // Actually, pointerWithin handles "over". closestCorners handles "near".
-    // Using closestCorners as fallback is good.
-    return closestCorners(args);
+  const handleDragStart = (event: DragEndEvent) => {
+    setActiveDragId(event.active.id as string);
   };
 
   const handleDragOver = (event: DragEndEvent) => {
@@ -324,7 +793,7 @@ export const QuestLog: React.FC = () => {
 
     const activeContainer = activeTask.projectId;
     // If over a container directly (e.g. empty column)
-    const overContainer = ['p-titan-1', 'p-tycoon-1', 'p-tech-1', 'p-tycoon-2'].includes(overId)
+    const overContainer = ['col-todo', 'col-habit', 'col-guild'].includes(overId)
       ? overId
       : overTask?.projectId;
 
@@ -353,7 +822,7 @@ export const QuestLog: React.FC = () => {
     // For now, let's just update the container (Project ID). 
     // real reordering happens locally or via arrayMove if we want to simulate the sort.
 
-    const isOverContainerDirectly = ['p-titan-1', 'p-tycoon-1', 'p-tech-1', 'p-tycoon-2'].includes(overId);
+    const isOverContainerDirectly = ['col-todo', 'col-habit', 'col-guild'].includes(overId);
 
     if (isOverContainerDirectly) {
       // Just move to container, append effectively (or keep existing relative order)
@@ -388,6 +857,8 @@ export const QuestLog: React.FC = () => {
         reorderTasks(arrayMove(tasks, oldIndex, newIndex));
       }
     }
+
+    setActiveDragId(null);
   };
 
   const handleCreateBounty = (taskData: any) => {
@@ -433,19 +904,30 @@ export const QuestLog: React.FC = () => {
   const systemItems = SHOP_ITEMS.filter(i => i.type === 'SYSTEM');
 
   useEffect(() => {
-    // Migration: Check for Tycoon Update
-    const hasTycoonUpdate = useGameStore.getState().projects.some(p => p.id === 'p-tycoon-2');
-    if (!hasTycoonUpdate) {
-      console.log('Migrating Tycoon Quests...');
-      useGameStore.getState().addProjects(INITIAL_PROJECTS);
-      useGameStore.getState().addTasks(INITIAL_TASKS);
-    }
+    // Migration: Check for Column Refactor (Titan -> To-Do)
+    const store = useGameStore.getState();
+    const hasNewColumns = store.projects.some(p => p.id === 'col-todo');
 
-    // Migration: Check for Physical Protocol Tasks
-    const hasSteps = useGameStore.getState().tasks.some(t => t.id === 'b-steps');
-    if (!hasSteps) {
-      console.log('Migrating Physical Protocol Tasks...');
-      useGameStore.getState().addTasks(INITIAL_TASKS.filter(t => t.id === 'b-steps' || t.id === 'b-stretch'));
+    if (!hasNewColumns) {
+      console.log('Migrating to new Column IDs...');
+      // 1. Add new projects (columns)
+      store.addProjects(INITIAL_PROJECTS);
+
+      // 2. Migrate existing tasks to new IDs
+      const migratedTasks = store.tasks.map(t => {
+        if (t.projectId === 'p-titan-1') return { ...t, projectId: 'col-todo' };
+        if (t.projectId === 'p-tycoon-1') return { ...t, projectId: 'col-habit' };
+        if (t.projectId === 'p-tycoon-2') return { ...t, projectId: 'col-guild' }; // assuming guild column
+        if (t.projectId === 'p-tech-1') return { ...t, projectId: 'col-todo' }; // Tech orphaned -> To-Do
+        return t;
+      });
+
+      // Update tasks in store (need a bulk update or just replace all?)
+      // We don't have replaceTasks, but addTasks appends? 
+      // Actually we should define a way to bulk update. 
+      // For now, let's just addTasks? No that duplicates.
+      // We can use updateTask multiple times or just rely on 'reorderTasks' which sets tasks?
+      store.reorderTasks(migratedTasks);
     }
   }, []);
 
@@ -476,16 +958,16 @@ export const QuestLog: React.FC = () => {
     // NEW LOGIC:
     let tasksForProject = tasks.filter(t => t.projectId === projectId);
 
-    // If this is the "Projects" column (p-tech-1), also include Guild Project tasks
-    if (projectId === 'p-tech-1') {
-      const guildTasks = tasks.filter(t => t.type === 'guild');
+    // If this is the "Guild" column (col-guild), also include Guild Project tasks
+    if (projectId === 'col-guild') {
+      const guildTasks = tasks.filter(t => t.type === 'guild' && t.projectId !== projectId);
       tasksForProject = [...tasksForProject, ...guildTasks];
     }
 
     // If we have tasks, return them (plus any forced defaults for Titan/Physical if missing?)
     // User wants "Bounty Columns". If I move a task to Titan, it should show up.
 
-    if (projectId === 'p-titan-1') {
+    if (projectId === 'col-todo') {
       const physicalDefaults = tasksForProject.filter(t => t.id === 'b-steps' || t.id === 'b-stretch');
       // If we have "real" tasks (moved here) or specific defaults, show them.
       // We also need to handle the "Mocks" for other pillars if the user hasn't created tasks yet?
@@ -509,10 +991,9 @@ export const QuestLog: React.FC = () => {
       return { [expandedQuestId]: getBountiesForFoundation(expandedQuestId) };
     }
     return {
-      'p-titan-1': getBountiesForFoundation('p-titan-1'),
-      'p-tycoon-1': getBountiesForFoundation('p-tycoon-1'),
-      'p-tech-1': getBountiesForFoundation('p-tech-1'),
-      'p-tycoon-2': getBountiesForFoundation('p-tycoon-2')
+      'col-todo': getBountiesForFoundation('col-todo'),
+      'col-habit': getBountiesForFoundation('col-habit'),
+      'col-guild': getBountiesForFoundation('col-guild')
     };
   };
 
@@ -542,323 +1023,95 @@ export const QuestLog: React.FC = () => {
         onAddItem={handleAddItem}
       />
 
+      {/* Edit Modal Overlay */}
+      {isEditModalOpen && editingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md">
+            <CreateBountyCard
+              projectId={editingTask.projectId}
+              onCreate={handleSaveEditedTask}
+              initialData={editingTask}
+              onCancel={() => setIsEditModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <div className={`flex flex-col lg:flex-row gap-8 mt-8 transition-opacity duration-300 ${isQuestModalOpen ? 'opacity-20 pointer-events-none' : ''}`}>
 
+        {/* LEFT PROFILE CARD (New Feature) */}
+        <div className="w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500">
+          <MiniCharacterCard
+            avatarId={stats.activeAvatarId || 'starter_villager_male'}
+            backdropId={stats.activeBackdropId}
+            companionId={stats.activeCompanionId || stats.activeAccessoryId}
+            weaponId={stats.activeMainHandId}
+            armorId={stats.activeArmorId}
+            className="w-full shadow-2xl border border-slate-700/50 sticky top-4"
+          />
+        </div>
 
-
-        {/* RIGHT CONTENT */}
+        {/* RIGHT CONTENT (Main Column) */}
         <div className="flex-1 space-y-8">
 
-
-
-          {/* MAIN QUESTS - Top 4 Projects (2 Column Layout) */}
+          {/* New Header for Bounties? Or just let Bounties speak for themselves */}
           <div className="flex items-center gap-3 mb-[-10px]">
-            {/* Removed missing divider image */}
-            <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">Foundations</h2>
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-amber-500/50 to-transparent" />
-          </div>
-          <div className="flex flex-col gap-4">
-            <AnimatePresence mode="wait">
-              {expandedQuestId ? (
-                (() => {
-                  const project = projects.find(p => p.id === expandedQuestId);
-                  if (!project) return null;
-
-                  const activeTasks = tasks.filter(t => t.projectId === project.id);
-                  const originalIndex = projects.findIndex(p => p.id === project.id);
-                  const questBackgrounds = [
-                    '/assets/vitality_peak_quest_card.jpg',
-                    '/assets/dwarvern_vault_quest_card.jpg',
-                    '/assets/scholars_mine_quest_card.jpg',
-                    '/assets/stewards_castle_quest_card.jpg'
-                  ];
-                  const hasBackground = originalIndex < questBackgrounds.length;
-                  const backgroundImage = hasBackground ? questBackgrounds[originalIndex] : null;
-
-                  return (
-                    <motion.div
-                      key="expanded-foundation"
-                      initial={{ opacity: 0, height: 200 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 200 }}
-                      className="w-full relative rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-2xl bg-white dark:bg-slate-900"
-                    >
-                      {/* Background Image Layer */}
-                      <div
-                        className="absolute inset-0 z-0 opacity-40"
-                        style={{
-                          backgroundImage: backgroundImage ? `url('${backgroundImage}')` : undefined,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}
-                      />
-                      <div className="absolute inset-0 z-0 bg-gradient-to-r from-white via-white/90 to-white/80 dark:from-slate-950 dark:via-slate-950/90 dark:to-slate-900/80" />
-
-
-                      <div className="relative z-10 p-4 md:p-8 flex flex-col gap-6 md:gap-8">
-                        {/* Header Section */}
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-lg">
-                              {project.icon ? <img src={project.icon} className="w-10 h-10 object-contain" /> : <Map size={32} className="text-indigo-500 dark:text-indigo-400" />}
-                            </div>
-                            <div>
-                              <h2 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-wider">{project.name}</h2>
-                              <p className="text-slate-500 dark:text-slate-400">{project.description}</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setExpandedQuestId(null);
-                            }}
-                            className="p-2 rounded-full bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-400 dark:hover:text-white transition-colors"
-                          >
-                            <ChevronDown className="rotate-180" size={24} />
-                          </button>
-                        </div>
-
-
-                        {/* Content Row: Protocol | Empty | Action */}
-                        {/* Content Row: Description | Action */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full items-center">
-
-                          {/* Description / Flavor Text Area */}
-                          <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm rounded-xl p-6 border border-slate-200/50 dark:border-slate-700/50 flex flex-col justify-center h-full">
-
-                            <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                              <span className="flex items-center gap-2"><Map size={16} /> {activeTasks.length} Milestones</span>
-                              <span className="flex items-center gap-2"><Zap size={16} /> {project.difficulty} Challenge</span>
-                            </div>
-                          </div>
-
-
-                          {/* Action Button & Rewards */}
-                          <div className="flex flex-col justify-center gap-6">
-
-                            {/* Rewards Summary */}
-
-
-                            <button
-                              onClick={() => toggleProject(project.id)}
-                              className="w-full py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                              <span>Enter Quest Log</span>
-                              <Scroll size={18} />
-                            </button>
-                          </div>
-
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })()
-              ) : (
-                <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
-                  {/* 2 Column Layout for Grid */}
-                  {[0, 1].map(columnIndex => (
-                    <div key={columnIndex} className="flex-1 flex flex-col gap-4 w-full">
-                      {projects.slice(0, 4).filter((_, i) => i % 2 === columnIndex).map((project) => {
-                        const projectTasks = tasks.filter(t => t.projectId === project.id);
-                        const completedCount = projectTasks.filter(t => t.completed).length;
-                        const progress = projectTasks.length > 0 ? (completedCount / projectTasks.length) * 100 : 0;
-                        // Calculate Total Rewards
-                        const totalXp = projectTasks.reduce((acc, t) => acc + t.xpReward, 0);
-                        const totalGold = projectTasks.reduce((acc, t) => acc + t.goldReward, 0);
-
-                        // Calculate original index to get correct background
-                        const originalIndex = projects.findIndex(p => p.id === project.id);
-                        const questBackgrounds = [
-                          '/assets/vitality_peak_quest_card.jpg', // Vitality Peak (Was _3)
-                          '/assets/dwarvern_vault_quest_card.jpg', // Dwarvern Vault
-                          '/assets/scholars_mine_quest_card.jpg', // Scholar's Mine
-                          '/assets/stewards_castle_quest_card.jpg' // Steward's Castle
-                        ];
-                        const hasBackground = originalIndex < questBackgrounds.length;
-                        const backgroundImage = hasBackground ? questBackgrounds[originalIndex] : null;
-
-                        // Lock logic: Only Vitality Peak (p-titan-1) is unlocked
-                        const isLocked = project.id !== 'p-titan-1';
-
-                        return (
-                          <div
-                            key={project.id}
-                            className={`relative group rounded-2xl transition-all duration-300 ${isLocked ? 'cursor-not-allowed opacity-80 hover:opacity-100' : 'cursor-pointer'}`}
-                            onClick={() => !isLocked && setExpandedQuestId(project.id)}
-                          >
-                            {/* 1. Logic Gate Aura (Blurry glow behind) - Only if unlocked */}
-                            {!isLocked && (
-                              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-2xl blur opacity-0 group-hover:opacity-75 transition duration-500 group-hover:duration-200" />
-                            )}
-
-                            {/* 3. Main Card Content (Inner) */}
-                            <div className={`relative flex flex-col h-full rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border ${project.completed ? 'border-green-500/50 dark:border-green-900/50' : isLocked ? 'border-slate-200 dark:border-slate-800' : 'border-slate-200 dark:border-slate-800'} transition-colors duration-300`}>
-
-                              {/* Locked Overlay */}
-                              {isLocked && (
-                                <div className="absolute inset-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center">
-                                  {/* Under Construction Art - scaled to fit nicely */}
-                                  <img
-                                    src="/assets/under construction pixel art.png"
-                                    alt="Under Construction"
-                                    className="absolute -bottom-14 left-0 w-full object-cover object-bottom opacity-50 mix-blend-luminosity"
-                                  />
-
-                                  <div className="relative z-10 flex flex-col items-center gap-3">
-                                    <div className="relative group/lock -translate-x-[22px] translate-y-[9px]">
-                                      <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full opacity-0 group-hover/lock:opacity-50 transition-opacity duration-500" />
-                                      <img
-                                        src="/assets/padlock pixel art.png"
-                                        alt="Locked"
-                                        className="w-24 h-24 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] relative z-10 opacity-90 hover:scale-105 transition-transform duration-300"
-                                      />
-                                    </div>
-
-                                    <div className="text-center px-6 max-w-sm">
-                                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 border border-slate-200 dark:border-slate-700/80 px-3 py-1 bg-white/90 dark:bg-slate-950/90 shadow-xl backdrop-blur-sm inline-block rounded-full">Coming Soon</p>
-                                      <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed drop-shadow-md bg-white/50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
-                                        {project.id === 'p-tech-1' && "The Scholar's Library is being excavated. Current Status: Writing ancient texts... Expected Unlock: Late Jan."}
-                                        {project.id === 'p-tycoon-1' && "The Financial Vault is being forged. Current Status: Smelting gold bars... Expected Unlock: Late Jan."}
-                                        {project.id === 'p-tycoon-2' && "The Steward's Castle is being fortified. Current Status: Drafting battle plans... Expected Unlock: Late Jan."}
-                                        <span className="block mt-1 text-slate-400 font-bold">Create your own quest or start the Vitality Peak quest today.</span>
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* HEADER with FIXED Background */}
-                              <div
-                                className={`relative w-full overflow-hidden flex-shrink-0 ${isLocked ? 'grayscale-[0.8]' : ''}`}
-                                style={{
-                                  backgroundImage: backgroundImage ? `url('${backgroundImage}')` : undefined,
-                                  backgroundSize: 'cover',
-                                  backgroundPosition: 'center',
-                                  minHeight: '200px'
-                                }}
-                              >
-                                {/* Overlay for quests with backgrounds to ensure text readability */}
-                                {hasBackground && <div className="absolute inset-0 bg-slate-950/70 pointer-events-none" />}
-
-                                <div className="p-5 relative z-10 h-full flex flex-col justify-between">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center gap-3">
-                                      {project.icon ? (
-                                        <img
-                                          src={project.icon}
-                                          alt=""
-                                          className="w-[58px] h-[58px] object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                                        />
-                                      ) : (
-                                        <div className={`p-2 rounded-lg ${project.completed ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-500' : 'bg-slate-100 dark:bg-slate-800 text-indigo-500 dark:text-indigo-400'}`}>
-                                          <Map size={20} />
-                                        </div>
-                                      )}
-                                      <div>
-                                        <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">{project.name}</h3>
-                                        <p className="text-xs text-slate-500">{project.description}</p>
-                                      </div>
-                                    </div>
-                                    <DifficultyBadge difficulty={project.difficulty} />
-                                  </div>
-
-                                  {/* Progress Bar */}
-                                  <div className="mt-4 flex items-center gap-4">
-                                    <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-                                      <div
-                                        className={`h-full transition-all duration-500 ${project.completed ? 'bg-green-500' : 'bg-indigo-500'}`}
-                                        style={{ width: `${progress}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-[10px] font-mono font-bold text-slate-500">
-                                      {completedCount}/{projectTasks.length}
-                                    </span>
-                                  </div>
-
-                                  {/* REWARDS (Bottom Right) */}
-                                  <div className="flex justify-end items-center gap-2 mt-3">
-                                    <span className="text-[10px] font-bold text-slate-600 tracking-wider mr-1">REWARDS</span>
-                                    {/* Mystery Chest */}
-                                    <div className="flex items-center gap-1 bg-purple-950/40 border border-purple-500/30 px-1.5 py-0.5 rounded text-[10px] text-purple-300 font-bold shadow-sm" title="Mastery Achievement">
-                                      <Sparkles size={12} className="text-purple-400" />
-                                      <span>Mastery</span>
-                                    </div>
-                                    {/* Mystery Chest */}
-                                    <div className="group/loot flex items-center gap-1.5 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 border border-indigo-500/50 px-2 py-1 rounded-lg text-[10px] text-indigo-100 font-bold shadow-[0_0_10px_rgba(99,102,241,0.3)] animate-pulse hover:animate-none cursor-help relative overflow-hidden" title="A sealed cache from the void...">
-                                      <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/loot:translate-x-[100%] transition-transform duration-700" />
-                                      <Gift size={12} className="text-purple-300" />
-                                      <span className="tracking-wide">Mystery Loot</span>
-                                    </div>
-                                    {/* SP */}
-                                    <div className="flex items-center gap-1 bg-cyan-950/40 border border-cyan-500/30 px-1.5 py-0.5 rounded text-[10px] text-cyan-300 font-bold shadow-sm" title="Skill Point">
-                                      <Zap size={12} className="text-cyan-400" fill="currentColor" />
-                                      <span>+1 SP</span>
-                                    </div>
-                                    {/* XP */}
-                                    <div className="flex items-center gap-1 bg-slate-800/60 border border-slate-600/30 px-1.5 py-0.5 rounded text-[10px] text-slate-300 font-bold shadow-sm">
-                                      <span>+{totalXp} XP</span>
-                                    </div>
-                                    {/* Gold */}
-                                    <div className="flex items-center gap-1 bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.5 rounded text-[10px] text-amber-300 font-bold shadow-sm">
-                                      <Coins size={12} className="text-amber-400" />
-                                      <span>{totalGold}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </AnimatePresence>
+            {/* <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-500 uppercase tracking-widest drop-shadow-sm">Active Bounties</h2> */}
+            {/* <div className="h-[1px] flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent" /> */}
           </div>
 
+          <div className="flex flex-col h-full min-h-[500px] mt-6">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={rectIntersection}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+                {['col-todo', 'col-habit', 'col-guild'].map((pid) => {
+                  /* 
+                     We are effectively using these IDs as "Generic Containers" now, 
+                     orphaned from the actual Foundation Projects conceptually in the UI.
+                  */
+                  const columnBounties = visibleBountiesMap[pid as any] || [];
 
-          {/* SIDE QUESTS - Remaining Projects (3 Column Layout) */}
-          <div className="space-y-6 relative mt-8">
-            <div className="flex items-center gap-3 mb-[-10px]">
-              {/* Removed missing divider image */}
-              <div className="flex-1">
-                <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 uppercase tracking-widest drop-shadow-sm">
-                  {expandedQuestId ? 'Relevant Bounties' : 'Bounties'}
-                </h2>
-                <p className="text-xs text-slate-500 font-mono mt-1">do the task or habit and acquire the bounty to reap your rewards, refreshes daily</p>
-              </div>
-            </div>
-            <div className="h-[1px] w-full bg-gradient-to-r from-amber-500/50 to-transparent" />
-
-            <DndContext sensors={sensors} collisionDetection={customCollisionDetection} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-              <div className={`grid grid-cols-1 md:grid-cols-2 ${expandedQuestId ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-4`}>
-                {['p-titan-1', 'p-tycoon-1', 'p-tech-1', 'p-tycoon-2'].map(pid => {
-                  if (expandedQuestId && expandedQuestId !== pid) return null;
-
-                  const columnBounties = visibleBountiesMap[pid] || [];
-                  const columnName = pid === 'p-titan-1' ? "To-Do"
-                    : pid === 'p-tycoon-1' ? "Habits"
-                      : pid === 'p-tech-1' ? "Projects"
-                        : "Create a Bounty";
+                  // Explicit titles, ignoring Project Names if we want to "orphan" them
+                  const title = {
+                    'col-todo': 'To-Do',
+                    'col-habit': 'Habits',
+                    'col-guild': 'Guild'
+                  }[pid] || 'Tasks';
 
                   return (
                     <BountyColumn
                       key={pid}
                       pid={pid}
-                      title={columnName}
+                      title={title}
                       bounties={columnBounties}
                       completeTask={handleCompleteTask}
                       deleteTask={handleDeleteTask}
+                      updateTask={updateTask}
+                      onEdit={handleEditTask}
                       onCreate={handleCreateBounty}
                     />
                   );
                 })}
               </div>
+              <DragOverlay dropAnimation={null}>
+                {activeDragId ? (
+                  <div className="cursor-grabbing pointer-events-none">
+                    <QuestCard
+                      task={tasks.find(t => t.id === activeDragId)!}
+                      completeTask={() => { }}
+                      deleteTask={() => { }}
+                      updateTask={() => { }}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
             </DndContext>
           </div>
-
-
         </div>
 
         {/* RIGHT SIDEBAR - Sticky */}
@@ -886,10 +1139,10 @@ export const QuestLog: React.FC = () => {
                 </div>
               </button>
 
-              {/* Tool 2: Mind Wipe */}
+              {/* Tool 2: Journal */}
               <button
                 className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-purple-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-purple-500/50 dark:hover:bg-purple-950/10 transition-all duration-300"
-                onClick={() => navigate('/app/tools/mind-wipe')}
+                onClick={() => navigate('/app/journal')}
               >
                 <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
                 <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
@@ -901,55 +1154,60 @@ export const QuestLog: React.FC = () => {
                 </div>
               </button>
 
-              {/* Tool 3: Empty */}
-              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-300 dark:border-slate-800/50 border-dashed opacity-50">
-                <Plus size={16} className="text-slate-400 dark:text-slate-700" />
-                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-700 uppercase">Slot Empty</span>
-              </div>
-
-              {/* Tool 4: Empty */}
-              <div className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl border border-slate-300 dark:border-slate-800/50 border-dashed opacity-50">
-                <Plus size={16} className="text-slate-400 dark:text-slate-700" />
-                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-700 uppercase">Slot Empty</span>
+              {/* Tool 3: New Bounty */}
+              <div className="col-span-2">
+                <CreateBountyCard projectId="col-todo" onCreate={handleCreateBounty} />
               </div>
             </div>
           </div>
+
+          {/* <FoundationsCarousel projects={projects} activeProjectId={activeProjectId} onProjectClick={toggleProject} /> */}
+
+
 
           <MerchantCard
             description="The stars have shifted. I have opportunities for one with your talents."
             onNewQuestClick={() => setIsQuestModalOpen(true)}
             isModalOpen={isQuestModalOpen}
           />
-        </div>
+        </div >
 
         {/* DETAIL VIEW OVERLAY */}
+        {/* DETAIL VIEW OVERLAY */}
         <AnimatePresence>
-          {activeProjectId && (() => {
-            const activeProject = projects.find(p => p.id === activeProjectId);
-            if (!activeProject) return null;
-
-            const activeTasks = tasks.filter(t => t.projectId === activeProjectId);
-
-            // Background Logic
-            const index = projects.findIndex(p => p.id === activeProjectId);
-            const backgrounds = [
-              '/assets/vitality_peak_quest_card.jpg',
-              '/assets/dwarvern_vault_quest_card.jpg',
-              '/assets/scholars_mine_quest_card.jpg',
-              '/assets/stewards_castle_quest_card.jpg'
-            ];
-            const bg = index < backgrounds.length ? backgrounds[index] : null;
-
-            return (
-              <ProjectDetailView
-                key={activeProjectId}
-                project={activeProject}
-                tasks={activeTasks}
-                onClose={handleCloseDetail}
-                background={bg}
-              />
-            );
-          })()}
+          {
+            activeProjectId && (() => {
+              /*
+              const activeProject = projects.find(p => p.id === activeProjectId);
+              if (!activeProject) return null;
+  
+              const activeTasks = tasks.filter(t => t.projectId === activeProjectId);
+  
+              // Background Logic
+              const index = projects.findIndex(p => p.id === activeProjectId);
+              const getColumnBackground = (columnName: string) => {
+  switch (columnName) {
+    case 'To-Do': return "url('/images/quest_cards/vitality_peak.jpg')";
+    case 'Habits': return "url('/images/quest_cards/scholars_cache.jpg')";
+    case 'Guild': return "url('/images/quest_cards/stewards_castle.jpg')"; // Assuming closest match
+    default: return "url('/images/quest_cards/quest_card_background_4.jpg')";
+  }
+};
+              const bg = getColumnBackground(activeProject.name);
+  
+              return (
+                <ProjectDetailView
+                  key={activeProjectId}
+                  project={activeProject}
+                  tasks={activeTasks}
+                  onClose={handleCloseDetail}
+                  background={bg}
+                />
+              );
+              */
+              return null;
+            })()
+          }
         </AnimatePresence>
       </div>
     </div>

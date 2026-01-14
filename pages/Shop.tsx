@@ -404,10 +404,10 @@ export const Shop: React.FC = () => {
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
                                 <div className="grid gap-3">
                                     {[
-                                        { amount: 100, name: 'Pile of Gems', price: '$1.49', id: 'price_100_gems', color: 'cyan', popular: false, image: '/assets/gem assets/pile of gems (100).png' },
-                                        { amount: 500, name: 'Pouch of Gems', price: '$6.99', id: 'price_500_gems', color: 'blue', popular: true, image: '/assets/gem assets/pouch of gems (500).png' },
-                                        { amount: 1000, name: 'Chest of Gems', price: '$12.99', id: 'price_1000_gems', color: 'purple', popular: false, image: '/assets/gem assets/chest of gems (1000).png' },
-                                        { amount: 10000, name: 'Mountain of Gems', price: '$99.99', id: 'price_10000_gems', color: 'amber', popular: false, image: '/assets/gem assets/mountain of gems (10000).png' },
+                                        { amount: 100, name: 'Pile of Gems', price: '$1.49', id: 'price_100_gems', color: 'cyan', popular: false, image: '/images/currency/pile of gems (100).png' },
+                                        { amount: 500, name: 'Pouch of Gems', price: '$6.99', id: 'price_500_gems', color: 'blue', popular: true, image: '/images/currency/pouch of gems (500).png' },
+                                        { amount: 1000, name: 'Chest of Gems', price: '$12.99', id: 'price_1000_gems', color: 'purple', popular: false, image: '/images/currency/chest of gems (1000).png' },
+                                        { amount: 10000, name: 'Mountain of Gems', price: '$99.99', id: 'price_10000_gems', color: 'amber', popular: false, image: '/images/currency/mountain of gems (10000).png' },
                                     ].map((pack) => (
                                         <div key={pack.amount} className={`relative bg-gradient-to-br from-white to-slate-100 dark:from-slate-900 dark:to-slate-950 border ${pack.popular ? 'border-cyan-500/50 shadow-cyan-500/20 shadow-lg' : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'} rounded-2xl p-3 flex items-center justify-between gap-3 group overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}>
 
@@ -573,7 +573,7 @@ export const Shop: React.FC = () => {
                                         />
                                     ) : (
                                         <img
-                                            src={previewItem.imageUrl || '/assets/unknown.png'}
+                                            src={previewItem.imageUrl || '/images/ui/unknown.png'}
                                             alt={previewItem.name}
                                             className="w-full h-full object-contain p-8 pixelated"
                                         />
