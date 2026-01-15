@@ -14,7 +14,8 @@ import { Coins, ShoppingBag, Tv, Coffee, Sparkles, Zap, Gift, Dna, ShoppingCart,
 // Chunk 3: Add Companion Column
 
 
-import { MerchantCard, MerchantModal } from '../components/MerchantCard'; // Updated import
+import { MerchantCard, MerchantModal } from '../components/MerchantCard';
+import { CharacterSidebar } from '../components/character/CharacterSidebar'; // Updated import
 
 import { useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -154,7 +155,105 @@ export const Shop: React.FC = () => {
 
 
             {/* 2. GENERAL ITEMS & COSMETICS MERGED */}
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-8 mt-8">
+
+                {/* LEFT SIDEBAR - MERCHANT CARD (Moved here) */}
+                <div className="w-full lg:w-48 flex-shrink-0 space-y-6 sticky top-4 h-fit self-start">
+                    <CharacterSidebar className="hidden lg:block w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500" />
+                    <MerchantCard onNewQuestClick={() => setIsMerchantModalOpen(true)} isModalOpen={isMerchantModalOpen} />
+
+                    <MerchantModal
+                        isOpen={isMerchantModalOpen}
+                        onClose={() => setIsMerchantModalOpen(false)}
+                        inventory={SHOP_ITEMS}
+                        onAddItem={handleAddItem}
+                    />
+
+                    {/* Preview Modal */}
+                    {previewItem && (
+                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPreviewItem(null)} />
+                            <div className="relative z-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+                                {/* Header / Image */}
+                                <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
+                                    {(previewItem.imageUrl?.endsWith('.mp4')) ? (
+                                        <video
+                                            src={previewItem.imageUrl}
+                                            autoPlay
+                                            loop
+                                            muted
+                                            playsInline
+                                            className="w-full h-full object-cover opacity-90"
+                                        />
+                                    ) : (
+                                        <img
+                                            src={previewItem.imageUrl || '/images/ui/unknown.png'}
+                                            alt={previewItem.name}
+                                            className="w-full h-full object-contain p-8 pixelated"
+                                        />
+                                    )}
+                                    <div className="absolute top-2 right-2">
+                                        <button onClick={() => setPreviewItem(null)} className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors">
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900 to-transparent p-6 pt-12">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{previewItem.rarity || 'Common'} • {previewItem.type}</div>
+                                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">{previewItem.name}</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-6 space-y-6">
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest mb-2">Description</h4>
+                                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">{previewItem.description}</p>
+                                        {previewItem.flavor && <p className="text-slate-500 dark:text-slate-500 italic mt-2 text-xs">"{previewItem.flavor}"</p>}
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                                        <div className="flex-1">
+                                            <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Cost</div>
+                                            <div className="text-xl font-black text-amber-500 flex items-center gap-1">
+                                                {previewItem.premiumPrice ? (
+                                                    <><Diamond size={18} /> {previewItem.premiumPrice}</>
+                                                ) : previewItem.currency === 'VOID_SHARD' ? (
+                                                    <><Sparkles size={18} className="text-purple-500" /> {previewItem.cost}</>
+                                                ) : (
+                                                    <><Coins size={18} /> {previewItem.cost}</>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                if (previewItem.premiumPrice) {
+                                                    const isOwned = useGameStore.getState().inventory.some(owned => owned.id === previewItem.id);
+                                                    if (isOwned) return;
+                                                    if (confirm(`Purchase ${previewItem.name} for ${previewItem.premiumPrice} Gems?`)) {
+                                                        const success = buyItem(previewItem);
+                                                        if (!success) alert("Not enough Gems!");
+                                                        else setPreviewItem(null);
+                                                    }
+                                                } else {
+                                                    handleAddItem(previewItem);
+                                                    setPreviewItem(null);
+                                                }
+                                            }}
+                                            className="flex-[2] py-3 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                                        >
+                                            Purchase
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
 
 
                 {/* RIGHT CONTENT */}
@@ -171,7 +270,7 @@ export const Shop: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
                         {/* 1. AVATARS */}
-                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-[75vh]">
                             <div className="bg-white/80 dark:bg-slate-900/80 p-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                 <h3 className="text-sm font-bold text-pink-500 uppercase tracking-widest flex items-center gap-2">
                                     <User size={16} /> Avatars
@@ -250,7 +349,7 @@ export const Shop: React.FC = () => {
                         </div>
 
                         {/* 2. COMPANIONS (Swapped with Equipment) */}
-                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-[75vh]">
                             <div className="bg-white/80 dark:bg-slate-900/80 p-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                 <h3 className="text-sm font-bold text-sky-500 uppercase tracking-widest flex items-center gap-2">
                                     <Bot size={16} /> Companions
@@ -333,7 +432,7 @@ export const Shop: React.FC = () => {
                         </div>
 
                         {/* 3. EQUIPMENT (Swapped with Companions) */}
-                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-[75vh]">
                             <div className="bg-white/80 dark:bg-slate-900/80 p-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                 <h3 className="text-sm font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-2">
                                     <Sword size={16} /> Equipment
@@ -392,7 +491,7 @@ export const Shop: React.FC = () => {
                         </div>
 
                         {/* 3. GEM CURRENCY STORE */}
-                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-[75vh]">
                             <div className="bg-white/80 dark:bg-slate-900/80 p-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                 <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2">
                                     <Diamond size={16} /> Currency Store
@@ -455,7 +554,7 @@ export const Shop: React.FC = () => {
                         </div>
 
                         {/* 5. AVATAR BACKDROPS (Moved to here, pos 5) */}
-                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[75vh]">
+                        <div className="bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden flex flex-col h-[500px] lg:h-[75vh]">
                             <div className="bg-white/80 dark:bg-slate-900/80 p-4 border-b border-slate-200 dark:border-slate-800 backdrop-blur-sm shrink-0">
                                 <h3 className="text-sm font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-2">
                                     <Monitor size={16} /> Avatar Backdrop
@@ -541,108 +640,7 @@ export const Shop: React.FC = () => {
 
 
                 </div>
-                {/* RIGHT SIDEBAR - MERCHANT CARD (Moved here) */}
-                <div className="w-full lg:w-80 flex-shrink-0 space-y-6">
-                    <MerchantCard onNewQuestClick={() => setIsMerchantModalOpen(true)} isModalOpen={isMerchantModalOpen} />
 
-                    <MerchantModal
-                        isOpen={isMerchantModalOpen}
-                        onClose={() => setIsMerchantModalOpen(false)}
-                        onBuyQuest={() => console.log("Buy Quest")}
-                        onCreateQuest={() => console.log("Create Quest")}
-                        realWorldItems={realWorldItems}
-                        systemItems={systemItems}
-                        onAddItem={handleAddItem}
-                    />
-
-                    {/* Preview Modal */}
-                    {previewItem && (
-                        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPreviewItem(null)} />
-                            <div className="relative z-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden max-w-lg w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                                {/* Header / Image */}
-                                <div className="aspect-video bg-black relative flex items-center justify-center overflow-hidden">
-                                    {(previewItem.imageUrl?.endsWith('.mp4')) ? (
-                                        <video
-                                            src={previewItem.imageUrl}
-                                            autoPlay
-                                            loop
-                                            muted
-                                            playsInline
-                                            className="w-full h-full object-cover opacity-90"
-                                        />
-                                    ) : (
-                                        <img
-                                            src={previewItem.imageUrl || '/images/ui/unknown.png'}
-                                            alt={previewItem.name}
-                                            className="w-full h-full object-contain p-8 pixelated"
-                                        />
-                                    )}
-                                    <div className="absolute top-2 right-2">
-                                        <button onClick={() => setPreviewItem(null)} className="p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors">
-                                            <X size={20} />
-                                        </button>
-                                    </div>
-                                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-900 to-transparent p-6 pt-12">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{previewItem.rarity || 'Common'} • {previewItem.type}</div>
-                                                <h2 className="text-2xl font-black text-white uppercase tracking-tight">{previewItem.name}</h2>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Content */}
-                                <div className="p-6 space-y-6">
-                                    <div>
-                                        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest mb-2">Description</h4>
-                                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">{previewItem.description}</p>
-                                        {previewItem.flavor && <p className="text-slate-500 dark:text-slate-500 italic mt-2 text-xs">"{previewItem.flavor}"</p>}
-                                    </div>
-
-                                    {/* Perks / Stats (if any) */}
-
-
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-                                        <div className="flex-1">
-                                            <div className="text-[10px] uppercase font-bold text-slate-500 mb-1">Cost</div>
-                                            <div className="text-xl font-black text-amber-500 flex items-center gap-1">
-                                                {previewItem.premiumPrice ? (
-                                                    <><Diamond size={18} /> {previewItem.premiumPrice}</>
-                                                ) : previewItem.currency === 'VOID_SHARD' ? (
-                                                    <><Sparkles size={18} className="text-purple-500" /> {previewItem.cost}</>
-                                                ) : (
-                                                    <><Coins size={18} /> {previewItem.cost}</>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                if (previewItem.premiumPrice) {
-                                                    const isOwned = useGameStore.getState().inventory.some(owned => owned.id === previewItem.id);
-                                                    if (isOwned) return;
-                                                    if (confirm(`Purchase ${previewItem.name} for ${previewItem.premiumPrice} Gems?`)) {
-                                                        const success = buyItem(previewItem);
-                                                        if (!success) alert("Not enough Gems!");
-                                                        else setPreviewItem(null);
-                                                    }
-                                                } else {
-                                                    handleAddItem(previewItem);
-                                                    setPreviewItem(null);
-                                                }
-                                            }}
-                                            className="flex-[2] py-3 bg-amber-500 hover:bg-amber-600 text-black font-black uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-                                        >
-                                            Purchase
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
             </div>
 
 

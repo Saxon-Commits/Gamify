@@ -62,7 +62,7 @@ export const Guild: React.FC = () => {
     const myGuilds = useQuery(api.guilds.getMyGuilds);
     const [activeGuildId, setActiveGuildId] = useState<string | null>(null);
     const [view, setView] = useState<'dashboard' | 'browse' | 'create'>('dashboard');
-    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'chat' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'chat' | 'settings' | 'members'>('overview');
     const [selectedGuildProjectId, setSelectedGuildProjectId] = useState<Id<"guildProjects"> | null>(null);
     const [draftProject, setDraftProject] = useState<any>(null);
 
@@ -242,7 +242,7 @@ export const Guild: React.FC = () => {
                             {/* Header Section */}
                             <GuildHeader guild={guild} onDonateClick={() => setIsDonating(true)} />
                             {/* Navigation Tabs */}
-                            <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+                            <div className="flex overflow-x-auto no-scrollbar pb-4 gap-2 border-b border-slate-800">
                                 <button
                                     onClick={() => setActiveTab('overview')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
@@ -274,10 +274,31 @@ export const Guild: React.FC = () => {
                                         Settings
                                     </button>
                                 )}
+                                <button
+                                    onClick={() => setActiveTab('members')}
+                                    className={`lg:hidden px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 flex-shrink-0 ${activeTab === 'members' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                    <Users size={16} />
+                                    Members
+                                </button>
                             </div>
 
                             {activeTab === 'chat' ? (
                                 <GuildChat guildId={guild._id} currentUserId={membership.userId} />
+                            ) : activeTab === 'members' ? (
+                                <GuildMembersPanel
+                                    guildId={guild._id}
+                                    members={guildMembers}
+                                    memberCount={memberCount}
+                                    myGuilds={myGuilds}
+                                    activeGuildId={activeGuildId as Id<"guilds">}
+                                    membershipRole={membership.role}
+                                    onSelectGuild={setActiveGuildId}
+                                    onBrowseGuilds={() => setView('browse')}
+                                    onLeaveGuild={handleLeave}
+                                    isLeaving={isLeaving}
+                                    currentUserId={membership.userId}
+                                />
                             ) : activeTab === 'projects' ? (
                                 <GuildProjectsView
                                     guildId={guild._id}
@@ -328,20 +349,22 @@ export const Guild: React.FC = () => {
                     )}
                 </div>
 
-                {/* Sidebar - Right */}
-                <GuildMembersPanel
-                    guildId={guild._id}
-                    members={guildMembers}
-                    memberCount={memberCount}
-                    myGuilds={myGuilds}
-                    activeGuildId={activeGuildId as Id<"guilds">}
-                    membershipRole={membership.role}
-                    onSelectGuild={setActiveGuildId}
-                    onBrowseGuilds={() => setView('browse')}
-                    onLeaveGuild={handleLeave}
-                    isLeaving={isLeaving}
-                    currentUserId={membership.userId}
-                />
+                {/* Sidebar - Right (Desktop) */}
+                <div className="hidden lg:block w-80 flex-shrink-0">
+                    <GuildMembersPanel
+                        guildId={guild._id}
+                        members={guildMembers}
+                        memberCount={memberCount}
+                        myGuilds={myGuilds}
+                        activeGuildId={activeGuildId as Id<"guilds">}
+                        membershipRole={membership.role}
+                        onSelectGuild={setActiveGuildId}
+                        onBrowseGuilds={() => setView('browse')}
+                        onLeaveGuild={handleLeave}
+                        isLeaving={isLeaving}
+                        currentUserId={membership.userId}
+                    />
+                </div>
             </div>
 
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from 'react-router-dom';
 import { useGameStore, INITIAL_PROJECTS, INITIAL_TASKS } from '../store/useGameStore';
 import { generateDailyQuests } from '../src/utils/aiQuestGenerator';
-import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle } from 'lucide-react';
+import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle, Heart, Award, Crown } from 'lucide-react';
 import { QuestDifficulty, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -12,9 +13,11 @@ import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ProjectDetailView } from '../components/ProjectDetailView';
 import { MiniCharacterCard } from '../components/MiniCharacterCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useMutation } from "convex/react";
-import { PenSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMutation, useQuery } from "convex/react";
+import { PenSquare, ChevronLeft, ChevronRight, Layout } from 'lucide-react';
 import { api } from "../convex/_generated/api";
+import { HealthDisplay } from '../components/ui/HealthDisplay';
+import { CharacterSidebar } from '../components/character/CharacterSidebar';
 
 const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty }) => {
   const colors = {
@@ -38,13 +41,16 @@ export const QuestCard: React.FC<{
   deleteTask: (id: string) => void;
   updateTask: (task: Task) => void;
   onEdit?: (task: Task) => void;
-}> = ({ task, completeTask, deleteTask, updateTask, onEdit }) => {
+  layoutId?: string;
+}> = ({ task, completeTask, deleteTask, updateTask, onEdit, layoutId }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!task) return null;
 
   return (
-    <div
+    <motion.div
+      layout={!!layoutId}
+      layoutId={layoutId}
       onClick={() => setIsExpanded(!isExpanded)}
       className={`
       relative p-3 rounded-xl border transition-all duration-300 group cursor-pointer
@@ -82,6 +88,11 @@ export const QuestCard: React.FC<{
               {task.type === 'daily' && !task.frequency && <Sparkles size={10} className="text-sky-400" />}
               {task.frequency && <Repeat size={10} className="text-slate-400" />}
               {task.deadline && <Clock size={10} className="text-red-400" />}
+
+              {/* Collapsed Source Labels */}
+              {task.projectId === 'col-todo' && <span className="text-[8px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded ml-1">TO-DO</span>}
+              {task.projectId === 'col-habit' && <span className="text-[8px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-1 py-0.5 rounded ml-1">HABIT</span>}
+              {task.projectId === 'col-guild' && <span className="text-[8px] font-bold text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-1 py-0.5 rounded ml-1">GUILD</span>}
             </div>
           </div>
 
@@ -126,6 +137,11 @@ export const QuestCard: React.FC<{
                     {task.frequency && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{task.frequency.toUpperCase()}</span>}
                     {task.deadline && <span className="text-[9px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">{new Date(task.deadline).toLocaleDateString()}</span>}
                     {task.penalty && (task.penalty.gold || task.penalty.xp) ? <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">PENALTY</span> : null}
+
+                    {/* Source Column Labels */}
+                    {task.projectId === 'col-todo' && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">TO-DO</span>}
+                    {task.projectId === 'col-habit' && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">HABIT</span>}
+                    {task.projectId === 'col-guild' && <span className="text-[9px] font-bold text-violet-500 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded border border-violet-200 dark:border-violet-800">GUILD</span>}
                   </div>
 
                   {/* Footer: Rewards & Edit */}
@@ -170,7 +186,7 @@ export const QuestCard: React.FC<{
           <Trash2 size={14} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -194,7 +210,14 @@ export const SortableQuestCard: React.FC<{
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <QuestCard task={task} completeTask={completeTask} deleteTask={deleteTask} updateTask={updateTask} onEdit={onEdit} />
+      <QuestCard
+        task={task}
+        completeTask={completeTask}
+        deleteTask={deleteTask}
+        updateTask={updateTask}
+        onEdit={onEdit}
+        layoutId={task.id}
+      />
     </div>
   );
 };
@@ -313,8 +336,8 @@ const FoundationsCarousel: React.FC<{ projects: any[], activeProjectId: string |
   );
 };
 
-const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel }: { projectId: string; onCreate: (task: any) => void; initialData?: Task; onCancel?: () => void }) => {
-  const [isExpanded, setIsExpanded] = useState(!!initialData);
+const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultExpanded = false }: { projectId: string; onCreate: (task: any) => void; initialData?: Task; onCancel?: () => void; defaultExpanded?: boolean }) => {
+  const [isExpanded, setIsExpanded] = useState(!!initialData || defaultExpanded);
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [difficulty, setDifficulty] = useState<QuestDifficulty>(initialData?.difficulty || 'EASY');
@@ -646,7 +669,8 @@ export const BountyColumn: React.FC<{
   deleteTask: (id: string) => void;
   updateTask: (task: Task) => void;
   onEdit: (task: Task) => void;
-  onCreate: (task: any) => void
+  onCreate: (task: any) => void;
+  isKanban?: boolean;
 }> = ({
   pid,
   title,
@@ -655,7 +679,8 @@ export const BountyColumn: React.FC<{
   deleteTask,
   updateTask,
   onEdit,
-  onCreate
+  onCreate,
+  isKanban = false
 }) => {
 
     const { setNodeRef, isOver } = useDroppable({
@@ -669,7 +694,38 @@ export const BountyColumn: React.FC<{
         className={`w-full h-full min-h-[150px] flex flex-col transition-colors duration-200 rounded-xl ${isOver ? 'bg-indigo-50/50 dark:bg-indigo-900/20 ring-2 ring-indigo-400/30' : ''}`}
       >
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</span>
+          <AnimatePresence mode="wait">
+            {isKanban ? (
+              <motion.div
+                key="kanban-title"
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                <div className={`p-1 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400`}>
+                  <Layout size={12} />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">{title}</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="standard-title"
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-2"
+              >
+                <div className="p-1 rounded opacity-0">
+                  <Layout size={12} />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800" />
           <button className="text-slate-400 dark:text-slate-500 hover:text-indigo-500 dark:hover:text-indigo-400">
             <Plus size={14} />
@@ -705,7 +761,13 @@ export const BountyColumn: React.FC<{
 
 export const QuestLog: React.FC = () => {
   const navigate = useNavigate();
+  /* LEFT SIDEBAR - Character & Merchant */
   const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart, updateTask } = useGameStore();
+  const { user } = useUser();
+  const firstName = user?.firstName || stats.name;
+
+  const [isBountyModalOpen, setIsBountyModalOpen] = useState(false);
+  const [isKanbanView, setIsKanbanView] = useState(false);
 
   // Robust wrapper to ensure delete functionality
   const handleDeleteTask = (taskId: string) => {
@@ -839,6 +901,31 @@ export const QuestLog: React.FC = () => {
       const reordered = arrayMove(newTasks, activeIndex, overIndex);
       reorderTasks(reordered);
     }
+
+    // Handle Status Updates based on Column (Only in Kanban View)
+    if (isKanbanView) {
+      const isMovingToDone = overContainer === 'col-guild';
+      const isMovingToInProgress = overContainer === 'col-habit';
+      const isMovingToTodo = overContainer === 'col-todo';
+
+      if (isMovingToDone) {
+        // Mark Completed, clear Kanban Status
+        if (!activeTask.completed) updateTask({ ...activeTask, completed: true, kanbanStatus: 'DONE' });
+      } else if (isMovingToInProgress) {
+        // Mark In Progress (Manual), Uncomplete if needed
+        const updates: Partial<Task> = { kanbanStatus: 'IN_PROGRESS' };
+        if (activeTask.completed) updates.completed = false;
+        updateTask({ ...activeTask, ...updates });
+      } else if (isMovingToTodo) {
+        // Mark Todo, Uncomplete if needed, Clear Kanban Status
+        const updates: Partial<Task> = { kanbanStatus: 'TODO' };
+        if (activeTask.completed) updates.completed = false;
+        updateTask({ ...activeTask, ...updates });
+      }
+    } else if (activeContainer !== overContainer) {
+      // Standard behavior: just update container/project ID
+      updateTask({ ...activeTask, projectId: overContainer });
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -876,17 +963,7 @@ export const QuestLog: React.FC = () => {
     setActiveProjectId(null);
   };
 
-  const handleBuyQuest = () => {
-    // TODO: Implement buy quest logic
-    console.log('Buy quest clicked');
-    setIsQuestModalOpen(false);
-  };
 
-  const handleCreateQuest = () => {
-    // TODO: Implement create quest logic
-    console.log('Create quest clicked');
-    setIsQuestModalOpen(false);
-  };
 
   const handleAddItem = (item: any) => {
     addToCart({
@@ -900,8 +977,7 @@ export const QuestLog: React.FC = () => {
     });
   };
 
-  const realWorldItems = SHOP_ITEMS.filter(i => i.type === 'REAL_LIFE');
-  const systemItems = SHOP_ITEMS.filter(i => i.type === 'SYSTEM');
+
 
   useEffect(() => {
     // Migration: Check for Column Refactor (Titan -> To-Do)
@@ -997,7 +1073,50 @@ export const QuestLog: React.FC = () => {
     };
   };
 
-  const visibleBountiesMap = getVisibleBountiesMap();
+  const getKanbanBountiesMap = () => {
+    // Flatten all tasks relevant to the Quest Log (excluding those completed long ago if needed, but here taking all active/recent)
+    // Actually, we should look at allTasks from the store or just visible ones.
+    // The previous getBountiesForFoundation filtered by projectId.
+    // Here we want ALL tasks that would normally appear in the Quest Log (daily + foundations).
+
+    // Simpler approach: Iterate through all tasks in store.
+
+    const todoTasks: Task[] = [];
+    const inProgressTasks: Task[] = [];
+    const doneTasks: Task[] = [];
+
+    // Filter tasks that belong to the main categories we track
+    const relevantTasks = tasks.filter(t =>
+      ['col-todo', 'col-habit', 'col-guild'].includes(t.projectId) ||
+      // Also include tasks that might be daily quests generated
+      (t as any).type === 'DAILY'
+    );
+
+    relevantTasks.forEach(task => {
+      if (task.completed) {
+        doneTasks.push(task);
+      } else {
+        const hasCheckedSubtasks = task.subtasks?.some(st => st.completed);
+        // Manual override allows dragging to "In Progress", BUT for Daily Bounties we want strict "Activity" based logic.
+        // User explicitly wants manual placement to persist.
+        const isManuallyInProgress = task.kanbanStatus === 'IN_PROGRESS';
+
+        if (hasCheckedSubtasks || isManuallyInProgress) {
+          inProgressTasks.push(task);
+        } else {
+          todoTasks.push(task);
+        }
+      }
+    });
+
+    return {
+      'col-todo': todoTasks,      // Maps to "To-Do" column
+      'col-habit': inProgressTasks, // Maps to "In Progress" column
+      'col-guild': doneTasks        // Maps to "Done" column
+    };
+  };
+
+  const visibleBountiesMap = isKanbanView ? getKanbanBountiesMap() : getVisibleBountiesMap();
 
 
   const now = new Date();
@@ -1016,10 +1135,7 @@ export const QuestLog: React.FC = () => {
       <MerchantModal
         isOpen={isQuestModalOpen}
         onClose={() => setIsQuestModalOpen(false)}
-        onBuyQuest={handleBuyQuest}
-        onCreateQuest={handleCreateQuest}
-        realWorldItems={realWorldItems}
-        systemItems={systemItems}
+        inventory={SHOP_ITEMS}
         onAddItem={handleAddItem}
       />
 
@@ -1039,26 +1155,90 @@ export const QuestLog: React.FC = () => {
 
       <div className={`flex flex-col lg:flex-row gap-8 mt-8 transition-opacity duration-300 ${isQuestModalOpen ? 'opacity-20 pointer-events-none' : ''}`}>
 
-        {/* LEFT PROFILE CARD (New Feature) */}
-        <div className="w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500">
-          <MiniCharacterCard
-            avatarId={stats.activeAvatarId || 'starter_villager_male'}
-            backdropId={stats.activeBackdropId}
-            companionId={stats.activeCompanionId || stats.activeAccessoryId}
-            weaponId={stats.activeMainHandId}
-            armorId={stats.activeArmorId}
-            className="w-full shadow-2xl border border-slate-700/50 sticky top-4"
+        {/* LEFT SIDEBAR - Character & Merchant */}
+        <div className="w-full lg:w-48 flex-shrink-0 space-y-6 sticky top-4 h-fit self-start">
+          <CharacterSidebar className="hidden lg:block w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500" />
+          <MerchantCard
+            description="The stars have shifted. I have opportunities for one with your talents."
+            onNewQuestClick={() => setIsQuestModalOpen(true)}
+            isModalOpen={isQuestModalOpen}
           />
         </div>
 
         {/* RIGHT CONTENT (Main Column) */}
         <div className="flex-1 space-y-8">
 
-          {/* New Header for Bounties? Or just let Bounties speak for themselves */}
-          <div className="flex items-center gap-3 mb-[-10px]">
-            {/* <h2 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-indigo-500 uppercase tracking-widest drop-shadow-sm">Active Bounties</h2> */}
-            {/* <div className="h-[1px] flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent" /> */}
+
+
+          {/* Create Bounty Modal */}
+          {isBountyModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                  <h3 className="font-bold text-slate-700 dark:text-slate-200">Create New Bounty</h3>
+                  <button onClick={() => setIsBountyModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
+                </div>
+                <div className="p-4">
+                  <CreateBountyCard
+                    projectId="col-todo"
+                    onCreate={(task) => {
+                      handleCreateBounty(task);
+                      setIsBountyModalOpen(false);
+                    }}
+                    onCancel={() => setIsBountyModalOpen(false)}
+                    defaultExpanded={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* New Header for Bounties & Tools */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl md:text-2xl font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest drop-shadow-sm">Hello <span className="text-amber-500">{firstName}</span>, welcome back.</h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Kanban View Toggle */}
+              <button
+                onClick={() => setIsKanbanView(!isKanbanView)}
+                className={`flex items-center gap-2 px-3 py-2 border rounded-lg transition-all group ${isKanbanView ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+              >
+                <Layout size={16} className={`${isKanbanView ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} transition-colors`} />
+                <span className={`text-xs font-bold ${isKanbanView ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200'} uppercase tracking-wider`}>Kanban</span>
+              </button>
+
+              {/* Journal Tool */}
+              <button
+                onClick={() => navigate('/app/journal')}
+                className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:border-purple-500/50 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all group"
+              >
+                <Book size={16} className="text-slate-400 group-hover:text-purple-500 transition-colors" />
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 uppercase tracking-wider">Journal</span>
+              </button>
+
+              {/* Grindstone Tool */}
+              <button
+                onClick={() => navigate('/app/tools/grindstone')}
+                className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:border-amber-500/50 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group"
+              >
+                <Hammer size={16} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-300 uppercase tracking-wider">Grindstone</span>
+              </button>
+
+              {/* Create Bounty Button */}
+              <button
+                onClick={() => setIsBountyModalOpen(true)}
+                className="flex items-center justify-center w-9 h-9 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95"
+                title="Create New Bounty"
+              >
+                <Plus size={20} className="stroke-[3]" />
+              </button>
+            </div>
           </div>
+
+
 
           <div className="flex flex-col h-full min-h-[500px] mt-6">
             <DndContext
@@ -1077,11 +1257,19 @@ export const QuestLog: React.FC = () => {
                   const columnBounties = visibleBountiesMap[pid as any] || [];
 
                   // Explicit titles, ignoring Project Names if we want to "orphan" them
-                  const title = {
+                  let title = {
                     'col-todo': 'To-Do',
                     'col-habit': 'Habits',
                     'col-guild': 'Guild'
                   }[pid] || 'Tasks';
+
+                  if (isKanbanView) {
+                    title = {
+                      'col-todo': 'To-Do',
+                      'col-habit': 'In Progress',
+                      'col-guild': 'Done'
+                    }[pid] || 'Tasks';
+                  }
 
                   return (
                     <BountyColumn
@@ -1094,6 +1282,7 @@ export const QuestLog: React.FC = () => {
                       updateTask={updateTask}
                       onEdit={handleEditTask}
                       onCreate={handleCreateBounty}
+                      isKanban={isKanbanView}
                     />
                   );
                 })}
@@ -1115,62 +1304,7 @@ export const QuestLog: React.FC = () => {
         </div>
 
         {/* RIGHT SIDEBAR - Sticky */}
-        <div className="w-full lg:w-80 flex-shrink-0 space-y-6 lg:sticky lg:top-4 lg:self-start">
 
-          {/* Tools Panel */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-lg">
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Sword size={12} />
-              <span>Tools</span>
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Tool 1: Grindstone */}
-              <button
-                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-amber-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-amber-500/50 dark:hover:bg-amber-950/10 transition-all duration-300"
-                onClick={() => navigate('/app/tools/grindstone')}
-              >
-                <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
-                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-amber-500 group-hover:scale-110 transition-transform">
-                  <Hammer size={18} />
-                </div>
-                <div className="text-center">
-                  <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-200 uppercase tracking-wider">Grindstone</span>
-                  <span className="block text-[9px] text-slate-500 dark:text-slate-600 scale-90">Focus Mode</span>
-                </div>
-              </button>
-
-              {/* Tool 2: Journal */}
-              <button
-                className="group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 hover:bg-purple-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:border-purple-500/50 dark:hover:bg-purple-950/10 transition-all duration-300"
-                onClick={() => navigate('/app/journal')}
-              >
-                <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
-                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                  <Book size={18} />
-                </div>
-                <div className="text-center">
-                  <span className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-purple-600 dark:group-hover:text-purple-200 uppercase tracking-wider">Journal</span>
-                  <span className="block text-[9px] text-slate-500 dark:text-slate-600 scale-90">Daily Log</span>
-                </div>
-              </button>
-
-              {/* Tool 3: New Bounty */}
-              <div className="col-span-2">
-                <CreateBountyCard projectId="col-todo" onCreate={handleCreateBounty} />
-              </div>
-            </div>
-          </div>
-
-          {/* <FoundationsCarousel projects={projects} activeProjectId={activeProjectId} onProjectClick={toggleProject} /> */}
-
-
-
-          <MerchantCard
-            description="The stars have shifted. I have opportunities for one with your talents."
-            onNewQuestClick={() => setIsQuestModalOpen(true)}
-            isModalOpen={isQuestModalOpen}
-          />
-        </div >
 
         {/* DETAIL VIEW OVERLAY */}
         {/* DETAIL VIEW OVERLAY */}
@@ -1180,9 +1314,9 @@ export const QuestLog: React.FC = () => {
               /*
               const activeProject = projects.find(p => p.id === activeProjectId);
               if (!activeProject) return null;
-  
+   
               const activeTasks = tasks.filter(t => t.projectId === activeProjectId);
-  
+   
               // Background Logic
               const index = projects.findIndex(p => p.id === activeProjectId);
               const getColumnBackground = (columnName: string) => {
@@ -1192,9 +1326,9 @@ export const QuestLog: React.FC = () => {
     case 'Guild': return "url('/images/quest_cards/stewards_castle.jpg')"; // Assuming closest match
     default: return "url('/images/quest_cards/quest_card_background_4.jpg')";
   }
-};
+  };
               const bg = getColumnBackground(activeProject.name);
-  
+   
               return (
                 <ProjectDetailView
                   key={activeProjectId}

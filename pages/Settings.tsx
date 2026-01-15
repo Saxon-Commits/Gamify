@@ -46,8 +46,8 @@ const ProfileSettings: React.FC<{ currentUsername?: string }> = ({ currentUserna
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200">Identity</h2>
       </div>
 
-      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800">
+        <div className="space-y-1 w-full sm:w-auto">
           <div className="text-xs text-slate-500 font-bold uppercase">Username</div>
           {isEditing ? (
             <div className="flex items-center gap-2">

@@ -85,7 +85,7 @@ export const Character: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-0 md:px-2 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-8 relative items-start">
+            <div className="max-w-[1920px] mx-auto px-0 md:px-2 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-6 relative items-start">
 
                 {/* MOBILE LAYOUT: Split Top Section */}
                 <div className="flex md:hidden w-full gap-3">
@@ -121,11 +121,10 @@ export const Character: React.FC = () => {
                 {/* LEFT COLUMN: STATS (Desktop) */}
                 <div className="hidden lg:block lg:col-span-3 space-y-6 lg:order-1">
                     <AttributesPanel />
-                    <MasteryAvatarSelector />
                 </div>
 
                 {/* CENTER COLUMN: DISPLAY (Desktop) */}
-                <div className="hidden md:flex lg:col-span-6 flex-col items-center lg:order-2">
+                <div className="hidden md:flex lg:col-span-4 flex-col items-center lg:order-2">
                     <CharacterDisplayCard
                         selectedAvatarPath={selectedAvatarPath}
                         devPanelOpen={devPanelOpen}
@@ -147,11 +146,7 @@ export const Character: React.FC = () => {
                 </div>
 
                 {/* RIGHT COLUMN: LOADOUT (Shared but moved below on mobile) */}
-                <div className="lg:col-span-3 space-y-6 lg:order-3">
-                    {/* Mastery Selector shown here on mobile for flow - HIDDEN per user request */}
-                    <div className="hidden md:block lg:hidden">
-                        <MasteryAvatarSelector />
-                    </div>
+                <div className="lg:col-span-5 space-y-6 lg:order-3">
                     <LoadoutPanel
                         selectedAvatarPath={selectedAvatarPath}
                         setSelectedAvatarPath={setSelectedAvatarPath}

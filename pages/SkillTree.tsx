@@ -5,6 +5,7 @@ import { CustomSkillNode } from '../components/CustomSkillNode';
 import { BRANCH_CONFIGS } from '../src/utils/SkillTreeUtils';
 import { Info, Lock, Unlock, AlertCircle } from 'lucide-react';
 import * as Icons from 'lucide-react';
+import { CharacterSidebar } from '../components/character/CharacterSidebar';
 
 const nodeTypes = {
   skillNode: CustomSkillNode,
@@ -24,7 +25,7 @@ export const SkillTree: React.FC = () => {
     const branchName = BRANCH_CONFIGS.find(b => b.id === hoveredNode.path)?.name || hoveredNode.path;
 
     return (
-      <div className="absolute top-4 right-4 z-[60] w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-right-4 duration-200">
+      <div className="fixed bottom-4 left-4 right-4 z-[60] md:absolute md:top-4 md:right-4 md:left-auto md:bottom-auto w-auto md:w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-200 max-h-[60vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-3">
           <span className="font-black text-[10px] uppercase tracking-[0.2em] text-indigo-400">{branchName}</span>
           {hoveredNode.isUnlocked ? (
@@ -87,7 +88,14 @@ export const SkillTree: React.FC = () => {
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col -m-4 md:-m-6">
       <div className="flex-1 bg-slate-50 dark:bg-slate-950 overflow-hidden relative">
-        <div className="absolute top-4 left-4 z-10">
+        {/* CHARACTER SIDEBAR OVERLAY - Matches QuestLog position */}
+        <div className="absolute inset-0 pointer-events-none z-50 px-4 md:px-6">
+          <div className="max-w-[95%] mx-auto h-full pt-14 flex gap-8">
+            <CharacterSidebar className="hidden lg:block w-full lg:w-48 flex-shrink-0 pointer-events-auto h-fit" />
+          </div>
+        </div>
+
+        <div className="absolute top-4 right-4 z-10 hidden md:block">
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 p-2 px-3 rounded-lg shadow-xl text-[10px] text-slate-500 dark:text-slate-400 flex items-center space-x-3">
             <div className="flex items-center space-x-1">
               <Info size={12} className="text-indigo-500 dark:text-indigo-400" />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Sword, Network, User, Users, Settings, Coins, Zap, Sparkles, ShoppingBag, Package, Book, Diamond, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Sword, Network, User, Users, Settings, Coins, Zap, Sparkles, ShoppingBag, Book, Diamond, Menu, X } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -201,12 +201,11 @@ export const Layout: React.FC = () => {
 
   const NavLinks = [
     { to: "/app", icon: Sword, label: "Quests", variant: 'fantasy' as const },
-    { to: "/app/skills", icon: Network, label: "Skills" },
-    { to: "/app/guild", icon: Users, label: "Guild" },
-    { to: "/app/shop", icon: ShoppingBag, label: "Shop" },
-    { to: "/app/journal", icon: Book, label: "Journal" },
-    { to: "/app/inventory", icon: Package, label: "Inventory" },
     { to: "/app/character", icon: User, label: "Character" },
+    { to: "/app/skills", icon: Network, label: "Skills" },
+    { to: "/app/shop", icon: ShoppingBag, label: "Shop" },
+    { to: "/app/guild", icon: Users, label: "Guild" },
+    { to: "/app/journal", icon: Book, label: "Journal" },
   ];
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -228,7 +227,7 @@ export const Layout: React.FC = () => {
             <Sword size={18} className="text-white" />
           </div>
           <h1 className="text-lg font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent tracking-tighter hidden sm:block">
-            Questify
+            XP Focus
           </h1>
         </div>
 

@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore, ToastMessage, RewardType } from '../../store/useToastStore';
-import { Sparkles, Coins, Zap, Diamond, Package, Crown } from 'lucide-react';
+import { Sparkles, Coins, Zap, Diamond, Package, Crown, CheckCircle2 } from 'lucide-react';
 
 const icons: Record<RewardType, any> = {
     xp: Zap,
     gold: Coins,
     gems: Diamond,
     item: Package,
+    success: CheckCircle2,
 };
 
 const colors: Record<RewardType, string> = {
@@ -15,6 +16,7 @@ const colors: Record<RewardType, string> = {
     gold: 'from-yellow-400 to-amber-600 shadow-amber-500/50',
     gems: 'from-fuchsia-500 to-pink-600 shadow-pink-500/50',
     item: 'from-emerald-400 to-green-600 shadow-green-500/50',
+    success: 'from-indigo-400 to-violet-600 shadow-indigo-500/50',
 };
 
 const RewardToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
@@ -52,10 +54,10 @@ const RewardToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
             {/* Content */}
             <div className="relative z-10 flex flex-col">
                 <span className={`text-[10px] font-black uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-r ${gradient}`}>
-                    {toast.type === 'item' ? 'Item Received' : 'Reward Claimed'}
+                    {toast.type === 'item' ? 'Item Received' : toast.type === 'success' ? 'System Notification' : 'Reward Claimed'}
                 </span>
                 <div className="flex items-baseline gap-1.5 text-white">
-                    <span className="text-xl font-black">{toast.amount}</span>
+                    {Number(toast.amount) > 0 && <span className="text-xl font-black">{toast.amount}</span>}
                     <span className="text-xs font-bold text-slate-300 uppercase">{toast.message}</span>
                 </div>
             </div>

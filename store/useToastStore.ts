@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type RewardType = 'xp' | 'gold' | 'gems' | 'item';
+export type RewardType = 'xp' | 'gold' | 'gems' | 'item' | 'success';
 
 export interface ToastMessage {
     id: string;

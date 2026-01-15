@@ -18,7 +18,7 @@ export const TermsOfService: React.FC = () => {
                 <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
                     <h2 className="text-xl font-bold text-white mb-4">1. Acceptance of Terms</h2>
                     <p>
-                        By accessing or using Questify ("the Application"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Application.
+                        By accessing or using XP Focus ("the Application"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Application.
                     </p>
                 </section>
 

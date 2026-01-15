@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { Activity, Award, Book, Coins, Crown, Flame, Hammer, Heart, Moon, Shield, Skull, Sparkles, TrendingUp, Users, Zap, Cpu } from 'lucide-react';
 import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
+import { HealthDisplay } from '../ui/HealthDisplay';
 
 const ProgressBar = ({ current, max, color, height = "h-4" }: { current: number, max: number, color: string, height?: string }) => {
     const percentage = Math.min(100, Math.max(0, (current / max) * 100));
@@ -93,13 +94,10 @@ export const AttributesPanel: React.FC = () => {
             </div>
 
             {/* Hitpoints */}
-            <div>
-                <div className="flex gap-1">
-                    {Array.from({ length: 7 }).map((_, i) => (
-                        <Heart key={i} size={24} className="text-red-500 fill-red-500/20" strokeWidth={2.5} />
-                    ))}
-                </div>
+            <div className="w-full">
+                <HealthDisplay current={stats.hp} max={stats.maxHp} heartSize={24} />
             </div>
+
 
             {/* Aggregated Perks */}
             <div className="space-y-3">
@@ -138,10 +136,10 @@ export const AttributesPanel: React.FC = () => {
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold flex items-center gap-2">
                     <Award size={14} /> Achievements
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-1.5">
                     {achievements.map(ach => (
-                        <div key={ach.id} className={`aspect-square rounded-xl border-2 flex items-center justify-center relative group ${ach.unlocked ? 'bg-amber-100 dark:bg-amber-900/20 border-amber-500/50 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 grayscale opacity-50'}`}>
-                            <ach.icon size={20} />
+                        <div key={ach.id} className={`aspect-square rounded-lg border-2 flex items-center justify-center relative group ${ach.unlocked ? 'bg-amber-100 dark:bg-amber-900/20 border-amber-500/50 text-amber-600 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 grayscale opacity-50'}`}>
+                            <ach.icon size={16} />
 
                             {/* Tooltip */}
                             <div className="absolute bottom-full mb-2 w-32 bg-white dark:bg-slate-950/90 text-center p-2 rounded-lg text-[10px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-200 dark:border-slate-700 shadow-xl z-50 left-1/2 -translate-x-1/2">

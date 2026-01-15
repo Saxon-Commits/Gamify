@@ -297,22 +297,21 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         quantity: 1,
         imageUrl: '/companions/void whisp companion.png'
     },
-    /*
     {
         id: 'a_adapt_cloak',
         name: 'Adaptive Cloak',
         description: 'Shimmers with dark energy.',
         lore: 'Woven from shadows.',
-        type: 'ARMOR',
+        type: 'IN_GAME',
         rarity: 'EPIC',
         cost: 0,
         premiumPrice: 1000,
         currency: 'GEMS',
         acquiredAt: '',
         quantity: 1,
-        imageUrl: '/items/void_cloak.png'
+        imageUrl: '/items/void_cloak.png',
+        slots: ['ARMOR']
     },
-    */
     {
         id: 'theme-mushroom-grove',
         name: 'Mushroom Grove',
