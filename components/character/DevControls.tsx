@@ -1,6 +1,7 @@
 import React from 'react';
 import { Save, Sliders } from 'lucide-react';
 import { EquipmentOffset } from '../../src/utils/EquipmentConfig';
+import { useGameStore } from '../../store/useGameStore';
 
 interface DevControlsProps {
     devPanelOpen: boolean;
@@ -198,6 +199,28 @@ export const DevControls: React.FC<DevControlsProps> = (props) => {
                             </div>
                         </div>
                     )}
+                    {/* Debug Actions */}
+                    <div className="space-y-2 pt-4 border-t border-slate-700">
+                        <h4 className="font-bold text-sm uppercase tracking-wider text-red-400">Debug Actions</h4>
+                        <button
+                            onClick={() => useGameStore.getState().resetTaskHistory()}
+                            className="w-full bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 py-1.5 rounded text-[10px] font-bold uppercase transition-colors"
+                        >
+                            Reset Daily Task History
+                        </button>
+                        <button
+                            onClick={() => useGameStore.getState().resetStreak()}
+                            className="w-full bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 py-1.5 rounded text-[10px] font-bold uppercase transition-colors"
+                        >
+                            Reset Streak
+                        </button>
+                        <button
+                            onClick={() => useGameStore.getState().resetSkills()}
+                            className="w-full bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 py-1.5 rounded text-[10px] font-bold uppercase transition-colors"
+                        >
+                            Reset Skill Tree
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

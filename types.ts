@@ -14,6 +14,10 @@ export interface Task {
   goldReward: number;
   energyCost: number;
   gems?: number; // Added Gems reward
+  createdAt?: number; // Timestamp for Speed Run skill
+  speedRunBonusClaimed?: boolean; // Prevent farming
+
+
 
   // Enhanced Bounty Fields
   frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
@@ -112,6 +116,11 @@ export interface Stats {
 
   gems: number; // Premium Currency
   streak: number;
+  dailyTaskCount?: number; // Track tasks committed today for Momentum
+  lastDailyCheck?: string; // ISO Date for detecting new days
+  monthlyStreakShieldUsed?: boolean; // Iron Will skill tracking
+  lastStreakIncrement?: string; // ISO Date for daily streak increments
+
   intellect: number;
   strength: number;
   vigor: number;
@@ -182,6 +191,12 @@ export interface GameState {
   vitality: VitalityData;
   isTutorialActive: boolean;
 
+  mostWantedTaskId?: string; // ID of the task designated as Most Wanted (reset daily)
+  setMostWantedTask: (taskId: string) => void;
+  checkDailyReset: () => void;
+  incrementStreak: () => void;
+  resetStreak: () => void;
+
   completeTask: (taskId: string) => void;
   completeProject: (projectId: string) => void;
   unlockNode: (nodeId: string) => void;
@@ -218,11 +233,14 @@ export interface GameState {
   // removeItem: (itemId: string) => void; // Potential future need
 
   purchaseHistory: { itemId: string; timestamp: string }[];
+  taskCompletionHistory?: number[]; // Timestamps of accumulated task completions (for Haste skill)
   activityLog: { date: string; xp: number }[]; // For Heatmap
 
 
   confirmHonorPledge: () => void;
   resetGame: () => void;
+  resetTaskHistory: () => void; // New Dev Tool
+
 
   // Tutorial System
   setTutorialActive: (active: boolean) => void;
@@ -232,11 +250,14 @@ export interface GameState {
   journalEntries: JournalEntry[];
   addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'date'>) => void;
   deleteJournalEntry: (id: string) => void;
+  deleteJournalEntries: (ids: string[]) => void;
   updateJournalEntry: (entry: JournalEntry) => void;
 
   // UI State
   isSidePanelOpen: boolean;
   setSidePanelOpen: (isOpen: boolean) => void;
+  syncSkillTree: () => void;
+  resetSkills: () => void;
 }
 
 export interface JournalEntry {

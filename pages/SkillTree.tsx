@@ -12,8 +12,13 @@ const nodeTypes = {
 };
 
 export const SkillTree: React.FC = () => {
-  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats, settings } = useGameStore();
+  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats, settings, syncSkillTree } = useGameStore();
   const isDark = settings.theme === 'dark';
+
+  // Sync latest node definitions on load (fixes stale cache)
+  React.useEffect(() => {
+    syncSkillTree();
+  }, []);
 
   const onNodesChange = useCallback(() => { }, []);
 

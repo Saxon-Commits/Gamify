@@ -3,7 +3,7 @@ import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from 'react-router-dom';
 import { useGameStore, INITIAL_PROJECTS, INITIAL_TASKS } from '../store/useGameStore';
 import { generateDailyQuests } from '../src/utils/aiQuestGenerator';
-import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle, Heart, Award, Crown } from 'lucide-react';
+import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle, Heart, Award, Crown, Target } from 'lucide-react';
 import { QuestDifficulty, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
@@ -42,7 +42,10 @@ export const QuestCard: React.FC<{
   updateTask: (task: Task) => void;
   onEdit?: (task: Task) => void;
   layoutId?: string;
-}> = ({ task, completeTask, deleteTask, updateTask, onEdit, layoutId }) => {
+  mostWantedTaskId?: string;
+  setMostWantedTask?: (id: string) => void;
+  mostWantedUnlocked?: boolean;
+}> = ({ task, completeTask, deleteTask, updateTask, onEdit, layoutId, mostWantedTaskId, setMostWantedTask, mostWantedUnlocked }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (!task) return null;
@@ -55,7 +58,15 @@ export const QuestCard: React.FC<{
       className={`
       relative p-3 rounded-xl border transition-all duration-300 group cursor-pointer
       ${task.completed ? 'bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 opacity-50' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/10'}
+      ${mostWantedTaskId === task.id ? 'ring-2 ring-red-500 border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-900/10' : ''}
     `}>
+      {/* Most Wanted Badge */}
+      {mostWantedTaskId === task.id && (
+        <div className="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm z-10 animate-bounce flex items-center gap-1">
+          <Target size={10} /> WANTED
+        </div>
+      )}
+
       <div className="flex items-start gap-3">
         {/* Checkbox */}
         <button
@@ -147,6 +158,38 @@ export const QuestCard: React.FC<{
                   {/* Footer: Rewards & Edit */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      {/* Most Wanted Toggle */}
+                      {mostWantedUnlocked && !task.completed && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (mostWantedTaskId === task.id) {
+                              // Toggle Off - pass empty string or handled by store?
+                              // Store likely expects a string. Let's pass empty string or check store.
+                              // Actually, let's update store to handle it or pass undefined/null if possible.
+                              // As setMostWantedTask takes string, I might need to cast or rely on store logic.
+                              // But wait, I can just use a specific value or empty string to clear.
+                              // Let's try passing empty string, or updating store to accept undefined.
+                              // But for now, lets assume I can pass task.id again to toggle? No that sets it.
+                              // I'll assume passing the SAME id should be handled by logic, OR I need to handle it here.
+                              // Simplest: If logic here says "if current == task, unset", then call setMostWantedTask('')
+                              setMostWantedTask && setMostWantedTask(mostWantedTaskId === task.id ? '' : task.id);
+                            } else {
+                              setMostWantedTask && setMostWantedTask(task.id);
+                            }
+                          }}
+                          className={`flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border transition-colors
+                            ${mostWantedTaskId === task.id
+                              ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+                              : 'text-slate-400 hover:text-red-500 bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-800'
+                            }`}
+                          title={mostWantedTaskId === task.id ? "Unset Most Wanted" : "Set as Most Wanted"}
+                        >
+                          <Target size={10} />
+                          <span>{mostWantedTaskId === task.id ? 'ACTIVE' : 'WANTED'}</span>
+                        </button>
+                      )}
+
                       <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-900/50">
                         <span>+{task.xpReward} XP</span>
                       </div>
@@ -196,7 +239,10 @@ export const SortableQuestCard: React.FC<{
   deleteTask: (id: string) => void;
   updateTask: (task: Task) => void;
   onEdit?: (task: Task) => void;
-}> = ({ task, completeTask, deleteTask, updateTask, onEdit }) => {
+  mostWantedTaskId?: string;
+  setMostWantedTask?: (id: string) => void;
+  mostWantedUnlocked?: boolean;
+}> = ({ task, completeTask, deleteTask, updateTask, onEdit, mostWantedTaskId, setMostWantedTask, mostWantedUnlocked }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   const style = {
@@ -217,6 +263,9 @@ export const SortableQuestCard: React.FC<{
         updateTask={updateTask}
         onEdit={onEdit}
         layoutId={task.id}
+        mostWantedTaskId={mostWantedTaskId}
+        setMostWantedTask={setMostWantedTask}
+        mostWantedUnlocked={mostWantedUnlocked}
       />
     </div>
   );
@@ -671,6 +720,9 @@ export const BountyColumn: React.FC<{
   onEdit: (task: Task) => void;
   onCreate: (task: any) => void;
   isKanban?: boolean;
+  mostWantedTaskId?: string;
+  setMostWantedTask?: (id: string) => void;
+  mostWantedUnlocked?: boolean;
 }> = ({
   pid,
   title,
@@ -680,7 +732,10 @@ export const BountyColumn: React.FC<{
   updateTask,
   onEdit,
   onCreate,
-  isKanban = false
+  isKanban = false,
+  mostWantedTaskId,
+  setMostWantedTask,
+  mostWantedUnlocked
 }) => {
 
     const { setNodeRef, isOver } = useDroppable({
@@ -745,6 +800,9 @@ export const BountyColumn: React.FC<{
                   deleteTask={deleteTask}
                   updateTask={updateTask}
                   onEdit={onEdit}
+                  mostWantedTaskId={mostWantedTaskId}
+                  setMostWantedTask={setMostWantedTask}
+                  mostWantedUnlocked={mostWantedUnlocked}
                 />
               ))}
             </AnimatePresence>
@@ -762,9 +820,14 @@ export const BountyColumn: React.FC<{
 export const QuestLog: React.FC = () => {
   const navigate = useNavigate();
   /* LEFT SIDEBAR - Character & Merchant */
-  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart, updateTask } = useGameStore();
+  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart, updateTask, mostWantedTaskId, setMostWantedTask, skillNodes } = useGameStore();
   const { user } = useUser();
   const firstName = user?.firstName || stats.name;
+
+  // Check for Most Wanted Skill
+  const mostWantedUnlocked = skillNodes.find(n => n.id === 'branch_3-3')?.data.isUnlocked;
+  // Check for Kanban Warrior Skill (branch_3-6)
+  const kanbanUnlocked = skillNodes.find(n => n.id === 'branch_3-6')?.data.isUnlocked;
 
   const [isBountyModalOpen, setIsBountyModalOpen] = useState(false);
   const [isKanbanView, setIsKanbanView] = useState(false);
@@ -853,54 +916,35 @@ export const QuestLog: React.FC = () => {
 
     if (!activeTask) return;
 
-    const activeContainer = activeTask.projectId;
-    // If over a container directly (e.g. empty column)
-    const overContainer = ['col-todo', 'col-habit', 'col-guild'].includes(overId)
-      ? overId
-      : overTask?.projectId;
+    let activeContainer = activeTask.projectId;
+
+    if (isKanbanView) {
+      // Determine visual column based on Kanban Logic
+      if (activeTask.completed) {
+        activeContainer = 'col-guild';
+      } else if (activeTask.kanbanStatus === 'DONE') {
+        activeContainer = 'col-guild';
+      } else if (activeTask.kanbanStatus === 'IN_PROGRESS') {
+        activeContainer = 'col-habit';
+      } else if (activeTask.kanbanStatus === 'TODO') {
+        activeContainer = 'col-todo';
+      } else if (activeTask.subtasks?.some(s => s.completed)) {
+        activeContainer = 'col-habit';
+      } else {
+        activeContainer = 'col-todo';
+      }
+    }
+    // Improved Container Detection using dnd-kit data
+    const overContainer = over.data.current?.sortable?.containerId || (['col-todo', 'col-habit', 'col-guild'].includes(overId) ? overId : null);
 
     if (!overContainer || activeContainer === overContainer) {
       return;
     }
 
-    // Move task to new container optimistically
-    // To support precise placement, we need to find the index of the overTask and insert activeTask there?
-    // But dragOver is firing continuously. Changing array order here might be expensive but dnd-kit recommends it for sortable across containers.
-
-    // 1. Update Project ID
-    // 2. Move in Array
-
     const activeIndex = tasks.findIndex(t => t.id === activeId);
     const overIndex = tasks.findIndex(t => t.id === overId);
 
     let newTasks = [...tasks];
-
-    // Update project ID first
-    newTasks[activeIndex] = { ...newTasks[activeIndex], projectId: overContainer };
-
-    // If we are over a specific task, move to that index (relative) via arrayMove logic? 
-    // Actually, simply updating the project ID puts it in the list.
-    // To enable "insert between", we should also verify visual order.
-    // For now, let's just update the container (Project ID). 
-    // real reordering happens locally or via arrayMove if we want to simulate the sort.
-
-    const isOverContainerDirectly = ['col-todo', 'col-habit', 'col-guild'].includes(overId);
-
-    if (isOverContainerDirectly) {
-      // Just move to container, append effectively (or keep existing relative order)
-      moveTask(activeId, overContainer);
-    } else {
-      // We are over another task in a different container.
-      // We want to move 'active' to 'overContainer' AND position it relative to 'over'.
-      // dnd-kit's official example does this by updating the list.
-
-      // Let's rely on moveTask for the container switch, separate reorder?
-      // No, moveTask updates state.
-
-      // Let's do a manual splice.
-      const reordered = arrayMove(newTasks, activeIndex, overIndex);
-      reorderTasks(reordered);
-    }
 
     // Handle Status Updates based on Column (Only in Kanban View)
     if (isKanbanView) {
@@ -908,23 +952,39 @@ export const QuestLog: React.FC = () => {
       const isMovingToInProgress = overContainer === 'col-habit';
       const isMovingToTodo = overContainer === 'col-todo';
 
+      const updates: Partial<Task> = {};
+
+      // Note: We DO NOT update projectId in Kanban View anymore.
+      // Separate Concern: Category vs Status.
+
       if (isMovingToDone) {
-        // Mark Completed, clear Kanban Status
-        if (!activeTask.completed) updateTask({ ...activeTask, completed: true, kanbanStatus: 'DONE' });
+        // Enforce DONE state
+        if (!activeTask.completed) {
+          updates.completed = true;
+          updates.kanbanStatus = 'DONE';
+        } else if (activeTask.kanbanStatus !== 'DONE') {
+          updates.kanbanStatus = 'DONE';
+        }
       } else if (isMovingToInProgress) {
-        // Mark In Progress (Manual), Uncomplete if needed
-        const updates: Partial<Task> = { kanbanStatus: 'IN_PROGRESS' };
+        // Enforce NOT DONE but IN PROGRESS
+        if (activeTask.completed) updates.completed = false; // "move out of done column this should uncheck it"
+        if (activeTask.kanbanStatus !== 'IN_PROGRESS') updates.kanbanStatus = 'IN_PROGRESS';
+      } else if (isMovingToTodo) { // "Not Started"
+        // Enforce NOT DONE and TODO
         if (activeTask.completed) updates.completed = false;
-        updateTask({ ...activeTask, ...updates });
-      } else if (isMovingToTodo) {
-        // Mark Todo, Uncomplete if needed, Clear Kanban Status
-        const updates: Partial<Task> = { kanbanStatus: 'TODO' };
-        if (activeTask.completed) updates.completed = false;
+        if (activeTask.kanbanStatus !== 'TODO') updates.kanbanStatus = 'TODO';
+      }
+
+      if (Object.keys(updates).length > 0) {
         updateTask({ ...activeTask, ...updates });
       }
-    } else if (activeContainer !== overContainer) {
+
+    } else {
       // Standard behavior: just update container/project ID
-      updateTask({ ...activeTask, projectId: overContainer });
+      // This is the Bounty Board View - Strictly Categorical
+      if (activeTask.projectId !== overContainer) {
+        updateTask({ ...activeTask, projectId: overContainer });
+      }
     }
   };
 
@@ -1023,43 +1083,9 @@ export const QuestLog: React.FC = () => {
 
   // Helper to get bounties for a specific foundation
   const getBountiesForFoundation = (projectId: string) => {
-    // Unified Logic: Always return ALL tasks for the project first, then append defaults if needed/empty?
-    // Actually, distinct behaviors:
-    // 1. Titan: has complex sub-logic.
-    // 2. Others: simple list.
-
-    // Fix: We must ensure that ANY task that has projectId === currently-viewed-project IS returned.
-    // The previous logic for Titan was filtering narrowly.
-
-    // NEW LOGIC:
-    let tasksForProject = tasks.filter(t => t.projectId === projectId);
-
-    // If this is the "Guild" column (col-guild), also include Guild Project tasks
-    if (projectId === 'col-guild') {
-      const guildTasks = tasks.filter(t => t.type === 'guild' && t.projectId !== projectId);
-      tasksForProject = [...tasksForProject, ...guildTasks];
-    }
-
-    // If we have tasks, return them (plus any forced defaults for Titan/Physical if missing?)
-    // User wants "Bounty Columns". If I move a task to Titan, it should show up.
-
-    if (projectId === 'col-todo') {
-      const physicalDefaults = tasksForProject.filter(t => t.id === 'b-steps' || t.id === 'b-stretch');
-      // If we have "real" tasks (moved here) or specific defaults, show them.
-      // We also need to handle the "Mocks" for other pillars if the user hasn't created tasks yet?
-      // Actually, if I drag a task here, it's a real task.
-
-      // Let's just return all tasks for this project.
-      // And if it's 'physical' and empty/only-defaults, maybe map them?
-      // But simply:
-      return tasksForProject.map(t => {
-        if (t.id === 'b-steps') return { ...t, name: `Daily Steps: ${vitality.stepGoal || '10,000'}` };
-        return t;
-      });
-    }
-
-    // For others, just return what is there.
-    return tasksForProject;
+    // STRICT CATEGORY LOGIC for Bounty Board
+    // Just return tasks that match the projectId from the DB
+    return tasks.filter(t => t.projectId === projectId);
   };
 
   const getVisibleBountiesMap = () => {
@@ -1093,19 +1119,34 @@ export const QuestLog: React.FC = () => {
     );
 
     relevantTasks.forEach(task => {
+      // 1. Completed Tasks -> Always DONE in Kanban (unless we decide to allow "Completed but In Progress"?? User said: "Done; this bounty is checked off... move out of done -> uncheck")
       if (task.completed) {
         doneTasks.push(task);
-      } else {
-        const hasCheckedSubtasks = task.subtasks?.some(st => st.completed);
-        // Manual override allows dragging to "In Progress", BUT for Daily Bounties we want strict "Activity" based logic.
-        // User explicitly wants manual placement to persist.
-        const isManuallyInProgress = task.kanbanStatus === 'IN_PROGRESS';
+        return;
+      }
 
-        if (hasCheckedSubtasks || isManuallyInProgress) {
-          inProgressTasks.push(task);
-        } else {
-          todoTasks.push(task);
-        }
+      // 2. Manual Override (If explicitly set and NOT completed)
+      if (task.kanbanStatus === 'IN_PROGRESS') {
+        inProgressTasks.push(task);
+        return;
+      }
+      if (task.kanbanStatus === 'TODO') {
+        todoTasks.push(task);
+        return;
+      }
+      if (task.kanbanStatus === 'DONE') {
+        // Should verify consistency? If status says DONE but task.completed is false.
+        // We can treat it as done or auto-fix? Let's just push to done tasks for view consistency.
+        doneTasks.push(task);
+        return;
+      }
+
+      // 3. Derived State (Only if no manual override)
+      const hasCheckedSubtasks = task.subtasks?.some(st => st.completed);
+      if (hasCheckedSubtasks) {
+        inProgressTasks.push(task);
+      } else {
+        todoTasks.push(task);
       }
     });
 
@@ -1201,13 +1242,15 @@ export const QuestLog: React.FC = () => {
 
             <div className="flex items-center gap-2">
               {/* Kanban View Toggle */}
-              <button
-                onClick={() => setIsKanbanView(!isKanbanView)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg transition-all group ${isKanbanView ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
-              >
-                <Layout size={16} className={`${isKanbanView ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} transition-colors`} />
-                <span className={`text-xs font-bold ${isKanbanView ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200'} uppercase tracking-wider`}>Kanban</span>
-              </button>
+              {kanbanUnlocked && (
+                <button
+                  onClick={() => setIsKanbanView(!isKanbanView)}
+                  className={`flex items-center gap-2 px-3 py-2 border rounded-lg transition-all group ${isKanbanView ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                >
+                  <Layout size={16} className={`${isKanbanView ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'} transition-colors`} />
+                  <span className={`text-xs font-bold ${isKanbanView ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200'} uppercase tracking-wider`}>Kanban</span>
+                </button>
+              )}
 
               {/* Journal Tool */}
               <button
@@ -1265,7 +1308,7 @@ export const QuestLog: React.FC = () => {
 
                   if (isKanbanView) {
                     title = {
-                      'col-todo': 'To-Do',
+                      'col-todo': 'Not Started',
                       'col-habit': 'In Progress',
                       'col-guild': 'Done'
                     }[pid] || 'Tasks';
@@ -1283,6 +1326,9 @@ export const QuestLog: React.FC = () => {
                       onEdit={handleEditTask}
                       onCreate={handleCreateBounty}
                       isKanban={isKanbanView}
+                      mostWantedTaskId={mostWantedTaskId}
+                      setMostWantedTask={setMostWantedTask}
+                      mostWantedUnlocked={mostWantedUnlocked}
                     />
                   );
                 })}

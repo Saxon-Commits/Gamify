@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import { GameState, Stats, Project, Task, GameSettings, VitalityData, JournalEntry } from '../types';
+import { GameState, JournalEntry, Stats, GameSettings, VitalityData, Project, QuestDifficulty, Task, InventoryItem, ActiveBuff } from '../types';
 import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/gameLogic';
 import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
@@ -62,6 +62,9 @@ export const INITIAL_PROJECTS: Project[] = [
   // --- TYCOON PATHWAY PROJECTS (Legacy/Active) ---
   { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false, difficulty: 'MEDIUM', hp: 300, maxHp: 300 },
   { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
+  // 3: Most Wanted (Bounty Hunter)
+  // Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.
+  { id: 'p-most-wanted', name: 'Most Wanted', description: 'Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
   { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
   // Active Branch
   { id: 'p-tycoon-4a', name: 'Skill Minting', description: 'Value Definition.', completed: false, difficulty: 'MEDIUM', hp: 200, maxHp: 200 },
@@ -192,6 +195,10 @@ export const useGameStore = create<GameState>()(
       isTutorialActive: false,
       isSidePanelOpen: false,
       journalEntries: [],
+      taskCompletionHistory: [],
+      mostWantedTaskId: undefined,
+
+      setMostWantedTask: (taskId) => set({ mostWantedTaskId: taskId }),
 
       addJournalEntry: (entry) => {
         const newEntry: JournalEntry = {
@@ -200,13 +207,174 @@ export const useGameStore = create<GameState>()(
           date: new Date().toISOString()
         };
         set((state) => ({ journalEntries: [newEntry, ...state.journalEntries] }));
+
+        // Check for exclusions (No rewards for auto-logs)
+        const isExcluded = entry.folder === 'Grindstone Log' || (entry.tags && entry.tags.includes('Quick Log'));
+        if (isExcluded) return;
+
+        // --- CLARITY SKILL NODE (branch_1-1 & branch_1-4) ---
+        // Clarity I: +5% XP
+        // Clarity II: +10% XP (Overrides Clarity I)
+        const state = get();
+        let xpReward = 50;
+
+        const clarityNode = state.skillNodes.find(n => n.id === 'branch_1-1');
+        const clarityIINode = state.skillNodes.find(n => n.id === 'branch_1-4');
+
+        if (clarityIINode?.data.isUnlocked) {
+          xpReward = Math.round(xpReward * 1.10); // +10%
+        } else if (clarityNode?.data.isUnlocked) {
+          xpReward = Math.round(xpReward * 1.05); // +5%
+        }
+
+        // --- MEMORY SKILL NODE (branch_1-2 & branch_1-5) ---
+        // Memory I: +10% Chance (20-50 Gold)
+        // Memory II: +15% Chance (Overrides Memory I)
+        const memoryNode = state.skillNodes.find(n => n.id === 'branch_1-2');
+        const memoryIINode = state.skillNodes.find(n => n.id === 'branch_1-5');
+        let goldReward = 0;
+
+        let chance = 0;
+        if (memoryIINode?.data.isUnlocked) chance = 0.15;
+        else if (memoryNode?.data.isUnlocked) chance = 0.10;
+
+        if (chance > 0 && Math.random() < chance) {
+          const foundGold = Math.floor(Math.random() * (200 - 90 + 1)) + 90; // 90-200 Gold
+          goldReward = foundGold;
+          useToastStore.getState().addToast({ type: 'gold', amount: foundGold, message: 'Memory: Recalled a hidden stash!' });
+        }
+
+        // Award XP
+        state.addRewards(xpReward, goldReward);
       },
 
       setSidePanelOpen: (isOpen) => set({ isSidePanelOpen: isOpen }),
 
+      syncSkillTree: () => {
+        const { nodes: freshNodes } = generateSkillTree();
+        const storedNodes = get().skillNodes;
+
+        const mergedNodes = freshNodes.map(freshNode => {
+          const storedNode = storedNodes.find(n => n.id === freshNode.id);
+          if (storedNode) {
+            return {
+              ...freshNode,
+              data: {
+                ...freshNode.data,
+                isUnlocked: storedNode.data.isUnlocked,
+              }
+            };
+          }
+          return freshNode;
+        });
+
+        set({ skillNodes: mergedNodes });
+      },
+
+      resetSkills: () => {
+        const { nodes, edges } = generateSkillTree();
+        set({ skillNodes: nodes, skillEdges: edges });
+        useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Skill Tree Reset!' });
+      },
+
+      incrementStreak: () => {
+        const { stats } = get();
+        const today = new Date().toISOString().split('T')[0];
+
+        if (stats.lastStreakIncrement !== today) {
+          set({
+            stats: {
+              ...stats,
+              streak: stats.streak + 1,
+              lastStreakIncrement: today
+            }
+          });
+          useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Daily Streak Increased!', icon: 'Flame' });
+        }
+      },
+
+      resetStreak: () => {
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            streak: 0,
+            lastStreakIncrement: undefined
+          }
+        }));
+        useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Streak Reset to 0' });
+      },
+
+      checkDailyReset: () => {
+        const { stats, skillNodes } = get();
+        const today = new Date().toISOString().split('T')[0];
+        const lastCheck = stats.lastDailyCheck;
+
+        // If never checked, just set it
+        if (!lastCheck) {
+          set((state) => ({ stats: { ...state.stats, lastDailyCheck: today, dailyTaskCount: 0 } }));
+          return;
+        }
+
+        if (today === lastCheck) return; // Already checked today
+
+        // Calculate days difference
+        const oneDay = 24 * 60 * 60 * 1000;
+        const diffDays = Math.round(Math.abs((new Date(today).getTime() - new Date(lastCheck).getTime()) / oneDay));
+
+        let newStreak = stats.streak;
+        let shieldUsed = stats.monthlyStreakShieldUsed;
+
+        // Reset Shield if new month
+        if (new Date(today).getMonth() !== new Date(lastCheck).getMonth()) {
+          shieldUsed = false;
+        }
+
+        // --- IRON WILL SKILL NODE (branch_2-5) ---
+        // Streak Shield: First missed day of month doesn't reset streak.
+        if (diffDays > 1) { // Missed at least one day
+          const ironWillNode = skillNodes.find(n => n.id === 'branch_2-5');
+
+          if (ironWillNode?.data.isUnlocked && !shieldUsed) {
+            // SAVE STREAK
+            shieldUsed = true;
+            useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Iron Will: Streak Saved!', icon: 'Shield' });
+          } else {
+            // RESET STREAK
+            newStreak = 0;
+            if (stats.streak > 0) {
+              useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Streak Lost!', icon: 'Frown' });
+            }
+          }
+        }
+
+        // Check Momentum (if not checked today, we assume checks are done on events, but this is just reset)
+        // Resetting daily trackers? useGameStore doesn't track daily trackers explicitly besides quests status.
+        // We might want to reset daily quests here too? Or do they reset elsewhere?
+        // Assuming Task.type === 'daily' logic is handled elsewhere or manual reset?
+        // Let's stick to streak logic 
+
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            lastDailyCheck: today,
+            streak: newStreak,
+            monthlyStreakShieldUsed: shieldUsed,
+            dailyTaskCount: 0 // Reset daily task count
+          },
+          // Should we reset daily quests here?
+          tasks: state.tasks.map(t => t.type === 'daily' ? { ...t, completed: false } : t)
+        }));
+      },
+
       deleteJournalEntry: (id) => {
         set((state) => ({
           journalEntries: state.journalEntries.filter(e => e.id !== id)
+        }));
+      },
+
+      deleteJournalEntries: (ids) => {
+        set((state) => ({
+          journalEntries: state.journalEntries.filter(e => !ids.includes(e.id))
         }));
       },
 
@@ -311,7 +479,28 @@ export const useGameStore = create<GameState>()(
         // ------------------------
 
         // Economy Integration
-        const { gold, sp } = calculateRewards(task.difficulty, false, activePerks);
+        let { gold, sp } = calculateRewards(task.difficulty, false, activePerks);
+
+        // --- GREED I SKILL NODE (branch_3-1) ---
+        // +5% Gold from all Tasks
+        const greedNode = get().skillNodes.find(n => n.id === 'branch_3-1');
+        if (greedNode?.data.isUnlocked) {
+          gold = Math.round(gold * 1.05);
+        }
+
+        // --- SPEED RUN SKILL NODE (branch_3-5) ---
+        // Double Gold if completed within 30m of creation
+        let speedRunBonusApplied = false;
+        const speedRunNode = get().skillNodes.find(n => n.id === 'branch_3-5');
+        if (speedRunNode?.data.isUnlocked && task.createdAt && !task.speedRunBonusClaimed) {
+          const timeDiff = Date.now() - task.createdAt;
+          const THIRTY_MINUTES = 30 * 60 * 1000;
+          if (timeDiff <= THIRTY_MINUTES) {
+            gold *= 2;
+            speedRunBonusApplied = true;
+            useToastStore.getState().addToast({ type: 'gold', amount: 0, message: 'Speed Run: Double Gold!' });
+          }
+        }
 
         let updatedLevel = stats.level;
 
@@ -319,6 +508,59 @@ export const useGameStore = create<GameState>()(
         let xpGained = task.xpReward;
         if (activePerks?.xpModifier) {
           xpGained = Math.round(xpGained * (1 + activePerks.xpModifier));
+        }
+
+        // --- HASTE SKILL NODE (branch_3-2) ---
+        // Combo Meter: 3 Tasks in 1 hour grants +20 XP
+        // Logic: Add current timestamp, filter list for last 1h, check count
+        const hasteNode = get().skillNodes.find(n => n.id === 'branch_3-2');
+        let newTaskHistory = [...(get().taskCompletionHistory || [])];
+        const now = Date.now();
+        newTaskHistory.push(now);
+
+        // Filter: Keep only timestamps within last 60 minutes
+        const ONE_HOUR = 60 * 60 * 1000;
+        newTaskHistory = newTaskHistory.filter(t => now - t <= ONE_HOUR);
+
+        if (hasteNode?.data.isUnlocked && newTaskHistory.length >= 3) {
+          xpGained += 20;
+          useToastStore.getState().addToast({ type: 'xp', amount: 20, message: 'Haste Bonus: 3x Combo!' });
+          // Consume the 3 timestamps to prevent spam (Combo Reset)
+          // We keep the most recent ones MINUS 3? No, we just emptied the "meter".
+          // Actually, if we have 4, and consume 3, we have 1 left.
+          // But strict "3 in 1 hour" usually matches sets of 3.
+          // Let's remove the OLDEST 3 that form the combo? Or the NEWEST?
+          // If we remove the ones that triggered it, we should remove the 3 that are in the window.
+          // Since we just filtered `newTaskHistory` to be in the window, we can just splice.
+          // Removing the OLDEST 3 makes sense for a "sliding window" consumption?
+          // Actually, let's just clear the history for simplicity and impactful "Combo Reset".
+          newTaskHistory = [];
+        }
+
+        // --- MOST WANTED SKILL NODE (branch_3-3) ---
+        // Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.
+        if (get().mostWantedTaskId === taskId) {
+          const buff: ActiveBuff = {
+            id: `buff - wanted - ${Date.now()} `,
+            type: 'XP_BOOST',
+            value: 0.1, // +10%
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          };
+
+          set((s) => ({ activeBuffs: [...s.activeBuffs, buff], mostWantedTaskId: undefined }));
+          useToastStore.getState().addToast({ type: 'xp', amount: 0, message: 'Bounty Collected! +10% XP Buff (24h)' });
+        }
+
+        // --- MOMENTUM SKILL NODE (branch_3-4) ---
+        // First Task completed each day grants +50% XP.
+        const momentumNode = get().skillNodes.find(n => n.id === 'branch_3-4');
+        if (momentumNode?.data.isUnlocked) {
+          // Check if dailyTaskCount is 0 or undefined
+          if (!stats.dailyTaskCount || stats.dailyTaskCount === 0) {
+            const momentumBonus = Math.round(task.xpReward * 0.5);
+            xpGained += momentumBonus;
+            useToastStore.getState().addToast({ type: 'xp', amount: momentumBonus, message: 'Momentum: First Blood! (+50% XP)' });
+          }
         }
 
         let updatedXp = stats.xp + xpGained;
@@ -358,11 +600,16 @@ export const useGameStore = create<GameState>()(
             xpToNext: updatedXpToNext,
             skillPoints: stats.skillPoints + skillPointsGained,
             // voidShards removed
-            streak: stats.streak + 1
+            // Streak handled via incrementStreak call below
+            dailyTaskCount: (stats.dailyTaskCount || 0) + 1
           },
-          tasks: tasks.map(t => t.id === taskId ? { ...t, completed: true } : t),
-          activityLog: newActivityLog
+          tasks: tasks.map(t => t.id === taskId ? { ...t, completed: true, speedRunBonusClaimed: t.speedRunBonusClaimed || speedRunBonusApplied } : t),
+          activityLog: newActivityLog,
+          taskCompletionHistory: newTaskHistory
         });
+
+        // Trigger Streak Increment (Daily Check)
+        get().incrementStreak();
       },
 
       completeProject: (projectId) => {
@@ -557,7 +804,7 @@ export const useGameStore = create<GameState>()(
       // --- CUSTOM TASKS & DND ---
       createTask: (task) => {
         set((state) => ({
-          tasks: [...state.tasks, { ...task, id: `t-custom-${crypto.randomUUID()}`, completed: false }]
+          tasks: [...state.tasks, { ...task, id: `t-custom-${crypto.randomUUID()}`, completed: false, createdAt: Date.now() }]
         }));
       },
 
@@ -787,6 +1034,12 @@ export const useGameStore = create<GameState>()(
           hoveredNode: null,
         });
       },
+
+      resetTaskHistory: () => {
+        set({ taskCompletionHistory: [] });
+        useToastStore.getState().addToast({ type: 'system', amount: 0, message: 'Daily Task History Reset' });
+      },
+
       addRewards: (xpAmount, goldAmount) => {
         // Trigger Toasts
         const { addToast } = useToastStore.getState();

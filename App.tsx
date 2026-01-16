@@ -57,6 +57,11 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Daily Check (Streak Protection)
+  useEffect(() => {
+    useGameStore.getState().checkDailyReset();
+  }, []);
+
   return (
     <HashRouter>
       {/* Background Music Player should persist across all pages? Or only in App?

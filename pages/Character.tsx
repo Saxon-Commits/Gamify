@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Gamepad } from 'lucide-react';
+
 
 // New Components
 import { AttributesPanel } from '../components/character/AttributesPanel';
@@ -74,14 +73,6 @@ export const Character: React.FC = () => {
                     <p className="text-slate-500 dark:text-slate-400 font-medium">Customize your legend.</p>
                 </div>
                 <div className="flex gap-3 w-full md:w-auto justify-center hidden md:flex">
-                    <Link to="/" className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-slate-200 dark:border-slate-800 flex items-center gap-2 group">
-                        <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                        Back to Hub
-                    </Link>
-                    <Link to="/play" className="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
-                        <Gamepad size={18} />
-                        Enter Game
-                    </Link>
                 </div>
             </div>
 

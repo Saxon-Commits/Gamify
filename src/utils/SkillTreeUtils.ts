@@ -67,7 +67,7 @@ export const NODE_DEFINITIONS: Record<string, Record<number, { label: string; de
         3: { label: 'Most Wanted', description: 'Designate 1 Daily Task as "Most Wanted". +10% XP for 24h on completion.', icon: 'Target', flavor: '"One target above all others. Bring me their head."' },
         4: { label: 'Momentum', description: 'First Task completed each day grants +50% XP.', icon: 'TrendingUp', flavor: '"The early blade drinks deepest."' },
         5: { label: 'Speed Run', description: 'Tasks completed within 30m of creation yield Double Gold.', icon: 'Timer', flavor: '"Hesitation is death. Strike while the contract is fresh."' },
-        6: { label: 'Hunter\'s Mark', description: 'Ability: Mark a task to double its Gold reward (1/day).', icon: 'Crosshair', flavor: '"A focused mind sees the target in everything."' },
+        6: { label: 'Kanban Warrior', description: 'Unlock the Kanban Board View for Quest Log.', icon: 'Columns', flavor: '"Order from chaos. Strategy from improved visualization."' },
         7: { label: 'Streak Economy', description: '+1% Gold Gen per streak day (Max 20%).', icon: 'BarChart', flavor: '"Success breeds wealth. Consistency compounds the reward."' },
         8: { label: 'Greed II', description: '+10% Gold from all Tasks.', icon: 'DollarSign', flavor: '"The heavier the purse, the sharper the aim."' },
         9: { label: 'Dealer\'s Choice', description: 'Daily Bounties have a 5% chance to include Gems.', icon: 'Dices', flavor: '"Fate favors the bold."' },
