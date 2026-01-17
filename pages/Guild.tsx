@@ -14,6 +14,10 @@ import { GuildBrowser } from '../components/guild/GuildBrowser';
 import { GuildProjectsView } from '../components/guild/GuildProjectsView';
 import { GuildSettings } from '../components/guild/GuildSettings';
 import { BountyBoardCard } from '../components/guild/BountyBoardCard';
+import { GuildBountyBoard } from '../components/guild/GuildBountyBoard';
+import { CreateBountyModal } from '../components/guild/CreateBountyModal'; // Import needed if we want to show it from Overview
+// Actually better to handle it inside GuildBountyBoard, or lift state.
+// Let's use GuildBountyBoard as the main view.
 import { GuildHeader } from '../components/guild/GuildHeader';
 import { GuildChat } from '../components/guild/GuildChat';
 // import { GuildActivityFeed } from '../components/guild/GuildActivityFeed';
@@ -62,7 +66,7 @@ export const Guild: React.FC = () => {
     const myGuilds = useQuery(api.guilds.getMyGuilds);
     const [activeGuildId, setActiveGuildId] = useState<string | null>(null);
     const [view, setView] = useState<'dashboard' | 'browse' | 'create'>('dashboard');
-    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'chat' | 'settings' | 'members'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'bounties' | 'chat' | 'settings' | 'members'>('overview');
     const [selectedGuildProjectId, setSelectedGuildProjectId] = useState<Id<"guildProjects"> | null>(null);
     const [draftProject, setDraftProject] = useState<any>(null);
 
@@ -140,6 +144,7 @@ export const Guild: React.FC = () => {
 
     // Quick Action States
     const [triggerProjectCreation, setTriggerProjectCreation] = useState(false);
+    const [triggerBountyCreation, setTriggerBountyCreation] = useState(false);
 
     // Loading State
     if (myGuilds === undefined) {
@@ -259,6 +264,12 @@ export const Guild: React.FC = () => {
                                     Projects
                                 </button>
                                 <button
+                                    onClick={() => setActiveTab('bounties')}
+                                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'bounties' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
+                                >
+                                    Bounties
+                                </button>
+                                <button
                                     onClick={() => setActiveTab('chat')}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2 ${activeTab === 'chat' ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'}`}
                                 >
@@ -311,6 +322,22 @@ export const Guild: React.FC = () => {
                                     draftProject={draftProject}
                                     setDraftProject={setDraftProject}
                                 />
+                            ) : activeTab === 'bounties' ? (
+                                <>
+                                    <GuildBountyBoard
+                                        guildId={guild._id}
+                                        role={membership.role as any}
+                                        userId={membership.userId}
+                                        treasury={guild.treasury}
+                                    />
+                                    {triggerBountyCreation && (
+                                        <CreateBountyModal
+                                            guildId={guild._id}
+                                            treasury={guild.treasury}
+                                            onClose={() => setTriggerBountyCreation(false)}
+                                        />
+                                    )}
+                                </>
                             ) : activeTab === 'settings' && isOfficer ? (
                                 <GuildSettings
                                     guild={guild}
@@ -342,7 +369,15 @@ export const Guild: React.FC = () => {
                                     />
 
                                     {/* Bounty Board */}
-                                    <BountyBoardCard isOfficer={isOfficer} />
+                                    <BountyBoardCard
+                                        guildId={guild._id}
+                                        isOfficer={isOfficer}
+                                        onViewAll={() => setActiveTab('bounties')}
+                                        onCreate={() => {
+                                            setActiveTab('bounties');
+                                            setTriggerBountyCreation(true);
+                                        }}
+                                    />
                                 </div>
                             )}
                         </>

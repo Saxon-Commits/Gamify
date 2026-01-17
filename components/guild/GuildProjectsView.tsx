@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from '../../convex/_generated/api';
 import { useGameStore } from '../../store/useGameStore';
 import { Id } from '../../convex/_generated/dataModel';
+import { CreateProjectWizard } from './CreateProjectWizard';
 
 interface GuildProjectsViewProps {
     guildId: Id<"guilds">;
@@ -26,59 +27,30 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     const contribute = useMutation(api.guilds.contributeToProject);
 
     const [contributionAmount, setContributionAmount] = useState<Record<string, number>>({});
-    // Local state removed, using props
 
-    // Direct Draft Creation Logic (Local State)
+    // Wizard State
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+
     const handleAddProject = () => {
-        if (!isOfficer || !setDraftProject) return;
-
-        setDraftProject({
-            _id: "draft-id",
-            title: "Untitled Project",
-            description: "<p>Describe the project goals and requirements here...</p>",
-            targetTasks: 10,
-            rewards: { xp: 0, gold: 0, gems: 0 },
-            tasks: [],
-            allowSubmissions: false,
-            createdAt: Date.now(),
-            rankedRewards: {
-                firstPlace: { xp: 0, gold: 0, gems: 0 },
-                secondPlace: { xp: 0, gold: 0, gems: 0 },
-                thirdPlace: { xp: 0, gold: 0, gems: 0 },
-            },
-            consolidateRewards: false,
-        });
-        onSelectProject("draft-id" as any); // Use draft-id to trigger detail view
+        if (!isOfficer) return;
+        setIsWizardOpen(true);
     };
 
     const handleLaunchProject = async (data: any) => {
         try {
-            const newProjectId = await createProject({
+            await createProject({
                 guildId,
-                title: data.title || "New Project",
-                description: data.description,
-                targetTasks: 10,
-                rewards: { xp: 0, gold: 0, gems: 0 },
-                tasks: [],
-                allowSubmissions: data.allowSubmissions,
-                submissionDeadline: data.submissionDeadline,
+                ...data
             });
 
-            // Update immediately with extra settings if needed
-            if (data.consolidateRewards || data.rankedRewards) {
-                await updateProject({
-                    projectId: newProjectId,
-                    consolidateRewards: data.consolidateRewards,
-                    rankedRewards: data.rankedRewards,
-                });
-            }
-
-            if (setDraftProject) setDraftProject(null);
-            onSelectProject(newProjectId);
-            alert("Project Launched Successfully!");
-        } catch (error) {
+            setIsWizardOpen(false);
+            // No need to set active, the query will update and show it in list.
+            // Or we could auto-select the latest one if we got the ID back (Convex mutation returns ID).
+            // But for now, just closing the wizard is fine. 
+        } catch (error: any) {
             console.error("Failed to launch project:", error);
-            alert("Failed to create project.");
+            alert("Failed to create project: " + error.message);
+            throw error; // Re-throw for Wizard to handle state
         }
     };
 
@@ -94,27 +66,30 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
 
     const joinProject = useMutation(api.guilds.joinProject);
     const addTasks = useGameStore(state => state.addTasks);
-    const tasks = useGameStore(state => state.tasks);
-    const completeTask = useGameStore(state => state.completeTask);
+    // const tasks = useGameStore(state => state.tasks); // Unused
+    // const completeTask = useGameStore(state => state.completeTask); // Unused
 
     const me = useQuery(api.users.getMe);
 
-    // ... (rest of hooks)
-
     const handleJoin = async (projectId: any) => {
         try {
-            const newTasks = await joinProject({ guildId, projectId });
+            await joinProject({ guildId, projectId });
 
-            const mappedTasks = newTasks.map((t: any) => ({
-                ...t,
-                projectId: projectId,
-                completed: false,
-                type: 'guild',
-                energyCost: 10
-            }));
+            const project = projects?.find(p => p._id === projectId);
 
-            addTasks(mappedTasks);
-            alert("Joined Project! Tasks added to your Quest Log.");
+            if (project?.storedTasks && project.storedTasks.length > 0) {
+                const mappedTasks = project.storedTasks.map((t: any) => ({
+                    ...t,
+                    projectId: projectId,
+                    completed: false,
+                    type: 'guild',
+                    energyCost: 10
+                }));
+                addTasks(mappedTasks);
+                alert("Joined Project! Tasks added to your Quest Log.");
+            } else {
+                alert("Joined Project!");
+            }
         } catch (e: any) {
             alert("Failed to join: " + e.message);
         }
@@ -132,11 +107,6 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
     const updateProject = useMutation(api.guilds.updateProject);
 
     const handleDeleteProject = async (projectId: Id<"guildProjects">) => {
-        if (projectId === "draft-id" as any) {
-            if (setDraftProject) setDraftProject(null);
-            onSelectProject(null);
-            return;
-        }
         try {
             await deleteProject({ projectId });
             onSelectProject(null); // Return to list view
@@ -153,14 +123,6 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         }
     };
 
-    // Helper to strip HTML for preview
-    const stripHtml = (html: string) => {
-        if (!html) return "";
-        const tmp = document.createElement("DIV");
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || "";
-    };
-
     const leaveProject = useMutation(api.guilds.leaveProject);
 
     const handleLeaveProject = async (projectId: Id<"guildProjects">) => {
@@ -175,31 +137,6 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
 
     // --- RENDER DETAIL VIEW IF SELECTED ---
     if (viewProjectId) {
-        // Check for draft first
-        if (viewProjectId === "draft-id" as any && draftProject) {
-            return (
-                <GuildProjectDetail
-                    project={draftProject}
-                    onBack={() => {
-                        if (confirm("Discard draft?")) {
-                            if (setDraftProject) setDraftProject(null);
-                            onSelectProject(null);
-                        }
-                    }}
-                    isOfficer={isOfficer}
-                    isJoined={true}
-                    onDelete={() => {
-                        if (setDraftProject) setDraftProject(null);
-                        onSelectProject(null);
-                    }}
-                    onUpdate={(pid, data) => setDraftProject && setDraftProject({ ...draftProject, ...data })}
-                    members={members}
-                    isDraft={true}
-                    onCreate={handleLaunchProject}
-                />
-            );
-        }
-
         const selectedProject = projects?.find(p => p._id === viewProjectId);
         if (selectedProject) {
             const isJoined = me && selectedProject.joinedUserIds?.includes(me._id);
@@ -219,10 +156,18 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         }
     }
 
-
-
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
+            {/* WIZARD OVERLAY */}
+            {isWizardOpen && (
+                <CreateProjectWizard
+                    guildId={guildId}
+                    treasury={treasury}
+                    onClose={() => setIsWizardOpen(false)}
+                    onCreate={handleLaunchProject}
+                />
+            )}
+
             <div className="flex items-center justify-end">
                 {isOfficer && (
                     <button
@@ -233,8 +178,6 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                     </button>
                 )}
             </div>
-
-
 
             {!projects ? (
                 <div className="text-center py-8 text-slate-500">Loading projects...</div>
@@ -264,18 +207,23 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors mb-1">{project.title}</h3>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">{project.title}</h3>
+                                                    {project.status === 'completed' && <span className="bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border border-green-500/30">Completed</span>}
+                                                </div>
                                                 <p className="text-xs text-slate-500 mb-2">Created: {new Date(project.createdAt).toLocaleDateString()}</p>
 
                                                 <div className="flex gap-2">
-                                                    <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
-                                                        {project.rewards.gold} Gold
-                                                    </span>
-                                                    {project.rewards.gems ? (
-                                                        <span className="text-xs bg-cyan-900/30 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">
-                                                            {project.rewards.gems} Gems
+                                                    {(project.totalEscrowed?.gold || project.rewards?.gold) > 0 && (
+                                                        <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
+                                                            {project.totalEscrowed?.gold || project.rewards.gold} Gold
                                                         </span>
-                                                    ) : null}
+                                                    )}
+                                                    {(project.totalEscrowed?.gems || project.rewards?.gems) > 0 && (
+                                                        <span className="text-xs bg-cyan-900/30 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">
+                                                            {project.totalEscrowed?.gems || project.rewards.gems} Gems
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 

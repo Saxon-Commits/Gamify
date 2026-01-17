@@ -20,6 +20,7 @@
     "lucide-react": "^0.562.0",
     "quill-blot-formatter": "^1.0.5",
     "react": "^19.2.3",
+    "react-confetti": "^6.4.0",
     "react-dom": "^19.2.3",
     "react-quill-new": "^3.7.0",
     "react-router-dom": "^7.11.0",

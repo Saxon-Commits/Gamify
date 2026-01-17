@@ -188,4 +188,23 @@ export default defineSchema({
     })
         .index("by_project", ["projectId"])
         .index("by_user", ["userId"]),
+
+    // Guild Bounties - Tasks created by leaders for members
+    guildBounties: defineTable({
+        guildId: v.id("guilds"),
+        title: v.string(),
+        description: v.string(),
+        reward: v.object({
+            gold: v.number(),
+            gems: v.optional(v.number()),
+        }),
+        createdBy: v.id("users"), // Leader/Officer
+        status: v.string(), // 'OPEN', 'CLAIMED', 'SUBMITTED', 'COMPLETED'
+        claimedBy: v.optional(v.id("users")),
+        submittedAt: v.optional(v.number()),
+        proof: v.optional(v.string()), // Text/Link proof
+        createdAt: v.number(),
+    })
+        .index("by_guild", ["guildId"])
+        .index("by_claimant", ["claimedBy"]),
 });

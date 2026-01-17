@@ -81,6 +81,17 @@ export const Grindstone: React.FC = () => {
 
     const handleGiveUp = () => {
         if (confirm('Are you sure you want to break focus? No rewards will be given.')) {
+            // Check Residual Heat (Branch 2 Node 9)
+            // Recover 50% XP / 25% Gold
+            const state = useGameStore.getState();
+            const residualNode = state.skillNodes.find(n => n.id === 'branch_2-9');
+            if (residualNode?.data.isUnlocked) {
+                const recoveredXP = Math.round(selectedOption.xp * 0.50);
+                const recoveredGold = Math.round(selectedOption.gold * 0.25);
+                addRewards(recoveredXP, recoveredGold);
+                useToastStore.getState().addToast({ type: 'xp', amount: recoveredXP, message: 'Residual Heat: Energy Recovered' });
+            }
+
             setIsActive(false);
             setTimeLeft(activeDuration * 60);
             if (isChainMode) setChainStep(0); // Reset chain on give up
@@ -106,6 +117,16 @@ export const Grindstone: React.FC = () => {
             } else if (heatNode?.data.isUnlocked) {
                 xpReward = Math.round(xpReward * 1.05); // +5%
             }
+        }
+
+        // Check "The Heat III" (branch_2-7): Double XP for minutes beyond 45m
+        const heatIIINode = state.skillNodes.find(n => n.id === 'branch_2-7');
+        if (selectedOption.duration > 45 && heatIIINode?.data.isUnlocked) {
+            const extraMinutes = selectedOption.duration - 45;
+            const xpPerMinute = selectedOption.xp / selectedOption.duration;
+            const extraXp = Math.round(extraMinutes * xpPerMinute); // "Double" means add another base amount for those minutes
+            xpReward += extraXp;
+            useToastStore.getState().addToast({ type: 'xp', amount: extraXp, message: 'Heat III: Overclock Bonus!' });
         }
 
         // Check "Golden Forge" Skill (branch_2-2): +5% Gold for sessions > 30 mins

@@ -3,8 +3,10 @@ import { Volume2, VolumeX, SkipForward, Music } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 
 const PLAYLIST = [
-    '/audio/music/Penumbra.mp3',
-    '/audio/music/EchoesOfHome.mp3'
+    '/XPFocus music/A cup of tea.mp3',
+    '/XPFocus music/Florist.mp3',
+    '/XPFocus music/Cue.mp3',
+    '/XPFocus music/lofihiphop.ogg'
 ];
 
 export const BackgroundMusicPlayer: React.FC = () => {

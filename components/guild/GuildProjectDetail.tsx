@@ -26,9 +26,8 @@ interface GuildProjectDetailProps {
 
 type Tab = 'overview' | 'archive' | 'settings';
 
-export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project, onBack, isOfficer, onJoin, onLeave, isJoined, onDelete, onUpdate, members, isDraft, onCreate }) => {
-    // ... (lines 26-153)
-
+export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project, onBack, isOfficer, onJoin, onLeave, isJoined, onDelete, onUpdate, members }) => {
+    // ... State ...
     const [activeTab, setActiveTab] = useState<Tab>('overview');
 
     // Edit State (Settings Tab)
@@ -51,10 +50,8 @@ export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project,
 
     if (!project) return null;
 
-    // Auto-Save Logic (Settings) - DISABLED IF DRAFT
+    // Auto-Save Logic (Settings)
     React.useEffect(() => {
-        if (isDraft) return; // Don't auto-save drafts
-
         if (isFirstLoad.current) {
             isFirstLoad.current = false;
             return;
@@ -85,7 +82,7 @@ export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project,
         }, 1500);
 
         return () => clearTimeout(timer);
-    }, [editTitle, editDescription, saveStatus, project.title, project.description, isDraft]);
+    }, [editTitle, editDescription, saveStatus, project.title, project.description]);
 
     // Handle Input Changes
     const handleTitleChange = (val: string) => {
@@ -100,35 +97,18 @@ export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project,
 
     // Silent Sync (Server -> Client)
     React.useEffect(() => {
-        if (isDraft) return;
         // Only sync if we are fully saved and CLEAN
         if (saveStatus === 'saved') {
             if (project.title !== editTitle) setEditTitle(project.title);
             if (project.description !== editDescription) setEditDescription(project.description || '');
         }
-    }, [project.title, project.description, saveStatus, isDraft]);
+    }, [project.title, project.description, saveStatus]);
 
     const handleDelete = () => {
-        if (isDraft) {
-            onDelete(project._id); // Just clear draft
-            return;
-        }
         if (confirm("Are you sure you want to delete this project? This action cannot be undone and will refund the treasury.")) {
             onDelete(project._id);
         }
     };
-
-    const handleCreateProject = () => {
-        if (onCreate) {
-            onCreate({
-                // Merge all existing project fields (like rankedRewards, deadline, etc.)
-                ...project,
-                // Override with local edits
-                title: editTitle,
-                description: editDescription,
-            });
-        }
-    }
 
     return (
         <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 h-full flex flex-col relative">
@@ -144,94 +124,73 @@ export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project,
                             <ArrowLeft size={20} />
                         </button>
                         <div>
-                            {isDraft ? (
-                                <input
-                                    value={editTitle}
-                                    onChange={(e) => setEditTitle(e.target.value)}
-                                    className="text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-slate-600 w-full"
-                                    placeholder="Enter Project Title..."
-                                    autoFocus
-                                />
-                            ) : (
+                            <div className="flex items-center gap-2">
                                 <h2 className="text-2xl font-bold text-white">{project.title}</h2>
-                            )}
+                                {project.status === 'completed' && <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold uppercase border border-green-500/30">Completed</span>}
+                                {project.status === 'archived' && <span className="bg-slate-500/20 text-slate-400 px-2 py-0.5 rounded text-xs font-bold uppercase border border-slate-500/30">Archived</span>}
+                            </div>
                         </div>
-
                     </div>
                     {/* Join Button & Progress */}
+                    {/* Join Button & Progress */}
                     <div className="flex items-center gap-6">
-                        {isDraft ? (
-                            <div className="flex items-center gap-4">
-                                <span className="text-amber-400 text-xs font-bold uppercase border border-amber-500/30 bg-amber-900/20 px-2 py-1 rounded">Draft Mode</span>
-                                <button
-                                    onClick={handleCreateProject}
-                                    className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold shadow-lg shadow-green-600/20 transition-all flex items-center gap-2"
-                                >
-                                    <CheckCircle size={18} />
-                                    Launch Project
-                                </button>
+                        {/* Progress Bar (Compact) */}
+                        <div className="flex flex-col items-end min-w-[200px]">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-medium text-slate-400">
+                                    {projectTasks.filter(t => t.completed).length} / {projectTasks.length} Tasks
+                                </span>
+                                <span className="text-sm font-bold text-indigo-400">
+                                    {Math.round(projectTasks.length > 0 ? (projectTasks.filter(t => t.completed).length / projectTasks.length) * 100 : 0)}%
+                                </span>
                             </div>
-                        ) : (
-                            <>
-                                {/* Progress Bar (Compact) */}
-                                <div className="flex flex-col items-end min-w-[200px]">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs font-medium text-slate-400">
-                                            {projectTasks.filter(t => t.completed).length} / {projectTasks.length} Tasks
-                                        </span>
-                                        <span className="text-sm font-bold text-indigo-400">
-                                            {Math.round(projectTasks.length > 0 ? (projectTasks.filter(t => t.completed).length / projectTasks.length) * 100 : 0)}%
-                                        </span>
-                                    </div>
-                                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 transition-all duration-500"
-                                            style={{ width: `${projectTasks.length > 0 ? (projectTasks.filter(t => t.completed).length / projectTasks.length) * 100 : 0}%` }}
-                                        />
-                                    </div>
-                                </div>
+                            <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 transition-all duration-500"
+                                    style={{ width: `${projectTasks.length > 0 ? (projectTasks.filter(t => t.completed).length / projectTasks.length) * 100 : 0}%` }}
+                                />
+                            </div>
+                        </div>
 
-                                <div className="h-8 w-px bg-slate-800" />
+                        <div className="h-8 w-px bg-slate-800" />
 
-                                {/* Status Messages for Header */}
-                                <div className="text-xs font-medium flex items-center gap-2">
-                                    {saveStatus === 'saving' && <span className="text-indigo-400 flex items-center gap-1"><RefreshCw size={10} className="animate-spin" /> Saving...</span>}
-                                    {saveStatus === 'saved' && <span className="text-slate-500 flex items-center gap-1">All changes saved</span>}
-                                    {saveStatus === 'unsaved' && <span className="text-amber-500 flex items-center gap-1">Unsaved changes...</span>}
-                                </div>
-                                <div className="flex items-center gap-2 mr-4 border-r border-slate-700 pr-4">
-                                    <Trophy size={14} className="text-amber-500" />
-                                    <div className="flex flex-col items-end leading-none">
-                                        <span className="text-[10px] text-slate-500 uppercase font-bold">Total Rewards</span>
-                                        <div className="flex items-center gap-3 text-xs font-mono mt-1">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-amber-400 font-bold">
-                                                    {(project.totalEscrowed?.gold || project.rewards?.gold || 0)}
-                                                </span>
-                                                <img src="/images/currency/gold_coin.png" alt="Gold" className="w-6 h-6 object-contain" />
-                                            </div>
-                                            {(project.totalEscrowed?.gems || project.rewards?.gems) > 0 && (
-                                                <div className="flex items-center gap-1">
-                                                    <span className="text-cyan-400 font-bold">
-                                                        {(project.totalEscrowed?.gems || project.rewards?.gems || 0)}
-                                                    </span>
-                                                    <img src="/images/currency/gem icon.png" alt="Gems" className="w-8 h-8 object-contain" />
-                                                </div>
-                                            )}
+                        {/* Status Messages for Header */}
+                        <div className="text-xs font-medium flex items-center gap-2">
+                            {saveStatus === 'saving' && <span className="text-indigo-400 flex items-center gap-1"><RefreshCw size={10} className="animate-spin" /> Saving...</span>}
+                            {saveStatus === 'saved' && <span className="text-slate-500 flex items-center gap-1">All changes saved</span>}
+                            {saveStatus === 'unsaved' && <span className="text-amber-500 flex items-center gap-1">Unsaved changes...</span>}
+                        </div>
+                        <div className="flex items-center gap-2 mr-4 border-r border-slate-700 pr-4">
+                            <Trophy size={14} className="text-amber-500" />
+                            <div className="flex flex-col items-end leading-none">
+                                <span className="text-[10px] text-slate-500 uppercase font-bold">Total Rewards</span>
+                                <div className="flex items-center gap-3 text-xs font-mono mt-1">
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-amber-400 font-bold">
+                                            {(project.totalEscrowed?.gold || project.rewards?.gold || 0)}
+                                        </span>
+                                        <img src="/images/currency/gold_coin.png" alt="Gold" className="w-6 h-6 object-contain" />
+                                    </div>
+                                    {(project.totalEscrowed?.gems || project.rewards?.gems) > 0 && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-cyan-400 font-bold">
+                                                {(project.totalEscrowed?.gems || project.rewards?.gems || 0)}
+                                            </span>
+                                            <img src="/images/currency/gem icon.png" alt="Gems" className="w-8 h-8 object-contain" />
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
+                            </div>
+                        </div>
 
-                                {isOfficer && project.status === 'active' && project.joinedUserIds?.length > 0 && (
-                                    <button
-                                        onClick={() => setIsWinnerSelectionOpen(true)}
-                                        className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors"
-                                    >
-                                        <Trophy size={14} />
-                                        Award Winners
-                                    </button>
-                                )}
-                            </>
+                        {isOfficer && project.status === 'active' && project.joinedUserIds?.length > 0 && (
+                            <button
+                                onClick={() => setIsWinnerSelectionOpen(true)}
+                                className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors"
+                            >
+                                <Trophy size={14} />
+                                Award Winners
+                            </button>
                         )}
 
                         {onJoin && !isJoined && (
@@ -303,7 +262,7 @@ export const GuildProjectDetail: React.FC<GuildProjectDetailProps> = ({ project,
                         members={members}
                         canEdit={isOfficer}
                         onUpdate={(data) => onUpdate(project._id, data)}
-                        defaultEditing={isDraft}
+                        defaultEditing={false}
                     />
                 )}
 

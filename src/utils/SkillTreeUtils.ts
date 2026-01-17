@@ -42,10 +42,10 @@ export const NODE_DEFINITIONS: Record<string, Record<number, { label: string; de
         2: { label: 'Memory', description: '+10% Chance to find a "Lost Item" (Gold) when saving a journal entry.', icon: 'Search', flavor: '"The past holds treasures for those who bother to look."' },
         3: { label: 'Inkwell', description: 'Unlock Quick-Log Journal Widget (Mood/Energy Logger).', icon: 'PenTool', flavor: '"Capture the thought before it returns to the void."' },
         4: { label: 'Clarity II', description: '+10% XP from Journal Entries.', icon: 'BookOpen', flavor: '"True focus is not seeing everything, but seeing what matters."' },
-        5: { label: 'Memory II', description: '+15% Chance to find a "Lost Item".', icon: 'Search', flavor: '"Nothing is ever truly lost, only misplaced in time."' },
+        5: { label: 'Memory II', description: '+15% Chance to find a "Lost Item" (Gold).', icon: 'Search', flavor: '"Nothing is ever truly lost, only misplaced in time."' },
         6: { label: 'The Grimoire', description: 'Unlock One-Click Journal Templates.', icon: 'Book', flavor: '"Do not reinvent the spell every time you cast it. Ancient frames for modern chaos."' },
-        7: { label: 'Golden Ink', description: '5% Chance to find a Gem when submitting a journal entry.', icon: 'Diamond', flavor: '"Sometimes, the words themselves carry a weight in gold."' },
-        8: { label: 'The Haggler', description: 'All Shop items cost 7% less Gold.', icon: 'ShoppingBag', flavor: '"Wisdom is knowing the true value of things."' },
+        7: { label: 'Golden Ink', description: '5% Chance to find Realm Shards when submitting a journal entry.', icon: 'Diamond', flavor: '"Sometimes, the words themselves vary in weight in gold."' },
+        8: { label: 'Royalties', description: 'Earn 2% Interest on Gold (Max 500g) upon first daily journal entry.', icon: 'Landmark', flavor: '"Wealth grows in the quiet moments between words."' },
         9: { label: 'Legacy', description: '+1% XP gain per 10,000 words written (Max +20%).', icon: 'Feather', flavor: '"We are defined by the history we write. Let your volume be heavy."' },
         10: { label: 'Scribe Master', description: 'Unlocks the "Scribe Master" Avatar.', icon: 'Crown', flavor: '"The pen is not a tool. It is a weapon against oblivion."', image: '/avatars/mastery/scribe_master.png' },
     },
@@ -70,7 +70,7 @@ export const NODE_DEFINITIONS: Record<string, Record<number, { label: string; de
         6: { label: 'Kanban Warrior', description: 'Unlock the Kanban Board View for Quest Log.', icon: 'Columns', flavor: '"Order from chaos. Strategy from improved visualization."' },
         7: { label: 'Streak Economy', description: '+1% Gold Gen per streak day (Max 20%).', icon: 'BarChart', flavor: '"Success breeds wealth. Consistency compounds the reward."' },
         8: { label: 'Greed II', description: '+10% Gold from all Tasks.', icon: 'DollarSign', flavor: '"The heavier the purse, the sharper the aim."' },
-        9: { label: 'Dealer\'s Choice', description: 'Daily Bounties have a 5% chance to include Gems.', icon: 'Dices', flavor: '"Fate favors the bold."' },
+        9: { label: 'Dealer\'s Choice', description: '10% Chance to receive a Full Refund when purchasing Shop items.', icon: 'Dices', flavor: '"The house always wins... but sometimes, you are the house."' },
         10: { label: 'Master Bounty Hunter', description: 'Unlocks the "Master Bounty Hunter" Avatar.', icon: 'Skull', flavor: '"The prey is infinite. The hunt is forever."', image: '/avatars/mastery/master_bounty_hunter.png' },
     }
 };

@@ -220,6 +220,23 @@ export const Settings: React.FC = () => {
                 step="0.05"
                 value={settings.musicVolume !== undefined ? settings.musicVolume : 0.4}
                 onChange={(e) => useGameStore.getState().setMusicVolume(parseFloat(e.target.value))}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">Sound Effects Volume</span>
+                <span className="text-indigo-500 dark:text-indigo-400 text-xs font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded">
+                  {Math.round((settings.sfxVolume !== undefined ? settings.sfxVolume : 0.4) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={settings.sfxVolume !== undefined ? settings.sfxVolume : 0.4}
+                onChange={(e) => useGameStore.getState().setSfxVolume(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
               />
             </div>

@@ -1,14 +1,17 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore, ToastMessage, RewardType } from '../../store/useToastStore';
-import { Sparkles, Coins, Zap, Diamond, Package, Crown, CheckCircle2 } from 'lucide-react';
+import { useGameStore } from '../../store/useGameStore';
+import { Sparkles, Coins, Zap, Diamond, Package, Crown, CheckCircle2, Star } from 'lucide-react';
 
 const icons: Record<RewardType, any> = {
     xp: Zap,
     gold: Coins,
     gems: Diamond,
     item: Package,
+    skillPoints: Star,
     success: CheckCircle2,
+    system: Crown, // Placeholder icon for system
 };
 
 const colors: Record<RewardType, string> = {
@@ -16,12 +19,22 @@ const colors: Record<RewardType, string> = {
     gold: 'from-yellow-400 to-amber-600 shadow-amber-500/50',
     gems: 'from-fuchsia-500 to-pink-600 shadow-pink-500/50',
     item: 'from-emerald-400 to-green-600 shadow-green-500/50',
+    skillPoints: 'from-violet-500 to-purple-600 shadow-purple-500/50',
     success: 'from-indigo-400 to-violet-600 shadow-indigo-500/50',
+    system: 'from-slate-500 to-slate-700 shadow-slate-500/50',
 };
 
 const RewardToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
     const Icon = icons[toast.type] || Sparkles;
     const gradient = colors[toast.type] || colors.xp;
+    const sfxVolume = useGameStore((state) => state.settings.sfxVolume);
+
+    // Play Sound on Mount
+    React.useEffect(() => {
+        const audio = new Audio('/notification sound.wav');
+        audio.volume = sfxVolume !== undefined ? sfxVolume : 0.4;
+        audio.play().catch(e => console.log("Audio play failed (interaction needed first?)", e));
+    }, [sfxVolume]);
 
     return (
         <motion.div
@@ -69,12 +82,17 @@ const RewardToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
 };
 
 export const RewardToastContainer = () => {
-    const toasts = useToastStore((state) => state.toasts);
+    const { toasts } = useToastStore();
+    // Show max 5, newest at bottom (or top?)
+    // Usually notifications stack: Newest enters, others shift.
+    // Let's do Newest at TOP.
+    // toasts array has newest at end. So we slice(-5) and reverse.
+    const visibleToasts = [...toasts].slice(-5).reverse();
 
     return (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-auto items-center">
+        <div className="fixed top-24 left-4 z-[100] flex flex-col gap-2 pointer-events-none w-auto items-start">
             <AnimatePresence mode="popLayout">
-                {toasts.map((toast) => (
+                {visibleToasts.map((toast) => (
                     <RewardToast key={toast.id} toast={toast} />
                 ))}
             </AnimatePresence>

@@ -7,6 +7,8 @@ import { Info, Lock, Unlock, AlertCircle } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
 
+import { MasteryUnlockModal } from '../components/MasteryUnlockModal';
+
 const nodeTypes = {
   skillNode: CustomSkillNode,
 };
@@ -37,7 +39,7 @@ export const SkillTree: React.FC = () => {
             <span className="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30 uppercase font-black">Mastered</span>
           ) : (
             <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-black ${hoveredNode.canAfford ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>
-              {hoveredNode.cost} SP Required
+              {hoveredNode.cost} Realm Shards Required
             </span>
           )}
         </div>
@@ -113,6 +115,7 @@ export const SkillTree: React.FC = () => {
         </div>
 
         <NodeInfoPanel />
+        <MasteryUnlockModal />
 
         <ReactFlow
           nodes={skillNodes}

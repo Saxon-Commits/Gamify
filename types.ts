@@ -116,10 +116,12 @@ export interface Stats {
 
   gems: number; // Premium Currency
   streak: number;
+  totalWordsWritten?: number; // Legacy Skill Tracker
   dailyTaskCount?: number; // Track tasks committed today for Momentum
   lastDailyCheck?: string; // ISO Date for detecting new days
   monthlyStreakShieldUsed?: boolean; // Iron Will skill tracking
   lastStreakIncrement?: string; // ISO Date for daily streak increments
+  lastRoyaltiesClaimed?: string; // For Royalties skill (Branch 1-5)
 
   intellect: number;
   strength: number;
@@ -138,6 +140,7 @@ export interface Stats {
 
 export interface GameSettings {
   musicVolume?: number;
+  sfxVolume?: number; // Effect Volume
   isMusicMuted?: boolean;
   honorSystemAgreed?: boolean;
   hasSeenTutorial?: boolean;
@@ -201,6 +204,8 @@ export interface GameState {
   completeProject: (projectId: string) => void;
   unlockNode: (nodeId: string) => void;
   addRewards: (xp: number, gold: number) => void;
+  addGold: (amount: number) => void;
+  addGems: (amount: number) => void;
   deductCurrency: (amount: number, currency: 'gold' | 'gems') => void;
   setAvatar: (avatarId: string) => void;
   setBackdrop: (backdropId: string | null) => void;
@@ -216,6 +221,7 @@ export interface GameState {
   setName: (name: string) => void;
   setMusicVolume: (volume: number) => void;
   toggleMusicMute: () => void;
+  setSfxVolume: (volume: number) => void;
   toggleTheme: () => void;
   addTasks: (newTasks: Task[]) => void;
   createTask: (task: Omit<Task, 'id' | 'completed'>) => void;
@@ -258,6 +264,10 @@ export interface GameState {
   setSidePanelOpen: (isOpen: boolean) => void;
   syncSkillTree: () => void;
   resetSkills: () => void;
+
+  // Mastery Unlock
+  masteryUnlock: { avatarId: string; title: string; flavor: string } | null;
+  closeMasteryUnlock: () => void;
 }
 
 export interface JournalEntry {

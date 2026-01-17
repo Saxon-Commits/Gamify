@@ -1,5 +1,6 @@
 import { Task, QuestDifficulty } from '../../types';
 import { QUEST_REWARDS } from './gameLogic';
+import { useGameStore } from '../../store/useGameStore';
 
 const TITLES = [
     "Rogue Signal", "Glitch Hunt", "System Purge", "Data Heist",
@@ -37,7 +38,8 @@ export const generateDailyQuests = (count: number = 3): Task[] => {
         const xp = QUEST_REWARDS[difficulty];
         const gold = xp / 2; // Simple heuristic
 
-        quests.push({
+        // Define task explicitly to modify it
+        const task: Task = {
             id: generateId(),
             name: `${title}: ${difficulty}`,
             description: desc,
@@ -47,8 +49,18 @@ export const generateDailyQuests = (count: number = 3): Task[] => {
             xpReward: xp,
             goldReward: gold,
             energyCost: Math.floor(xp / 10), // Heuristic
-            voidShardReward: difficulty === 'HARD' ? 1 : 0
-        });
+            gems: 0
+        };
+
+        // Check Dealer's Choice (Branch 3 Node 9)
+        // 5% Chance to add Gems
+        const state = useGameStore.getState();
+        const dealerNode = state.skillNodes.find(n => n.id === 'branch_3-9');
+        if (dealerNode?.data.isUnlocked && Math.random() < 0.05) {
+            task.gems = Math.floor(Math.random() * 6) + 5; // 5-10 Gems
+        }
+
+        quests.push(task);
     }
 
     return quests;

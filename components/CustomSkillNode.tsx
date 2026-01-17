@@ -139,7 +139,7 @@ export const CustomSkillNode = ({ id, data }: { id: string, data: any }) => {
                 {data.cost} <span className="text-[8px] text-purple-400">+1★</span>
               </span>
             ) : (
-              `${data.cost} SP`
+              `${data.cost} Realm Shards`
             )}
           </div>
         )}

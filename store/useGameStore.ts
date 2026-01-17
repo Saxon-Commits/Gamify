@@ -42,6 +42,7 @@ const INITIAL_VITALITY: VitalityData = {
 
 const INITIAL_SETTINGS: GameSettings = {
   musicVolume: 0.4,
+  sfxVolume: 0.4,
   isMusicMuted: false,
   honorSystemAgreed: false,
   hasSeenTutorial: false,
@@ -186,6 +187,7 @@ export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
       stats: INITIAL_STATS,
+      masteryUnlock: null,
       settings: INITIAL_SETTINGS,
       projects: INITIAL_PROJECTS,
       tasks: INITIAL_TASKS,
@@ -201,12 +203,22 @@ export const useGameStore = create<GameState>()(
       setMostWantedTask: (taskId) => set({ mostWantedTaskId: taskId }),
 
       addJournalEntry: (entry) => {
+        const state = get();
         const newEntry: JournalEntry = {
           ...entry,
           id: Math.random().toString(36).substring(2, 9),
           date: new Date().toISOString()
         };
-        set((state) => ({ journalEntries: [newEntry, ...state.journalEntries] }));
+
+        // Count Words for Legacy Skill
+        const wordCount = entry.content ? entry.content.trim().split(/\s+/).length : 0;
+        const currentTotalWords = state.stats.totalWordsWritten || 0;
+        const newTotalWords = currentTotalWords + wordCount;
+
+        set((s) => ({
+          journalEntries: [newEntry, ...s.journalEntries],
+          stats: { ...s.stats, totalWordsWritten: newTotalWords }
+        }));
 
         // Check for exclusions (No rewards for auto-logs)
         const isExcluded = entry.folder === 'Grindstone Log' || (entry.tags && entry.tags.includes('Quick Log'));
@@ -215,7 +227,6 @@ export const useGameStore = create<GameState>()(
         // --- CLARITY SKILL NODE (branch_1-1 & branch_1-4) ---
         // Clarity I: +5% XP
         // Clarity II: +10% XP (Overrides Clarity I)
-        const state = get();
         let xpReward = 50;
 
         const clarityNode = state.skillNodes.find(n => n.id === 'branch_1-1');
@@ -240,15 +251,48 @@ export const useGameStore = create<GameState>()(
 
         if (chance > 0 && Math.random() < chance) {
           const foundGold = Math.floor(Math.random() * (200 - 90 + 1)) + 90; // 90-200 Gold
-          goldReward = foundGold;
+          goldReward += foundGold;
           useToastStore.getState().addToast({ type: 'gold', amount: foundGold, message: 'Memory: Recalled a hidden stash!' });
         }
 
-        // Award XP
+        // --- ROYALTIES SKILL NODE (branch_1-8) ---
+        // Earn 2% Interest on Gold (Max 500g) upon first daily journal entry.
+        const royaltiesNode = state.skillNodes.find(n => n.id === 'branch_1-8');
+        const today = new Date().toISOString().split('T')[0];
+
+        if (royaltiesNode?.data.isUnlocked && state.stats.lastRoyaltiesClaimed !== today) {
+          const interest = Math.min(Math.floor(state.stats.gold * 0.02), 500);
+          if (interest > 0) {
+            goldReward += interest;
+            useToastStore.getState().addToast({ type: 'gold', amount: interest, message: 'Royalties: Daily Interest Paid' });
+            // Update Claimed Date
+            set(s => ({ stats: { ...s.stats, lastRoyaltiesClaimed: today } }));
+          }
+        }
+
+        // --- GOLDEN INK SKILL NODE (branch_1-7) ---
+        // 5% Chance to find Realm Shards (1-3)
+        const goldenNode = state.skillNodes.find(n => n.id === 'branch_1-7');
+        let skillPointsGained = 0;
+        if (goldenNode?.data.isUnlocked) {
+          if (Math.random() < 0.05) { // 5% Chance
+            skillPointsGained = Math.floor(Math.random() * 3) + 1; // 1-3 SP
+            setTimeout(() => {
+              useToastStore.getState().addToast({ type: 'skillPoints', amount: skillPointsGained, message: `Golden Ink: Realm Shards Found!` });
+            }, 1800); // 1.8s Delay (After XP & Gold)
+          }
+        }
+
+        // Award XP & SP
         state.addRewards(xpReward, goldReward);
+        if (skillPointsGained > 0) {
+          set((s) => ({ stats: { ...s.stats, skillPoints: s.stats.skillPoints + skillPointsGained } }));
+        }
       },
 
       setSidePanelOpen: (isOpen) => set({ isSidePanelOpen: isOpen }),
+
+      closeMasteryUnlock: () => set({ masteryUnlock: null }),
 
       syncSkillTree: () => {
         const { nodes: freshNodes } = generateSkillTree();
@@ -483,9 +527,25 @@ export const useGameStore = create<GameState>()(
 
         // --- GREED I SKILL NODE (branch_3-1) ---
         // +5% Gold from all Tasks
+        // --- GREED I & II SKILL NODES (branch_3-1, branch_3-8) ---
+        // I: +5% Gold, II: +10% Gold (Stacking? Or Override? Description says "+10%". Usually tiers stack or replace. Let's make II add +10% effectively making it +15% total if both? Or 10% total?
+        // Let's assume Stacking for "RPG feel" or Replacement for "Upgrade feel".
+        // Let's do Replacement/Upgrade logic: If II is unlocked, use 10%. If I, use 5%.
         const greedNode = get().skillNodes.find(n => n.id === 'branch_3-1');
-        if (greedNode?.data.isUnlocked) {
+        const greedIINode = get().skillNodes.find(n => n.id === 'branch_3-8');
+
+        if (greedIINode?.data.isUnlocked) {
+          gold = Math.round(gold * 1.10);
+        } else if (greedNode?.data.isUnlocked) {
           gold = Math.round(gold * 1.05);
+        }
+
+        // --- STREAK ECONOMY SKILL NODE (branch_3-7) ---
+        // +1% Gold Gen per streak day (Max 20%)
+        const streakNode = get().skillNodes.find(n => n.id === 'branch_3-7');
+        if (streakNode?.data.isUnlocked && stats.streak > 0) {
+          const bonusPercent = Math.min(stats.streak * 0.01, 0.20); // Cap at 20%
+          gold = Math.round(gold * (1 + bonusPercent));
         }
 
         // --- SPEED RUN SKILL NODE (branch_3-5) ---
@@ -508,6 +568,25 @@ export const useGameStore = create<GameState>()(
         let xpGained = task.xpReward;
         if (activePerks?.xpModifier) {
           xpGained = Math.round(xpGained * (1 + activePerks.xpModifier));
+        }
+
+        // --- SLAG SIFTING SKILL NODE (branch_2-8) ---
+        // +1% XP per Account Level
+        const slagNode = get().skillNodes.find(n => n.id === 'branch_2-8');
+        if (slagNode?.data.isUnlocked) {
+          const levelBonus = stats.level * 0.01;
+          xpGained = Math.round(xpGained * (1 + levelBonus));
+        }
+
+        // --- LEGACY SKILL NODE (branch_1-9) ---
+        // +1% XP per 10,000 words written (Max +20%)
+        const legacyNode = get().skillNodes.find(n => n.id === 'branch_1-9');
+        if (legacyNode?.data.isUnlocked && stats.totalWordsWritten) {
+          const chunks = Math.floor(stats.totalWordsWritten / 10000);
+          const legacyBonus = Math.min(chunks * 0.01, 0.20); // Max 20%
+          if (legacyBonus > 0) {
+            xpGained = Math.round(xpGained * (1 + legacyBonus));
+          }
         }
 
         // --- HASTE SKILL NODE (branch_3-2) ---
@@ -585,10 +664,15 @@ export const useGameStore = create<GameState>()(
           newActivityLog.push({ date: today, xp: xpGained });
         }
 
-        // Trigger Toasts
+        // Trigger Toasts (Staggered)
         const { addToast } = useToastStore.getState();
         if (xpGained > 0) addToast({ type: 'xp', amount: xpGained, message: 'XP Gained' });
-        if (gold > 0) addToast({ type: 'gold', amount: gold, message: 'Gold Earned' });
+
+        if (gold > 0) {
+          setTimeout(() => {
+            addToast({ type: 'gold', amount: gold, message: 'Gold Earned' });
+          }, 900); // 900ms Delay
+        }
 
         set({
           stats: {
@@ -660,6 +744,14 @@ export const useGameStore = create<GameState>()(
         }
         // -----------------------------------
 
+        // --- CASHBACK (Dealer's Choice, Branch 3-9) ---
+        // 10% Chance for Full Refund on Gold Purchases
+        const dealerNode = get().skillNodes.find(n => n.id === 'branch_3-9');
+        if (!isPremium && dealerNode?.data.isUnlocked && Math.random() < 0.10) {
+          finalCost = 0;
+          useToastStore.getState().addToast({ type: 'gold', amount: cost, message: 'Dealer\'s Choice: Full Refund!' });
+        }
+
         const canAfford = isPremium ? stats.gems >= finalCost : stats.gold >= finalCost;
 
         if (canAfford) {
@@ -730,11 +822,21 @@ export const useGameStore = create<GameState>()(
               cost = Math.round(cost * (1 - activePerks.shopDiscount));
             }
             return sum + (cost * item.quantity);
+            return sum + (cost * item.quantity);
           }, 0);
 
+        // --- CASHBACK (Dealer's Choice, Branch 3-9) ---
+        // 10% Chance for Full Cart Refund
+        const dealerNode = get().skillNodes.find(n => n.id === 'branch_3-9');
+        let finalTotalGold = totalGold;
+        if (totalGold > 0 && dealerNode?.data.isUnlocked && Math.random() < 0.10) {
+          finalTotalGold = 0;
+          useToastStore.getState().addToast({ type: 'gold', amount: totalGold, message: 'Dealer\'s Choice: Cart Refunded!' });
+        }
 
 
-        if (stats.gold >= totalGold) {
+
+        if (stats.gold >= finalTotalGold) {
           let newInventory = [...inventory];
           const newHistory = [...(purchaseHistory || [])];
 
@@ -755,7 +857,7 @@ export const useGameStore = create<GameState>()(
           set({
             stats: {
               ...stats,
-              gold: stats.gold - totalGold,
+              gold: stats.gold - finalTotalGold,
               // voidShards removed
             },
             inventory: newInventory,
@@ -868,41 +970,31 @@ export const useGameStore = create<GameState>()(
         const newNodes = skillNodes.map(n => n.id === nodeId ? { ...n, data: { ...n.data, isUnlocked: true, unlockedAt: new Date().toISOString() } } : n);
 
         // --- MASTERY REWARD LOGIC ---
-        // Map Node ID -> Avatar ID
-        const REWARD_MAP: Record<string, string> = {
-          'branch_1-10': 'avatar_scribe_master',
-          'branch_2-10': 'avatar_master_blacksmith',
-          'branch_3-10': 'avatar_master_bounty_hunter'
-        };
-
-        const rewardAvatarId = REWARD_MAP[nodeId];
-        let newInventory = [...get().inventory];
-
-        if (rewardAvatarId) {
-          // Check if already owned (shouldn't be, but safety first)
-          const alreadyOwned = newInventory.some(i => i.id === rewardAvatarId);
-          if (!alreadyOwned) {
-            const allItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
-            const rewardItem = allItems.find(i => i.id === rewardAvatarId);
-            if (rewardItem) {
-              newInventory.push({
-                ...rewardItem,
-                type: rewardItem.type as any,
-                acquiredAt: new Date().toISOString(),
-                quantity: 1
-              } as any);
-
-              // Toast Mastery Reward
-              const { addToast } = useToastStore.getState();
-              addToast({ type: 'item', amount: 1, message: rewardItem.name, icon: rewardItem.imageUrl });
-            }
-          }
+        // Grant Avatars upon unlocking Level 10 nodes
+        if (nodeId === 'branch_1-10') {
+          setTimeout(() => get().addItem('avatar_scribe_master', 1), 500);
+          set({ masteryUnlock: { avatarId: 'avatar_scribe_master', title: 'Scribe Master', flavor: 'The pen is mightier than the sword, and you wield it with absolute dominion.' } });
+        } else if (nodeId === 'branch_2-10') {
+          setTimeout(() => get().addItem('master_blacksmith', 1), 500);
+          set({ masteryUnlock: { avatarId: 'avatar_master_blacksmith', title: 'Master Blacksmith', flavor: 'You have forged yourself in the fires of discipline. You are unbreakable.' } });
+        } else if (nodeId === 'branch_3-10') {
+          setTimeout(() => get().addItem('master_bounty_hunter', 1), 500);
+          set({ masteryUnlock: { avatarId: 'avatar_master_bounty_hunter', title: 'Master Bounty Hunter', flavor: 'No target escapes your sight. The world is your hunting ground.' } });
         }
+
+        set((state) => ({
+          skillNodes: newNodes,
+          stats: {
+            ...state.stats,
+            skillPoints: state.stats.skillPoints - costSP,
+            gems: state.stats.gems - costGems
+          }
+        }));
         // -----------------------------
 
         set({
           skillNodes: newNodes,
-          inventory: newInventory, // Save updated inventory
+          // inventory: newInventory, // Save updated inventory (Handled by addItem via setTimeout)
           stats: {
             ...stats,
             skillPoints: stats.skillPoints - costSP,
@@ -910,6 +1002,13 @@ export const useGameStore = create<GameState>()(
           },
           verificationNode: null // Cleanup just in case
         });
+
+        // Play Unlock Sound (Non-Mastery)
+        if (!['branch_1-10', 'branch_2-10', 'branch_3-10'].includes(nodeId)) {
+          const audio = new Audio('/audio/unlock_node.wav');
+          audio.volume = get().settings.sfxVolume ?? 0.5;
+          audio.play().catch(e => console.error("Audio play failed", e));
+        }
       },
 
       // Removed duplicate setAvatar
@@ -993,6 +1092,12 @@ export const useGameStore = create<GameState>()(
         }));
       },
 
+      setSfxVolume: (volume: number) => {
+        set(state => ({
+          settings: { ...state.settings, sfxVolume: volume }
+        }));
+      },
+
       toggleTheme: () => {
         set(state => {
           const newTheme = state.settings.theme === 'light' ? 'dark' : 'light';
@@ -1044,7 +1149,11 @@ export const useGameStore = create<GameState>()(
         // Trigger Toasts
         const { addToast } = useToastStore.getState();
         if (xpAmount > 0) addToast({ type: 'xp', amount: xpAmount, message: 'XP Gained' });
-        if (goldAmount > 0) addToast({ type: 'gold', amount: goldAmount, message: 'Gold Earned' });
+        if (goldAmount > 0) {
+          setTimeout(() => {
+            addToast({ type: 'gold', amount: goldAmount, message: 'Gold Earned' });
+          }, 900);
+        }
 
         set((state) => {
           const { stats, activityLog } = state;
@@ -1084,6 +1193,14 @@ export const useGameStore = create<GameState>()(
             activityLog: newActivityLog
           };
         });
+      },
+
+      addGold: (amount) => {
+        set(state => ({ stats: { ...state.stats, gold: state.stats.gold + amount } }));
+      },
+
+      addGems: (amount) => {
+        set(state => ({ stats: { ...state.stats, gems: state.stats.gems + amount } }));
       },
 
       deductCurrency: (amount, currency) => {

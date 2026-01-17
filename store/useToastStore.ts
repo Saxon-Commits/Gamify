@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type RewardType = 'xp' | 'gold' | 'gems' | 'item' | 'success' | 'system';
+export type RewardType = 'xp' | 'gold' | 'gems' | 'item' | 'skillPoints' | 'success' | 'system';
 
 export interface ToastMessage {
     id: string;
@@ -22,10 +22,10 @@ export const useToastStore = create<ToastStore>((set) => ({
         const id = Math.random().toString(36).substring(7);
         set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }));
 
-        // Auto remove after 3 seconds
+        // Auto remove after 5 seconds
         setTimeout(() => {
             set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-        }, 4000); // 4s to allow for enter/exit anims
+        }, 5000); // 5s Linger
     },
     removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 }));
