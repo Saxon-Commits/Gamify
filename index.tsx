@@ -25,13 +25,24 @@ if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key")
 }
 
+import { PostHogProvider } from 'posthog-js/react'
+
+const options = {
+  api_host: 'https://us.i.posthog.com',
+}
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <App />
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <PostHogProvider
+      apiKey="phc_J8H9ncvATA50mUjdku1EG7XslSE8lZYLbJ70KL6UiUE"
+      options={options}
+    >
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <App />
+        </ConvexProviderWithClerk>
+      </ClerkProvider>
+    </PostHogProvider>
   </React.StrictMode>
 );

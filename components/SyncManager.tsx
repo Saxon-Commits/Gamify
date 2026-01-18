@@ -88,5 +88,56 @@ export const SyncManager: React.FC = () => {
         };
     }, [isUserLoaded, user, saveGameState, cloudState]);
 
+    // 3. Reward Listener (Injection)
+    const pendingRewards = useQuery(api.rewards.getPending) || [];
+    const claimReward = useMutation(api.rewards.claim);
+    const processingRef = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (!pendingRewards || pendingRewards.length === 0) return;
+
+        pendingRewards.forEach(async (reward) => {
+            // Avoid double processing in strict mode
+            if (processingRef.current.has(reward._id)) return;
+            processingRef.current.add(reward._id);
+
+            console.log("🎁 Processing Pending Reward:", reward);
+
+            // 1. Add to Local Store
+            if (reward.type === 'gold') {
+                useGameStore.getState().addResources({ gold: reward.amount });
+            } else if (reward.type === 'gems') {
+                useGameStore.getState().addResources({ gems: reward.amount });
+            } else if (reward.type === 'xp') {
+                useGameStore.getState().addResources({ xp: reward.amount });
+            } else if (reward.type === 'item') {
+                // Check if we have item data
+                if (reward.data && reward.data.itemId) {
+                    useGameStore.getState().addItem(reward.data.itemId, reward.amount || 1);
+                }
+            }
+            // Add other types here if needed
+
+            // 2. Notify User
+            addToast({
+                type: 'success',
+                message: reward.description || 'System Reward Received!',
+                amount: reward.amount
+            });
+
+            // 3. Claim on Server (Delete from queue)
+            try {
+                await claimReward({ rewardId: reward._id });
+                processingRef.current.delete(reward._id);
+            } catch (err) {
+                console.error("Failed to claim reward:", err);
+                // If failed, we might want to reload or retry?
+                // Ideally we let it retry on next render, but mapped check needs to be careful.
+                processingRef.current.delete(reward._id);
+            }
+        });
+    }, [pendingRewards, claimReward, addToast]);
+
+
     return null; // Headless component
 };

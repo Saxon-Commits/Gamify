@@ -46,7 +46,20 @@ export const PrivacyPolicy: React.FC = () => {
                 </section>
 
                 <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
-                    <h2 className="text-xl font-bold text-white mb-4">4. Contact Us</h2>
+                    <h2 className="text-xl font-bold text-white mb-4">4. Analytics & Improvement</h2>
+                    <p className="mb-4">
+                        We use third-party analytics tools (PostHog) to help us understand how the Application is used and to improve your experience.
+                    </p>
+                    <ul className="list-disc pl-6 space-y-2 text-slate-400">
+                        <li><strong>Usage Data:</strong> We collect anonymous telemetry on features used, pages visited, and buttons clicked.</li>
+                        <li><strong>Session Replay:</strong> We may record visual sessions of your interaction with the app to identify bugs and UX issues. <strong>Sensitive inputs (passwords, payment details) are automatically masked</strong> and are never recorded.</li>
+                        <li><strong>Opt-Out:</strong> You may request deletion of your analytics data by contacting us.</li>
+                    </ul>
+                </section>
+
+                <section className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+                    <h2 className="text-xl font-bold text-white mb-4">5. Contact Us</h2>
+
                     <p>
                         If you have any questions about this Privacy Policy, please contact the developer directly or via the project repository.
                     </p>

@@ -204,6 +204,7 @@ export interface GameState {
   completeProject: (projectId: string) => void;
   unlockNode: (nodeId: string) => void;
   addRewards: (xp: number, gold: number) => void;
+  addResources: (resources: { gold?: number; gems?: number; xp?: number; skillPoints?: number }) => void;
   addGold: (amount: number) => void;
   addGems: (amount: number) => void;
   deductCurrency: (amount: number, currency: 'gold' | 'gems') => void;
@@ -246,6 +247,11 @@ export interface GameState {
   confirmHonorPledge: () => void;
   resetGame: () => void;
   resetTaskHistory: () => void; // New Dev Tool
+  resetLevel: () => void;
+  resetResources: () => void;
+  dev_forceDailyReset: () => void;
+  dev_timeTravel: () => void;
+  dev_gainLevel: () => void;
 
 
   // Tutorial System

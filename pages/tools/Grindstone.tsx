@@ -3,6 +3,8 @@ import { Hammer, Clock, Trophy, Play, Square, CheckCircle, Gift, Sparkles, Arrow
 import { useGameStore } from '../../store/useGameStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
 
 const FOCUS_OPTIONS = [
@@ -24,6 +26,11 @@ export const Grindstone: React.FC = () => {
     const [timeLeft, setTimeLeft] = useState(selectedOption.duration * 60);
     const [isCompleted, setIsCompleted] = useState(false);
     const [finalRewards, setFinalRewards] = useState<{ xp: number, gold: number }>({ xp: 0, gold: 0 });
+
+    // Secure Session State
+    const startSession = useMutation(api.grindstone.startSession);
+    const completeSession = useMutation(api.grindstone.completeSession);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
     // Schematic State (Branch 2 Node 6)
     const [sessionGoal, setSessionGoal] = useState('');
@@ -74,9 +81,21 @@ export const Grindstone: React.FC = () => {
     }, [selectedOption]);
     */
 
-    const handleStart = () => {
+    const handleStart = async () => {
         setIsActive(true);
         setIsCompleted(false);
+
+        // Start Secure Session on Server
+        try {
+            const result = await startSession({ durationMinutes: activeDuration });
+            if (result.success) {
+                setCurrentSessionId(result.sessionId);
+                console.log("🔒 Secure Session Started:", result.sessionId);
+            }
+        } catch (err) {
+            console.error("Failed to start secure session:", err);
+            useToastStore.getState().addToast({ type: 'error', message: 'Offline Mode: Rewards may not save.', amount: 0 });
+        }
     };
 
     const handleGiveUp = () => {
@@ -137,8 +156,32 @@ export const Grindstone: React.FC = () => {
         }
 
         setFinalRewards({ xp: xpReward, gold: goldReward });
+        // Optimistic UI Update (Instant Feedback)
         addRewards(xpReward, goldReward);
         useGameStore.getState().incrementStreak();
+
+        // Server Verification (The Receipt Check)
+        if (currentSessionId) {
+            completeSession({ sessionId: currentSessionId as any })
+                .then(res => {
+                    console.log("✅ Session Verified:", res);
+
+                    if (!res.success) {
+                        console.warn("⚠️ Server Rejected Session:", res.reason);
+                        // REVERT OPTIMISTIC REWARDS
+                        useGameStore.getState().addRewards(-xpReward, -goldReward);
+                        useToastStore.getState().addToast({ type: 'error', message: `Verification Failed: ${res.reason}`, amount: 0 });
+                    }
+                })
+                .catch(err => {
+                    console.error("❌ CHEAT DETECTED / Verification Failed:", err);
+
+                    // REVERT OPTIMISTIC REWARDS
+                    useGameStore.getState().addRewards(-xpReward, -goldReward);
+
+                    useToastStore.getState().addToast({ type: 'error', message: 'Cheat Detected: Rewards Confiscated', amount: 0 });
+                });
+        }
 
         // 2. Roll for Loot
         const multiplier = selectedOption.duration / 15;
@@ -433,7 +476,9 @@ export const Grindstone: React.FC = () => {
                             >
                                 Yield (Give Up)
                             </button>
-                            <button onClick={handleComplete} className="block mx-auto text-[10px] bg-red-900/50 text-red-200 px-2 py-1 rounded">Dev: Complete Now</button>
+
+                            {/* Dev Controls (Admin Only) */}
+                            <DevControls handleComplete={handleComplete} />
                         </div>
                     )}
                 </div>
@@ -528,5 +573,21 @@ export const Grindstone: React.FC = () => {
                 </div>
             )}
         </div>
+    );
+};
+
+const DevControls: React.FC<{ handleComplete: () => void }> = ({ handleComplete }) => {
+    const user = useQuery(api.users.getMe);
+
+    // Only show if user is loaded and has admin role
+    if (!user || user.role !== 'admin') return null;
+
+    return (
+        <button
+            onClick={handleComplete}
+            className="block mx-auto text-[10px] bg-red-900/50 text-red-200 px-2 py-1 rounded border border-red-900/50 hover:bg-red-900 transition-colors"
+        >
+            Dev: Complete Now (Simulate Hack)
+        </button>
     );
 };

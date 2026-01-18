@@ -4,18 +4,16 @@ import { useGameStore } from '../store/useGameStore';
 
 // New Components
 import { AttributesPanel } from '../components/character/AttributesPanel';
-import { MasteryAvatarSelector } from '../components/character/MasteryAvatarSelector';
-import { ConsistencyGraph } from '../components/character/ConsistencyGraph';
 import { LoadoutPanel } from '../components/character/LoadoutPanel';
-import { DevControls } from '../components/character/DevControls';
+// DevControls is now GLOBAL in Layout, removed from here
+// import { DevControls } from '../components/character/DevControls';
 import { CharacterDisplayCard } from '../components/character/CharacterDisplayCard';
 import { MobileStatsPanel } from '../components/character/MobileStatsPanel';
 
-import { EquipmentOffset } from '../src/utils/EquipmentConfig';
 import { AVAILABLE_AVATARS, MASTERY_AVATARS } from '../components/character/CharacterData';
 
 export const Character: React.FC = () => {
-    const { stats, inventory } = useGameStore();
+    const { stats } = useGameStore();
 
     // --- LOCAL STATE for Visual Selection Only ---
     const [selectedAvatarPath, setSelectedAvatarPath] = useState(AVAILABLE_AVATARS[0].path);
@@ -34,33 +32,6 @@ export const Character: React.FC = () => {
             if (found) setSelectedAvatarPath(found.path);
         }
     }, [stats.activeAvatarId]);
-
-
-    // --- DEV CONTROL STATE (Hoisted) ---
-    const [devPanelOpen, setDevPanelOpen] = useState(false);
-    const [devEditMode, setDevEditMode] = useState<'backdrop' | 'avatar' | 'companion' | 'equipment'>('backdrop');
-
-    // Companion Dev State
-    const [devCompanionTop, setDevCompanionTop] = useState(38.5);
-    const [devCompanionRight, setDevCompanionRight] = useState(63);
-    const [devCompanionScale, setDevCompanionScale] = useState(1);
-    const [devCompanionRotation, setDevCompanionRotation] = useState(7);
-
-    // Avatar Dev State
-    const [devAvatarScale, setDevAvatarScale] = useState(77);
-    const [devAvatarOffsetX, setDevAvatarOffsetX] = useState(1);
-    const [devAvatarOffsetY, setDevAvatarOffsetY] = useState(-16);
-
-    // Backdrop Dev State
-    const [devBackdropScale, setDevBackdropScale] = useState(100);
-    const [devBackdropOffsetX, setDevBackdropOffsetX] = useState(0);
-    const [devBackdropOffsetY, setDevBackdropOffsetY] = useState(0);
-
-    // Equipment Dev State
-    const [isDevMode, setIsDevMode] = useState(false);
-    const [devActiveItem, setDevActiveItem] = useState('a_seraph_wings');
-    const [devOffset, setDevOffset] = useState<EquipmentOffset>({ top: 30, left: 50, scale: 1.0, rotation: 0, zIndex: 60 });
-
 
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-32 transition-colors duration-500 font-sans selection:bg-amber-100 dark:selection:bg-amber-900/30">
@@ -84,21 +55,6 @@ export const Character: React.FC = () => {
                     <div className="w-[55%]">
                         <CharacterDisplayCard
                             selectedAvatarPath={selectedAvatarPath}
-                            devPanelOpen={devPanelOpen}
-                            devEditMode={devEditMode}
-                            devBackdropScale={devBackdropScale}
-                            devBackdropOffsetX={devBackdropOffsetX}
-                            devBackdropOffsetY={devBackdropOffsetY}
-                            devAvatarScale={devAvatarScale}
-                            devAvatarOffsetX={devAvatarOffsetX}
-                            devAvatarOffsetY={devAvatarOffsetY}
-                            devCompanionTop={devCompanionTop}
-                            devCompanionRight={devCompanionRight}
-                            devCompanionScale={devCompanionScale}
-                            devCompanionRotation={devCompanionRotation}
-                            isDevMode={isDevMode}
-                            devActiveItem={devActiveItem}
-                            devOffset={devOffset}
                         />
                     </div>
 
@@ -118,21 +74,6 @@ export const Character: React.FC = () => {
                 <div className="hidden md:flex lg:col-span-4 flex-col items-center lg:order-2">
                     <CharacterDisplayCard
                         selectedAvatarPath={selectedAvatarPath}
-                        devPanelOpen={devPanelOpen}
-                        devEditMode={devEditMode}
-                        devBackdropScale={devBackdropScale}
-                        devBackdropOffsetX={devBackdropOffsetX}
-                        devBackdropOffsetY={devBackdropOffsetY}
-                        devAvatarScale={devAvatarScale}
-                        devAvatarOffsetX={devAvatarOffsetX}
-                        devAvatarOffsetY={devAvatarOffsetY}
-                        devCompanionTop={devCompanionTop}
-                        devCompanionRight={devCompanionRight}
-                        devCompanionScale={devCompanionScale}
-                        devCompanionRotation={devCompanionRotation}
-                        isDevMode={isDevMode}
-                        devActiveItem={devActiveItem}
-                        devOffset={devOffset}
                     />
                 </div>
 
@@ -145,31 +86,9 @@ export const Character: React.FC = () => {
                 </div>
             </div>
 
-
-            {/* DEV CONTROLS OVERLAY - Hidden on Mobile */}
-            <div className="hidden md:block">
-                <DevControls
-                    devPanelOpen={devPanelOpen} setDevPanelOpen={setDevPanelOpen}
-                    devEditMode={devEditMode} setDevEditMode={setDevEditMode}
-                    devCompanionTop={devCompanionTop} setDevCompanionTop={setDevCompanionTop}
-                    devCompanionRight={devCompanionRight} setDevCompanionRight={setDevCompanionRight}
-                    devCompanionScale={devCompanionScale} setDevCompanionScale={setDevCompanionScale}
-                    devCompanionRotation={devCompanionRotation} setDevCompanionRotation={setDevCompanionRotation}
-                    devAvatarScale={devAvatarScale} setDevAvatarScale={setDevAvatarScale}
-                    devAvatarOffsetX={devAvatarOffsetX} setDevAvatarOffsetX={setDevAvatarOffsetX}
-                    devAvatarOffsetY={devAvatarOffsetY} setDevAvatarOffsetY={setDevAvatarOffsetY}
-                    devBackdropScale={devBackdropScale} setDevBackdropScale={setDevBackdropScale}
-                    devBackdropOffsetX={devBackdropOffsetX} setDevBackdropOffsetX={setDevBackdropOffsetX}
-                    devBackdropOffsetY={devBackdropOffsetY} setDevBackdropOffsetY={setDevBackdropOffsetY}
-                    devActiveItem={devActiveItem} setDevActiveItem={setDevActiveItem}
-                    devOffset={devOffset} setDevOffset={setDevOffset}
-                    isDevMode={isDevMode} setIsDevMode={setIsDevMode}
-                    activeBackdropId={stats.activeBackdropId}
-                />
-            </div>
-
         </div>
     );
 };
+
 
 

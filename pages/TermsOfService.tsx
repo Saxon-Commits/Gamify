@@ -46,6 +46,7 @@ export const TermsOfService: React.FC = () => {
                     <ul className="list-disc pl-6 space-y-2 text-slate-400">
                         <li><strong>Cheating & Exploits:</strong> You agree not to exploit vulnerabilities in the cloud save system or game logic to unfairly gain advantage or manipulate the economy.</li>
                         <li><strong>Account Security:</strong> You are responsible for maintaining the confidentiality of your account credentials.</li>
+                        <li><strong>Analytics Consent:</strong> By using the Application, you consent to the collection of usage data and session telemetry for the purpose of product improvement/debugging, as detailed in our Privacy Policy.</li>
                     </ul>
                 </section>
 

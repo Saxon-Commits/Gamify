@@ -3,6 +3,9 @@ import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // Helper to get current user's internal ID
+import { cleanText } from "./textSafety";
+
+// Helper to get current user's internal ID
 async function getCurrentUserId(ctx: any): Promise<Id<"users"> | null> {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -276,8 +279,8 @@ export const createGuild = mutation({
 
         // Create the guild
         const guildId = await ctx.db.insert("guilds", {
-            name: args.name,
-            description: args.description,
+            name: cleanText(args.name),
+            description: args.description ? cleanText(args.description) : undefined,
             leaderId: userId,
             level: 1,
             xp: 0,
@@ -521,8 +524,8 @@ export const updateGuild = mutation({
         if (!hasPerms) throw new Error("You don't have permission to update the guild");
 
         const updates: any = {};
-        if (args.name !== undefined) updates.name = args.name;
-        if (args.description !== undefined) updates.description = args.description;
+        if (args.name !== undefined) updates.name = cleanText(args.name);
+        if (args.description !== undefined) updates.description = cleanText(args.description);
         if (args.isPublic !== undefined) {
             const guild = await ctx.db.get(args.guildId);
             updates.settings = {
@@ -702,8 +705,8 @@ export const createProject = mutation({
 
         const projectId = await ctx.db.insert("guildProjects", {
             guildId: args.guildId,
-            title: args.title || "New Project",
-            description: args.description || "",
+            title: cleanText(args.title || "New Project"),
+            description: cleanText(args.description || ""),
             status: "active",
             targetTasks: args.targetTasks || args.tasks?.length || 100,
             completedTasks: 0,
@@ -830,8 +833,8 @@ export const updateProject = mutation({
         }
 
         const updatesToApply: any = { ...updates };
-        if (args.title !== undefined) updatesToApply.title = args.title;
-        if (args.description !== undefined) updatesToApply.description = args.description;
+        if (args.title !== undefined) updatesToApply.title = cleanText(args.title);
+        if (args.description !== undefined) updatesToApply.description = cleanText(args.description);
         if (args.allowSubmissions !== undefined) updatesToApply.allowSubmissions = args.allowSubmissions;
         if (args.submissionDeadline !== undefined) updatesToApply.submissionDeadline = args.submissionDeadline;
         if (args.consolidateRewards !== undefined) updatesToApply.consolidateRewards = args.consolidateRewards;
@@ -1518,8 +1521,8 @@ export const createBounty = mutation({
 
         const bountyId = await ctx.db.insert("guildBounties", {
             guildId: args.guildId,
-            title: args.title,
-            description: args.description,
+            title: cleanText(args.title),
+            description: cleanText(args.description),
             reward: args.reward,
             createdBy: userId,
             status: "OPEN",
@@ -1733,4 +1736,87 @@ export const getGuildBounties = query({
             })
         );
     },
+});
+
+// ============================================
+// ADMIN FUNCTIONS (Added for Stability)
+// ============================================
+
+// Helper: Verify Admin Status
+async function ensureAdmin(ctx: any) {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const user = await ctx.db
+        .query("users")
+        .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+        .unique();
+
+    if (!user || user.role !== 'admin') {
+        throw new Error("Access Denied: Admins Only");
+    }
+
+    return user;
+}
+
+export const getAllGuildsAdmin = query({
+    args: {},
+    handler: async (ctx) => {
+        await ensureAdmin(ctx);
+        const guilds = await ctx.db.query("guilds").collect();
+
+        // Enrich with leader name and member count
+        return await Promise.all(guilds.map(async (g) => {
+            let leaderName = "Unknown";
+            if (g.leaderId) {
+                const leader = await ctx.db.get(g.leaderId);
+                if (leader) leaderName = leader.name || "Unknown";
+            }
+
+            const memberCount = (await ctx.db
+                .query("guildMembers")
+                .withIndex("by_guild", q => q.eq("guildId", g._id))
+                .collect()).length;
+
+            return {
+                ...g,
+                leaderName,
+                memberCount
+            };
+        }));
+    }
+});
+
+export const disbandGuildByAdmin = mutation({
+    args: { guildId: v.id("guilds") },
+    handler: async (ctx, args) => {
+        await ensureAdmin(ctx);
+        const guild = await ctx.db.get(args.guildId);
+        if (!guild) throw new Error("Guild not found");
+
+        // Delete members
+        const members = await ctx.db.query("guildMembers").withIndex("by_guild", q => q.eq("guildId", args.guildId)).collect();
+        for (const m of members) await ctx.db.delete(m._id);
+
+        // Delete activities
+        const activities = await ctx.db.query("guildActivities").withIndex("by_guild", q => q.eq("guildId", args.guildId)).collect();
+        for (const a of activities) await ctx.db.delete(a._id);
+
+        // Delete invites
+        const invites = await ctx.db.query("guildInvites").withIndex("by_guild", q => q.eq("guildId", args.guildId)).collect();
+        for (const i of invites) await ctx.db.delete(i._id);
+
+        // Delete projects
+        const projects = await ctx.db.query("guildProjects").withIndex("by_guild", q => q.eq("guildId", args.guildId)).collect();
+        for (const p of projects) await ctx.db.delete(p._id);
+
+        // Delete bounties
+        const bounties = await ctx.db.query("guildBounties").withIndex("by_guild", q => q.eq("guildId", args.guildId)).collect();
+        for (const b of bounties) await ctx.db.delete(b._id);
+
+        // Delete Guild
+        await ctx.db.delete(args.guildId);
+
+        return { success: true, message: "Guild disbanded by Admin Order" };
+    }
 });

@@ -1,6 +1,6 @@
 export const XP_CONSTANTS = {
     BASE_XP: 100,
-    DIFFICULTY_FACTOR: 2.0, // Quadratic curve (x^2.0) - Standard RPG pacing
+    DIFFICULTY_FACTOR: 2.0, // Deprecated in favor of piecewise logic, kept for reference
 };
 
 export const QUEST_REWARDS = {
@@ -12,41 +12,70 @@ export const QUEST_REWARDS = {
 };
 
 /**
- * Calculates the TOTAL XP required to reach the START of the target level.
- * Formula: Round( Base * (Level-1)^Factor ) to nearest 100
- * 
- * Level 1 starts at 0 XP.
- * Level 2 require 100 XP total.
+ * Calculates how much XP is needed to go from current level to next level.
+ * Implements the "Gamify Hybrid Curve":
+ * 1. Novice (1-10): Fast Linear (100 * Level)
+ * 2. Adept (11-50): Steady Slope (1500 + 100/lvl)
+ * 3. Master (50+): Fixed Cap (5500)
  */
-export const calculateTotalXpForLevel = (level: number): number => {
-    if (level <= 1) return 0;
-    const rawXp = XP_CONSTANTS.BASE_XP * Math.pow(level - 1, XP_CONSTANTS.DIFFICULTY_FACTOR);
-    // Round to nearest 50 to keep clean numbers
-    return Math.max(100, Math.round(rawXp / 50) * 50);
+export const calculateXpToNextLevel = (level: number): number => {
+    // TIER 1: NOVICE (Levels 1-10)
+    // Pace: Very Fast
+    if (level < 11) {
+        return 100 * level;
+        // L1->2: 100
+        // L10->11: 1000
+    }
+
+    // TIER 2: ADEPT (Levels 11-50)
+    // Pace: ~1-2 Weeks per level
+    if (level < 50) {
+        const base = 1500;
+        const increment = 100;
+        return base + ((level - 11) * increment);
+        // L11->12: 1500
+        // L20->21: 2400
+        // L49->50: 5300
+    }
+
+    // TIER 3: MASTER (Levels 50+)
+    // Pace: Prestige Cap (~2 Weeks fixed)
+    return 5500;
 };
 
 /**
- * Calculates how much XP is needed to go from current level to next level.
- * This is effectively: TotalXP(Level+1) - TotalXP(Level)
+ * Calculates the TOTAL XP required to reach the START of the target level.
+ * Sums up the specific requirements from level 1 to target level.
  */
-export const calculateXpToNextLevel = (currentLevel: number): number => {
-    const currentLevelTotal = calculateTotalXpForLevel(currentLevel);
-    const nextLevelTotal = calculateTotalXpForLevel(currentLevel + 1);
-    return nextLevelTotal - currentLevelTotal;
+export const calculateTotalXpForLevel = (targetLevel: number): number => {
+    if (targetLevel <= 1) return 0;
+
+    let total = 0;
+    // Sum up the cost of every level prior to target
+    for (let i = 1; i < targetLevel; i++) {
+        total += calculateXpToNextLevel(i);
+    }
+    return total;
 };
 
 /**
  * Calculates player level based on accumulated lifetime XP.
  * Uses a basic iterative check since the max level isn't infinity (optimized for <Level 100).
- * For very high levels, we could invert the formula, but loop is safer for discrete steps.
  */
 export const calculateLevelFromTotalXp = (totalXp: number): number => {
     let level = 1;
     while (true) {
+        const xpNeededForNext = calculateXpToNextLevel(level);
+        // If we have enough XP to complete this level, advance properties
+        // Wait, standard logic is usually: totalXp vs Threshold.
         const nextLevelThreshold = calculateTotalXpForLevel(level + 1);
+
         if (totalXp < nextLevelThreshold) {
             return level;
         }
         level++;
+
+        // Safety Break for infinite loops (e.g. if logic fails)
+        if (level > 1000) return level;
     }
 };

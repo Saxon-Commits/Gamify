@@ -166,7 +166,7 @@ export const Settings: React.FC = () => {
             The system is powered by local storage, meaning all your data stays private and stored directly in your browser.
           </p>
           <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
-            Version 1.2.0 - "Constellation Update"
+            Version 1.3.0 - "Sovereign Update"
           </div>
           <button
             onClick={() => useGameStore.getState().setTutorialActive(true)}
@@ -268,55 +268,6 @@ export const Settings: React.FC = () => {
             >
               <Trash2 size={14} />
               <span>Wipe Journey (Reset)</span>
-            </button>
-            <button
-              onClick={() => {
-                const { inventory } = useGameStore.getState();
-                // Merge both lists
-                const combinedItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
-                const allItems = combinedItems.filter(i => i.type !== 'REAL_LIFE' && i.type !== 'SYSTEM');
-
-                const currentInventory = useGameStore.getState().inventory;
-                const finalInventory = [...currentInventory];
-
-                allItems.forEach(item => {
-                  if (!finalInventory.some(i => i.id === item.id)) {
-                    finalInventory.push({
-                      id: item.id,
-                      name: item.name,
-                      type: item.type as any,
-                      acquiredAt: new Date().toISOString(),
-                      quantity: 1,
-                      imageUrl: item.imageUrl,
-                      perks: (item as any).perks,
-                      slots: (item as any).slots // Ensure slots are carried over
-                    });
-                  }
-                });
-
-                useGameStore.setState({ inventory: finalInventory });
-                alert(`Unlocked ${finalInventory.length - currentInventory.length} new items! (Total: ${finalInventory.length})`);
-              }}
-              className="flex items-center space-x-2 px-6 py-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
-            >
-              <Unlock size={14} />
-              <span>Unlock All Items (Dev)</span>
-            </button>
-            <button
-              onClick={() => {
-                const currentState = useGameStore.getState();
-                useGameStore.setState({
-                  stats: {
-                    ...currentState.stats,
-                    gold: currentState.stats.gold + 100000,
-                  }
-                });
-                alert('Added 100,000 Gold!');
-              }}
-              className="flex items-center space-x-2 px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
-            >
-              <Coins size={14} />
-              <span>+100k Resources (Dev)</span>
             </button>
             <button
               onClick={() => signOut()}

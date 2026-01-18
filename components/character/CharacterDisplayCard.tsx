@@ -1,42 +1,32 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useGameStore } from '../../store/useGameStore';
-import { Sliders } from 'lucide-react';
-import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS, STARTER_AVATARS } from '../../src/utils/CosmeticsData';
+import { useDevStore } from '../../store/useDevStore';
+import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS } from '../../src/utils/CosmeticsData';
 import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
-import { EQUIPMENT_CONFIGS, EquipmentOffset } from '../../src/utils/EquipmentConfig';
+import { EQUIPMENT_CONFIGS } from '../../src/utils/EquipmentConfig';
 
 import { AVAILABLE_AVATARS, MASTERY_AVATARS } from './CharacterData';
 
-// Local Alias for compatibility if needed, or just use the imported one directly.
-// The code below uses AVAILABLE_AVATARS_LOCAL, let's just map it or replace usages.
+// Local Alias for compatibility
 const AVAILABLE_AVATARS_LOCAL = AVAILABLE_AVATARS;
 const MASTERY_AVATARS_LOCAL = MASTERY_AVATARS;
 
 interface CharacterDisplayCardProps {
     selectedAvatarPath: string;
-
-    // Dev Props
-    devPanelOpen: boolean;
-    devEditMode: string;
-
-    // State props passed from parent
-    devBackdropScale: number;
-    devBackdropOffsetX: number;
-    devBackdropOffsetY: number;
-    devAvatarScale: number;
-    devAvatarOffsetX: number;
-    devAvatarOffsetY: number;
-    devCompanionTop: number;
-    devCompanionRight: number;
-    devCompanionScale: number;
-    devCompanionRotation: number;
-    isDevMode: boolean;
-    devActiveItem: string;
-    devOffset: EquipmentOffset;
 }
 
 export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props) => {
     const { stats } = useGameStore();
+
+    // --- Connect to Dev Store ---
+    const {
+        devPanelOpen,
+        devEditMode,
+        devBackdropScale, devBackdropOffsetX, devBackdropOffsetY,
+        devAvatarScale, devAvatarOffsetX, devAvatarOffsetY,
+        devCompanionTop, devCompanionRight, devCompanionScale, devCompanionRotation,
+        isDevMode, devActiveItem, devOffset
+    } = useDevStore();
 
 
     const getAvatarIdFromPath = (path: string) => {
@@ -166,10 +156,10 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                             'theme-wizards-library': { scale: 118, offsetX: 5, offsetY: 15 },
                         };
                         const savedConfig = activeBackdropItem ? BACKDROP_CONFIGS[activeBackdropItem.id] : null;
-                        const useDev = props.devPanelOpen && props.devEditMode === 'backdrop';
-                        const scale = useDev ? props.devBackdropScale : (savedConfig?.scale ?? 100);
-                        const offsetX = useDev ? props.devBackdropOffsetX : (savedConfig?.offsetX ?? 0);
-                        const offsetY = useDev ? props.devBackdropOffsetY : (savedConfig?.offsetY ?? 0);
+                        const useDev = devPanelOpen && devEditMode === 'backdrop';
+                        const scale = useDev ? devBackdropScale : (savedConfig?.scale ?? 100);
+                        const offsetX = useDev ? devBackdropOffsetX : (savedConfig?.offsetX ?? 0);
+                        const offsetY = useDev ? devBackdropOffsetY : (savedConfig?.offsetY ?? 0);
 
                         const style = (scale !== 100 || offsetX !== 0 || offsetY !== 0) ? { transform: `scale(${scale / 100}) translate(${(offsetX / 440) * 100}%, ${(offsetY / 440) * 100}%)`, transformOrigin: 'center center' } : undefined;
 
@@ -210,10 +200,10 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                             'avatar_master_bounty_hunter': { height: 77, offsetX: 11, offsetY: -11 },
                         };
                         const config = AVATAR_CONFIGS[currentAvatarId as string];
-                        const useDev = props.devPanelOpen && props.devEditMode === 'avatar';
-                        const height = useDev ? props.devAvatarScale : (config?.height ?? 95);
-                        const offsetX = useDev ? props.devAvatarOffsetX : (config?.offsetX ?? 0);
-                        const offsetY = useDev ? props.devAvatarOffsetY : (config?.offsetY ?? 0);
+                        const useDev = devPanelOpen && devEditMode === 'avatar';
+                        const height = useDev ? devAvatarScale : (config?.height ?? 95);
+                        const offsetX = useDev ? devAvatarOffsetX : (config?.offsetX ?? 0);
+                        const offsetY = useDev ? devAvatarOffsetY : (config?.offsetY ?? 0);
 
                         return (
                             <>
@@ -232,16 +222,16 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                                     }}
                                 />
                                 {/* DYNAMIC EQUIPMENT */}
-                                {props.isDevMode ? (
-                                    props.devActiveItem === 'a_seraph_wings' && (
+                                {isDevMode ? (
+                                    devActiveItem === 'a_seraph_wings' && (
                                         <img
                                             src="/items/seraph_wings.png"
                                             className="absolute pointer-events-none pixelated"
                                             style={{
-                                                top: `${props.devOffset.top}%`,
-                                                left: `${props.devOffset.left}%`,
-                                                transform: `scale(${props.devOffset.scale}) rotate(${props.devOffset.rotation}deg)`,
-                                                zIndex: props.devOffset.zIndex,
+                                                top: `${devOffset.top}%`,
+                                                left: `${devOffset.left}%`,
+                                                transform: `scale(${devOffset.scale}) rotate(${devOffset.rotation}deg)`,
+                                                zIndex: devOffset.zIndex,
                                                 width: 'auto', height: 'auto', maxWidth: 'none'
                                             }}
                                         />

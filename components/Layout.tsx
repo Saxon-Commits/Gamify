@@ -1,8 +1,11 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useQuery } from 'convex/react';
+import { DevControls } from './character/DevControls';
 import { LayoutDashboard, Sword, Network, User, Users, Settings, Coins, Zap, Sparkles, ShoppingBag, Book, Diamond, Menu, X } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '../convex/_generated/api';
 
 interface NavItemProps {
   to: string;
@@ -210,8 +213,24 @@ export const Layout: React.FC = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+  // System Flags (Banner)
+  const systemFlags = useQuery(api.admin.getSystemFlags) || {};
+  const globalBanner = systemFlags['global_banner'];
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+
+      {/* GLOBAL BANNER */}
+      {globalBanner && (
+        <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 border-b border-blue-500/50 text-center py-2 px-4 shadow-lg shadow-blue-900/20 relative overflow-hidden z-[100]">
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-100 relative z-10 flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+            {globalBanner}
+          </p>
+        </div>
+      )}
+
       <HonorPledgeModal />
       <TutorialOverlay />
       <RewardToastContainer />
@@ -281,6 +300,7 @@ export const Layout: React.FC = () => {
           <Outlet />
         </div>
       </main>
+      <DevControls />
     </div>
   );
 };

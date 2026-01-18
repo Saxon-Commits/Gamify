@@ -1,40 +1,20 @@
+
 import React from 'react';
-import { Save, Sliders } from 'lucide-react';
-import { EquipmentOffset } from '../../src/utils/EquipmentConfig';
+import { Save, Sliders, RefreshCw, Trash2, Coins, Unlock, Clock, FastForward } from 'lucide-react';
 import { useGameStore } from '../../store/useGameStore';
+import { useDevStore } from '../../store/useDevStore';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
+import { ALL_COSMETIC_ITEMS } from '../../src/utils/CosmeticsData';
 
-interface DevControlsProps {
-    devPanelOpen: boolean;
-    setDevPanelOpen: (v: boolean) => void;
-    devEditMode: 'backdrop' | 'avatar' | 'companion' | 'equipment';
-    setDevEditMode: (v: 'backdrop' | 'avatar' | 'companion' | 'equipment') => void;
+// No props needed now, fully global
+export const DevControls: React.FC = () => {
+    // --- game store for actions / reading current active backdrop ---
+    const { stats } = useGameStore();
+    const activeBackdropId = stats.activeBackdropId;
 
-    // Companion
-    devCompanionTop: number; setDevCompanionTop: (v: number) => void;
-    devCompanionRight: number; setDevCompanionRight: (v: number) => void;
-    devCompanionScale: number; setDevCompanionScale: (v: number) => void;
-    devCompanionRotation: number; setDevCompanionRotation: (v: number) => void;
-
-    // Avatar
-    devAvatarScale: number; setDevAvatarScale: (v: number) => void;
-    devAvatarOffsetX: number; setDevAvatarOffsetX: (v: number) => void;
-    devAvatarOffsetY: number; setDevAvatarOffsetY: (v: number) => void;
-
-    // Backdrop
-    devBackdropScale: number; setDevBackdropScale: (v: number) => void;
-    devBackdropOffsetX: number; setDevBackdropOffsetX: (v: number) => void;
-    devBackdropOffsetY: number; setDevBackdropOffsetY: (v: number) => void;
-
-    // Equipment
-    devActiveItem: string; setDevActiveItem: (v: string) => void;
-    devOffset: EquipmentOffset; setDevOffset: (v: EquipmentOffset) => void;
-    isDevMode: boolean; setIsDevMode: (v: boolean) => void;
-
-    // Helpers
-    activeBackdropId: string | undefined;
-}
-
-export const DevControls: React.FC<DevControlsProps> = (props) => {
+    // --- dev store for UI state (MUST BE CALLED BEFORE CONDITIONAL RETURN) ---
     const {
         devPanelOpen, setDevPanelOpen,
         devEditMode, setDevEditMode,
@@ -51,8 +31,11 @@ export const DevControls: React.FC<DevControlsProps> = (props) => {
         devActiveItem, setDevActiveItem,
         devOffset, setDevOffset,
         isDevMode, setIsDevMode,
-        activeBackdropId
-    } = props;
+    } = useDevStore();
+
+    // Admin Check
+    const user = useQuery(api.users.getMe);
+    if (!user || user.role !== 'admin') return null;
 
     const copyConfig = () => {
         const configString = `'ITEM_ID': { top: ${devOffset.top}, left: ${devOffset.left}, scale: ${devOffset.scale}, rotation: ${devOffset.rotation}, zIndex: ${devOffset.zIndex} },`;
@@ -61,24 +44,120 @@ export const DevControls: React.FC<DevControlsProps> = (props) => {
     };
 
     return (
-        <div className="fixed bottom-4 left-4 z-50">
+        <div className="fixed bottom-20 right-4 md:bottom-4 md:left-4 z-[9999]">
             <button
                 onClick={() => setDevPanelOpen(!devPanelOpen)}
                 className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm flex items-center gap-2"
             >
                 <Sliders size={16} />
-                {devPanelOpen ? 'Close Dev Panel' : 'Dev Controls'}
+                <span className="hidden md:inline">{devPanelOpen ? 'Close Dev Panel' : 'Dev Controls'}</span>
+                <span className="md:hidden">Dev</span>
             </button>
 
             {devPanelOpen && (
-                <div className="absolute bottom-12 left-0 bg-slate-900 border border-slate-700 rounded-xl p-4 w-80 shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto">
-                    {/* Edit Mode Selector */}
+                <div className="absolute bottom-12 right-0 md:left-0 md:bottom-12 bg-slate-900 border border-slate-700 rounded-xl p-4 w-80 shadow-2xl space-y-4 max-h-[70vh] overflow-y-auto">
+
+                    {/* --- GLOBAL ACTIONS --- */}
+                    <div className="space-y-4 pb-4 border-b border-slate-700">
+                        <h4 className="font-bold text-sm uppercase tracking-wider text-indigo-400">Game Actions</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => {
+                                    const currentState = useGameStore.getState();
+                                    useGameStore.setState({ stats: { ...currentState.stats, gold: currentState.stats.gold + 100000 } });
+                                    alert('Rich!');
+                                }}
+                                className="bg-emerald-900/40 border border-emerald-800 text-emerald-300 p-2 rounded text-[10px] font-bold uppercase flex flex-col items-center gap-1 hover:bg-emerald-900/60"
+                            >
+                                <Coins size={14} /> +100k Gold
+                            </button>
+                            <button
+                                onClick={() => useGameStore.getState().dev_gainLevel()}
+                                className="bg-amber-900/40 border border-amber-800 text-amber-300 p-2 rounded text-[10px] font-bold uppercase flex flex-col items-center gap-1 hover:bg-amber-900/60"
+                            >
+                                <RefreshCw size={14} /> Force Level Up
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const { inventory } = useGameStore.getState();
+                                    const combinedItems = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS];
+                                    const allItems = combinedItems.filter(i => i.type !== 'REAL_LIFE' && i.type !== 'SYSTEM');
+                                    const currentInventory = useGameStore.getState().inventory;
+                                    const finalInventory = [...currentInventory];
+
+                                    allItems.forEach(item => {
+                                        if (!finalInventory.some(i => i.id === item.id)) {
+                                            finalInventory.push({
+                                                id: item.id,
+                                                name: item.name,
+                                                type: item.type as any,
+                                                acquiredAt: new Date().toISOString(),
+                                                quantity: 1,
+                                                imageUrl: item.imageUrl,
+                                                perks: (item as any).perks,
+                                                slots: (item as any).slots
+                                            });
+                                        }
+                                    });
+                                    useGameStore.setState({ inventory: finalInventory });
+                                    alert('Unlocked All Items!');
+                                }}
+                                className="col-span-2 bg-purple-900/40 border border-purple-800 text-purple-300 p-2 rounded text-[10px] font-bold uppercase flex flex-col items-center gap-1 hover:bg-purple-900/60"
+                            >
+                                <Unlock size={14} /> Unlock All Items
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => { if (confirm("Reset Level?")) useGameStore.getState().resetLevel(); }}
+                                className="bg-indigo-900/40 border border-indigo-800 text-indigo-300 p-2 rounded text-[10px] font-bold uppercase flex flex-col items-center gap-1 hover:bg-indigo-900/60"
+                            >
+                                <RefreshCw size={14} /> Reset Level
+                            </button>
+                            <button
+                                onClick={() => { if (confirm("Wipe Resources?")) useGameStore.getState().resetResources(); }}
+                                className="bg-red-900/40 border border-red-800 text-red-300 p-2 rounded text-[10px] font-bold uppercase flex flex-col items-center gap-1 hover:bg-red-900/60"
+                            >
+                                <Trash2 size={14} /> Wipe Res.
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* TIME GOD PANEL */}
+                    <div className="space-y-2 pb-4 border-b border-slate-700">
+                        <h4 className="font-bold text-sm uppercase tracking-wider text-pink-400 flex items-center gap-2">
+                            <Clock size={14} /> Time God
+                        </h4>
+                        <div className="grid grid-cols-1 gap-2">
+                            <button
+                                onClick={() => useGameStore.getState().dev_forceDailyReset()}
+                                className="flex items-center justify-center gap-2 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800 p-3 rounded text-[10px] font-bold uppercase transition-colors"
+                            >
+                                <RefreshCw size={14} />
+                                Force Day Reset (Midnight)
+                            </button>
+                            <button
+                                onClick={() => useGameStore.getState().dev_timeTravel()}
+                                className="flex items-center justify-center gap-2 bg-pink-900/40 hover:bg-pink-900/60 text-pink-300 border border-pink-800 p-3 rounded text-[10px] font-bold uppercase transition-colors"
+                            >
+                                <FastForward size={14} />
+                                Time Travel (+1 Day)
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-slate-500 italic leading-tight">
+                            "Day Reset" simulates checking in on a new day. "Time Travel" pushes your last login back 24h so the NEXT check counts as a streak.
+                        </p>
+                    </div>
+
+
+                    {/* --- VISUAL EDITORS --- */}
                     <div className="space-y-2">
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Edit Mode (others use saved configs)</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Visual Editor Mode</p>
                         <div className="flex gap-2">
-                            <button onClick={() => setDevEditMode('backdrop')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'backdrop' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Backdrop</button>
-                            <button onClick={() => setDevEditMode('avatar')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'avatar' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Avatar</button>
-                            <button onClick={() => setDevEditMode('companion')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'companion' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Companion</button>
+                            <button onClick={() => setDevEditMode('backdrop')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'backdrop' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>BG</button>
+                            <button onClick={() => setDevEditMode('avatar')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'avatar' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Avi</button>
+                            <button onClick={() => setDevEditMode('companion')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'companion' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Pet</button>
                             <button onClick={() => setDevEditMode('equipment')} className={`flex-1 px-2 py-1.5 rounded text-[10px] font-bold uppercase transition-colors ${devEditMode === 'equipment' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>Equip</button>
                         </div>
                     </div>
@@ -199,9 +278,9 @@ export const DevControls: React.FC<DevControlsProps> = (props) => {
                             </div>
                         </div>
                     )}
-                    {/* Debug Actions */}
+                    {/* Debug Actions: Legacy */}
                     <div className="space-y-2 pt-4 border-t border-slate-700">
-                        <h4 className="font-bold text-sm uppercase tracking-wider text-red-400">Debug Actions</h4>
+                        <h4 className="font-bold text-sm uppercase tracking-wider text-red-400">Other Debug</h4>
                         <button
                             onClick={() => useGameStore.getState().resetTaskHistory()}
                             className="w-full bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-800 py-1.5 rounded text-[10px] font-bold uppercase transition-colors"

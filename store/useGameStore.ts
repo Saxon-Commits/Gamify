@@ -14,14 +14,14 @@ const INITIAL_STATS: Stats = {
   level: 1,
   xp: 0,
   xpToNext: calculateXpToNextLevel(1),
-  gold: 5000,
+  gold: 0,
   hp: 100,
   maxHp: 100,
   energy: 100,
   maxEnergy: 100,
-  skillPoints: 1000,
+  skillPoints: 0,
 
-  gems: 100000,
+  gems: 0,
   streak: 0,
   intellect: 1,
   strength: 1,
@@ -346,6 +346,85 @@ export const useGameStore = create<GameState>()(
           }
         }));
         useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Streak Reset to 0' });
+      },
+
+      resetLevel: () => {
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            level: 1,
+            xp: 0,
+            xpToNext: calculateXpToNextLevel(1)
+          }
+        }));
+        useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Level Reset to 1' });
+      },
+
+      resetResources: () => {
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            gold: 0,
+            gems: 0,
+            skillPoints: 0
+          }
+        }));
+        useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Resources Wiped' });
+      },
+
+      dev_forceDailyReset: () => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        set((state) => ({
+          stats: {
+            ...state.stats,
+            lastDailyCheck: yesterdayStr, // "Tricks" the engine
+            // lastStreakIncrement: yesterdayStr, // User requested checking for breaks, so maybe don't reset this?
+            // Actually, if we set this to yesterday, incrementStreak() will allow a new increment today.
+            lastStreakIncrement: yesterdayStr,
+            lastRoyaltiesClaimed: undefined,
+            dailyTaskCount: 0
+          },
+          mostWantedTaskId: undefined, // Reset Most Wanted
+          tasks: state.tasks.map(t => t.type === 'daily' ? { ...t, completed: false } : t)
+        }));
+
+        // Trigger the check immediately to simulate "Clock Striking Midnight"
+        get().checkDailyReset();
+        useToastStore.getState().addToast({ type: 'system', amount: 0, message: 'Time God: Day Reset!', icon: 'Clock' });
+      },
+
+      dev_timeTravel: () => {
+        // Move Last Daily Check back 1 day
+        // Move Last Streak Increment back 1 day
+        // This makes "Today" feel like "Tomorrow" relative to those dates.
+        const { stats } = get();
+        const moveDateBack = (dateStr?: string) => {
+          if (!dateStr) return undefined;
+          const d = new Date(dateStr);
+          d.setDate(d.getDate() - 1);
+          return d.toISOString().split('T')[0];
+        };
+
+        set({
+          stats: {
+            ...stats,
+            lastDailyCheck: moveDateBack(stats.lastDailyCheck),
+            lastStreakIncrement: moveDateBack(stats.lastStreakIncrement),
+            lastRoyaltiesClaimed: moveDateBack(stats.lastRoyaltiesClaimed)
+          }
+        });
+        useToastStore.getState().addToast({ type: 'system', amount: 0, message: 'Time Travel: +1 Day', icon: 'FastForward' });
+      },
+
+      dev_gainLevel: () => {
+        const { stats, addRewards } = get();
+        const xpNeeded = stats.xpToNext - stats.xp;
+        // Add exact amount to reach next level
+        addRewards(xpNeeded, 0);
+        useToastStore.getState().addToast({ type: 'xp', amount: xpNeeded, message: 'Dev: Level Up Triggered!' });
       },
 
       checkDailyReset: () => {
@@ -1193,6 +1272,22 @@ export const useGameStore = create<GameState>()(
             activityLog: newActivityLog
           };
         });
+      },
+
+      addResources: ({ gold = 0, gems = 0, xp = 0, skillPoints = 0 }) => {
+        if (xp > 0 || gold > 0) {
+          get().addRewards(xp, gold);
+        }
+
+        if (gems > 0) {
+          get().addGems(gems);
+          useToastStore.getState().addToast({ type: 'gems', amount: gems, message: 'Gems Received' });
+        }
+
+        if (skillPoints > 0) {
+          set(state => ({ stats: { ...state.stats, skillPoints: state.stats.skillPoints + skillPoints } }));
+          useToastStore.getState().addToast({ type: 'skillPoints', amount: skillPoints, message: 'Skill Points Received' });
+        }
       },
 
       addGold: (amount) => {

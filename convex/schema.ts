@@ -13,6 +13,8 @@ export default defineSchema({
         subscription: v.optional(v.string()), // 'free', 'pro', 'lifetime'
         credits: v.optional(v.number()), // 'gems' (virtual currency - keeping generic name 'credits' or explicit 'gems'?) -> Let's use 'gems' as per plan but verify if 'credits' is better. Plan said 'gems'.
         gems: v.optional(v.number()),
+        // RBAC
+        role: v.optional(v.string()), // 'admin' | 'user'
     })
         .index("by_token", ["tokenIdentifier"])
         .index("by_username", ["username"]),
@@ -207,4 +209,31 @@ export default defineSchema({
     })
         .index("by_guild", ["guildId"])
         .index("by_claimant", ["claimedBy"]),
+
+    // System Flags - Global Config (Maintenance, Banner, etc.)
+    // Key is the 'flag' name (e.g. 'maintenance_mode')
+    systemFlags: defineTable({
+        key: v.string(),
+        value: v.any(),
+        updatedAt: v.number(),
+    }).index("by_key", ["key"]),
+
+    // Pending Rewards - For async injection (Admin grants, off-chain logic, etc.)
+    pendingRewards: defineTable({
+        userId: v.id("users"),
+        type: v.string(), // 'gold', 'gems', 'item'
+        amount: v.number(),
+        data: v.optional(v.any()), // item details if needed
+        description: v.optional(v.string()), // 'Admin Grant', 'Weekly Bonus'
+        createdAt: v.number(),
+    }).index("by_user", ["userId"]),
+
+    // Secure Grindstone Sessions
+    focusSessions: defineTable({
+        userId: v.id("users"),
+        startTime: v.number(),
+        durationMinutes: v.number(),
+        status: v.string(), // 'active', 'completed', 'abandoned', 'cheated'
+        cheated: v.optional(v.boolean()),
+    }).index("by_user_status", ["userId", "status"]),
 });
