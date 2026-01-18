@@ -17,13 +17,13 @@ This file tracks what each agent is ACTIVELY working on RIGHT NOW. Update this B
 ---
 
 ## 🌱 Gardener
-**Status:** IDLE  
-**Working on:** Nothing  
-**Files locked:** None  
-**Started:** N/A  
-**Expected completion:** N/A
+**Status:** ACTIVE  
+**Working on:** Phase 1 - Low-Risk Deletions (Foundations Carousel, Activity Heatmap, Bounty Penalties)  
+**Files locked:** pages/QuestLog.tsx, types.ts, store/useGameStore.ts  
+**Started:** Jan 19, 9:34 AM  
+**Expected completion:** Jan 19, 10:15 AM
 
-**Notes:** Awaiting pruning plan execution
+**Notes:** Executing pruning plan - testing after each deletion, committing after each success
 
 ---
 
