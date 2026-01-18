@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from 'react-router-dom';
 import { useGameStore, INITIAL_PROJECTS, INITIAL_TASKS } from '../store/useGameStore';
-import { generateDailyQuests } from '../src/utils/aiQuestGenerator';
+
 import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle, Heart, Award, Crown, Target } from 'lucide-react';
 import { QuestDifficulty, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
@@ -1072,14 +1072,7 @@ export const QuestLog: React.FC = () => {
     handleProjectClick(id);
   };
 
-  const handleGenerateDaily = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      const newQuests = generateDailyQuests(3);
-      addTasks(newQuests);
-      setIsGenerating(false);
-    }, 1500); // Fake delay for "AI processing" effect
-  };
+
 
   // Helper to get bounties for a specific foundation
   const getBountiesForFoundation = (projectId: string) => {

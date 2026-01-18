@@ -19,13 +19,18 @@ http.route({
         // Verify webhook signature (using a specific webhook secret would be better for prod)
         // For now, we'll try to parse the event safely. 
         // In a real app, you MUST use constructEvent with process.env.STRIPE_WEBHOOK_SECRET
-        let event;
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        if (!webhookSecret) {
+            console.error("Missing STRIPE_WEBHOOK_SECRET environment variable");
+            return new Response("Server Configuration Error", { status: 500 });
+        }
+
+        let event: Stripe.Event;
         try {
-            // event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
-            event = JSON.parse(body);
-        } catch (err) {
-            console.error(`Webhook Error: ${err}`);
-            return new Response("Webhook Error", { status: 400 });
+            event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        } catch (err: any) {
+            console.error(`Webhook Signature Verification Failed: ${err.message}`);
+            return new Response(`Webhook Error: ${err.message}`, { status: 400 });
         }
 
         switch (event.type) {

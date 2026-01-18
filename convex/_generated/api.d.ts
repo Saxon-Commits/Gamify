@@ -20,7 +20,6 @@ import type * as rewards from "../rewards.js";
 import type * as storeUser from "../storeUser.js";
 import type * as textSafety from "../textSafety.js";
 import type * as users from "../users.js";
-import type * as vitality from "../vitality.js";
 
 import type {
   ApiFromModules,
@@ -41,7 +40,6 @@ declare const fullApi: ApiFromModules<{
   storeUser: typeof storeUser;
   textSafety: typeof textSafety;
   users: typeof users;
-  vitality: typeof vitality;
 }>;
 
 /**
