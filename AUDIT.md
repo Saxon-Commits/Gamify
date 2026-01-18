@@ -62,3 +62,32 @@ This audit successfully refactored the codebase, extracting monoliths, cleaning 
 | **Potion/Item Effects** | 💀 Legacy | Pending Review. |
 | **Cloud Sync** | ✅ Solved | Kept as is. |
 
+---
+
+## 5. 📝 Deferred / Backlog (Outstanding Analysis Findings)
+
+The following items were identified in the `PROJECT_ANALYSIS` phase but were **not** addressed in Phases 1-3. They are captured here to ensure nothing is lost.
+
+### 🔴 High Priority (Technical Debt)
+1.  **Backend God Object (`C-04`):** `convex/guilds.ts` handles Invites, XP, Projects, and Chat. It remains a monolith and should be split into `guildProjects.ts`, `guildMembers.ts`, etc.
+2.  **State Management:** `useGameStore.ts` stores **UI State** (e.g., `isSidePanelOpen`) alongside **Game Data**. This causes excessive re-renders. **Recommendation:** Split into `useUIStore` and `useGameStore`.
+3.  **Database Pattern:** The "Save File" pattern (`state: v.any()`) dumps the entire frontend state into a single DB cell. This is efficient for prototyping but bad for query performance and data migration.
+
+### 🟠 Medium Priority (Cleanup)
+4.  **Folder Confusion:** `components/project/` (Core Logic) exists alongside `components/projects/` (Dashboard Widget). **Action:** Move the widget to `components/dashboard/` and delete the `projects` folder.
+5.  **Hardcoded IDs:** `convex/users.ts` contains hardcoded Stripe Price IDs. These should be in Environment Variables or a Config file.
+6.  **Duplication:** `components/MerchantCard.tsx` re-implements video logic found in `MerchantNPC.tsx`.
+7.  **UX Issue:** `pages/Guild.tsx` renders Project View in a "Full Page" mode that can override other tabs confusingly.
+
+### 🟡 Low Priority (Minor)
+8.  **Legacy Code:** `src/utils/itemEffects.ts` appears largely unused or half-baked.
+9.  **Inline Components:** `pages/Journal.tsx` and `pages/Settings.tsx` contain significant inline component definitions that could be extracted.
+10. **Hardcoded Strings:** `pages/LandingPage.tsx` and `pages/Dashboard.tsx` content is hardcoded.
+
+---
+
+## 6. Next Steps Recommendation
+1.  **Immediate:** Start **Phase 4 (Backend Hardening)** to address the `convex/guilds.ts` monolith.
+2.  **Secondary:** Address the **Folder Confusion** to clean up the file tree.
+
+
