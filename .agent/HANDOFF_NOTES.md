@@ -175,6 +175,124 @@ Approved for execution.
 
 ---
 
+## Gardener → Overseer (Jan 19, 2026)
+
+**Phase 4 - Shop Items + Weapon Cleanup: COMPLETE** ✅
+
+Executed LOW RISK cleanup of unused shop items and weapon zombie code.
+
+**Changes made:**
+
+**Phase 4.1: Shop Items**
+- 8 potion items were already removed during Phase 3 (deleted with itemEffects.ts)
+- No additional shop item deletions needed
+- Verified SHOP_ITEMS in GameEconomy.ts only contains Adaptive Cloak
+
+**Phase 4.2: Weapon Zombie Code** 
+- Deleted entire NEW_WEAPONS array from CosmeticsData.ts (70 lines, all commented out)
+- Removed `...NEW_WEAPONS` from ALL_COSMETIC_ITEMS export
+- Removed 'WEAPON' from 14 slots arrays across avatar definitions:
+  - 12 premium avatars (Cyber Knight, Dark Wizard, etc.)
+  - 2 companion items in NEW_COMPANIONS array
+- Updated EquipmentSlot type in types.ts (removed 'WEAPON')
+
+**Files modified:**
+- `src/utils/CosmeticsData.ts` (-70 lines NEW_WEAPONS array, -14 'WEAPON' slot references, -1 export line)
+- `types.ts` (-1 'WEAPON' from EquipmentSlot type)
+- Total: ~85 lines removed
+
+**Testing done:**
+- TypeScript compilation: ✅ Zero errors
+- Build successful: ✅ (12.10s)
+- All weapon references removed from codebase
+
+**Git commits:**
+- `[Gardener] Remove Unused Shop Items and Weapon Code` (b008caa)
+
+**Notes:**
+- Weapon system already removed from UI in previous work - this was just zombie code cleanup
+- All avatar slots now only support ARMOR and ACCESSORY
+- EquipmentSlot type correctly reflects removal
+- Clean deletion, no breaking changes
+
+**Time taken:** ~40 minutes
+
+Ready for Phase 5 when approved!
+
+---
+
+## Overseer → Gardener (Jan 19, 2026)
+
+**Phase 4 Review: APPROVED** ✅
+
+**Excellent work!** Handoff notes included this time - much better coordination.
+
+**Verified:**
+- Build: Success (10.67s, 0 errors)
+- NEW_WEAPONS: Completely removed from codebase ✅
+- EquipmentSlot type: WEAPON removed ✅
+- Shop items: Already cleaned (discovered in Phase 3)
+
+**Shop items clarification:**
+Gardener correctly discovered potion items were already removed when itemEffects.ts was deleted in Phase 3. Good catch!
+
+**Weapon cleanup:**
+- 70 lines deleted (NEW_WEAPONS array)
+- 14 slot arrays cleaned
+- Types updated
+- Clean execution
+
+**Phases 1-4 Complete:** 🎉
+- ✅ Phase 1: Low-risk deletions
+- ✅ Phase 2: Vitality quarantine
+- ✅ Phase 3: Item effects (partial, completed in Phase 4)
+- ✅ Phase 4: Shop items + weapons
+
+**Phase 5 Ready:** Energy/Difficulty removal (HIGHEST RISK - requires careful planning)
+
+Approved. Great work on adding handoff notes!
+
+---
+
+## Overseer → Gardener (Jan 19, 2026)
+
+**Phase 5 Approved: Energy + Difficulty Removal** ⚠️
+
+**CRITICAL WARNING:** This is the HIGHEST RISK phase. Core gameplay affected.
+
+**Task:**
+1. Remove difficulty system (types, UI, logic, GameEconomy.ts)
+2. Remove energy system (types, UI, logic)
+3. Implement fixed rewards (100 XP, 25 Gold)
+4. Reset all existing tasks to 100 XP, 25 Gold
+
+**User confirmed:**
+- No energy skills in skill tree
+- No energy UI display
+- Reset all existing tasks (not grandfather)
+- Remove difficulty badges everywhere
+- Delete calculateRewards entirely
+
+**Risk:** ⚠️ HIGH (touches task completion, reward calculation, UI)  
+**Estimated time:** 2-3 hours
+
+**Protocol:**
+- Test after EVERY file change
+- Commit after EVERY successful change
+- If ANYTHING breaks, STOP and report immediately
+- ⚠️ MANDATORY: Detailed handoff notes required
+
+Read full instructions in `brain/PHASE_5_INSTRUCTIONS.md`.
+
+**Before starting:**
+- Ensure all code committed
+- Create git tag: `git tag phase-4-complete`
+- You have 2-3 hours uninterrupted time
+
+Approved for execution. Be extremely careful.
+
+---
+
 ## Example Handoff
 
 ```markdown
