@@ -11,7 +11,6 @@ export interface Task {
   completed: boolean;
   xpReward: number;
   goldReward: number;
-  energyCost: number;
   gems?: number; // Added Gems reward
   createdAt?: number; // Timestamp for Speed Run skill
   speedRunBonusClaimed?: boolean; // Prevent farming
@@ -92,7 +91,6 @@ export interface AvatarPerks {
   goldModifier?: number;
   luckModifier?: number; // Flat add to % chance (e.g. 0.05 for +5%)
   shopDiscount?: number; // e.g. 0.05 for 5% off
-  energyMaxBonus?: number;
 }
 
 export interface Stats {
@@ -104,8 +102,6 @@ export interface Stats {
   gold: number;
   hp: number;
   maxHp: number;
-  energy: number;
-  maxEnergy: number;
   skillPoints: number;
 
   gems: number; // Premium Currency
