@@ -147,7 +147,6 @@ export const QuestCard: React.FC<{
                     {task.type === 'daily' && !task.frequency && <span className="text-[9px] font-bold text-sky-500 bg-sky-50 dark:bg-sky-900/20 px-1.5 py-0.5 rounded border border-sky-200 dark:border-sky-800">DAILY</span>}
                     {task.frequency && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">{task.frequency.toUpperCase()}</span>}
                     {task.deadline && <span className="text-[9px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">{new Date(task.deadline).toLocaleDateString()}</span>}
-                    {task.penalty && (task.penalty.gold || task.penalty.xp) ? <span className="text-[9px] font-bold text-red-600 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800">PENALTY</span> : null}
 
                     {/* Source Column Labels */}
                     {task.projectId === 'col-todo' && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">TO-DO</span>}
@@ -294,9 +293,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
   };
 
   const [deadline, setDeadline] = useState(formatDeadline(initialData?.deadline));
-  const [hasPenalty, setHasPenalty] = useState(!!initialData?.penalty);
-  const [penaltyGold, setPenaltyGold] = useState(initialData?.penalty?.gold || 0);
-  const [penaltyXP, setPenaltyXP] = useState(initialData?.penalty?.xp || 0);
 
   const [subtasks, setSubtasks] = useState<{ id: string, text: string, completed: boolean }[]>(initialData?.subtasks || []);
   const [newSubtask, setNewSubtask] = useState('');
@@ -311,9 +307,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
       setCategory(initialData.projectId as any);
       setFrequency(initialData.frequency || 'once');
       setDeadline(formatDeadline(initialData.deadline));
-      setHasPenalty(!!initialData.penalty);
-      setPenaltyGold(initialData.penalty?.gold || 0);
-      setPenaltyXP(initialData.penalty?.xp || 0);
       setSubtasks(initialData.subtasks || []);
     }
   }, [initialData]);
@@ -373,7 +366,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
       completed: initialData?.completed || false,
       frequency: frequency !== 'once' ? frequency : undefined,
       deadline: deadline ? new Date(deadline).toISOString() : undefined,
-      penalty: hasPenalty ? { gold: penaltyGold, xp: penaltyXP } : undefined,
       subtasks: subtasks.length > 0 ? subtasks : undefined
     };
 
@@ -389,9 +381,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
       setIsExpanded(false);
       setFrequency('once');
       setDeadline('');
-      setHasPenalty(false);
-      setPenaltyGold(0);
-      setPenaltyXP(0);
       setSubtasks([]);
       setNewSubtask('');
 
@@ -536,51 +525,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
           )}
         </div>
 
-        {/* Penalty Toggle */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50">
-          <div className="flex items-center gap-2 mb-2">
-            <input
-              type="checkbox"
-              id="penaltyCheck"
-              checked={hasPenalty}
-              onChange={(e) => setHasPenalty(e.target.checked)}
-              className="rounded border-slate-300 dark:border-slate-700 text-red-500 focus:ring-red-500"
-            />
-            <label htmlFor="penaltyCheck" className="text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1 cursor-pointer select-none">
-              <Flame size={12} className={hasPenalty ? "text-red-500" : "text-slate-400"} />
-              Enable Failure Penalty
-            </label>
-          </div>
-
-          {hasPenalty && (
-            <div className="grid grid-cols-2 gap-3 pl-6 animate-in slide-in-from-top-2 duration-200">
-              <div>
-                <label className="text-[9px] uppercase font-bold text-slate-400">Gold Loss</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={penaltyGold}
-                    onChange={(e) => setPenaltyGold(Number(e.target.value))}
-                    className="w-full pl-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg py-1 text-xs text-red-600 dark:text-red-400 focus:border-red-500 outline-none"
-                  />
-                  <Coins size={10} className="absolute left-2 top-1.5 text-red-400" />
-                </div>
-              </div>
-              <div>
-                <label className="text-[9px] uppercase font-bold text-slate-400">XP Loss</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={penaltyXP}
-                    onChange={(e) => setPenaltyXP(Number(e.target.value))}
-                    className="w-full pl-6 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-lg py-1 text-xs text-red-600 dark:text-red-400 focus:border-red-500 outline-none"
-                  />
-                  <Brain size={10} className="absolute left-2 top-1.5 text-red-400" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Submit */}
         <button

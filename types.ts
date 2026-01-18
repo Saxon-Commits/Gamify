@@ -22,10 +22,6 @@ export interface Task {
   // Enhanced Bounty Fields
   frequency?: 'daily' | 'weekly' | 'monthly' | 'custom';
   kanbanStatus?: 'TODO' | 'IN_PROGRESS' | 'DONE'; // Separates view status from category (projectId)
-  penalty?: {
-    gold?: number;
-    xp?: number;
-  };
 
   dueDate?: string;
   deadline?: string; // ISO String for hard cutoff
