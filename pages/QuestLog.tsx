@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore, INITIAL_PROJECTS, INITIAL_TASKS } from '../store/useGameStore';
 
 import { ChevronDown, CheckCircle2, Circle, Trophy, PlusCircle, AlertCircle, Sword, Sparkles, Zap, Scroll, Map, Calendar, Coins, Gift, Activity, Brain, Utensils, Users, Moon, Hammer, Eraser, Plus, Book, Trash2, Clock, Repeat, Flame, X, AlertTriangle, Heart, Award, Crown, Target } from 'lucide-react';
-import { QuestDifficulty, Task } from '../types';
+import { Task } from '../types';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners, useDroppable, pointerWithin, rectIntersection, CollisionDetection, getFirstCollision } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -19,21 +19,6 @@ import { api } from "../convex/_generated/api";
 import { HealthDisplay } from '../components/ui/HealthDisplay';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
 
-const DifficultyBadge: React.FC<{ difficulty: QuestDifficulty }> = ({ difficulty }) => {
-  const colors = {
-    TRIVIAL: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700',
-    EASY: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800/50',
-    MEDIUM: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50',
-    HARD: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50',
-    EPIC: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/50'
-  };
-
-  return (
-    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${colors[difficulty]}`}>
-      {difficulty}
-    </span>
-  );
-};
 
 export const QuestCard: React.FC<{
   task: Task;
@@ -275,7 +260,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
   const [isExpanded, setIsExpanded] = useState(!!initialData || defaultExpanded);
   const [name, setName] = useState(initialData?.name || '');
   const [description, setDescription] = useState(initialData?.description || '');
-  const [difficulty, setDifficulty] = useState<QuestDifficulty>(initialData?.difficulty || 'EASY');
   const [category, setCategory] = useState<'col-todo' | 'col-habit' | 'col-guild'>((initialData?.projectId as any) || projectId || 'col-todo');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -320,16 +304,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
   const frequencies = ['once', 'daily', 'weekly', 'monthly'];
 
   // Default rewards based on difficulty
-  const getRewards = (diff: QuestDifficulty) => {
-    switch (diff) {
-      case 'TRIVIAL': return { xp: 50, gold: 10 };
-      case 'EASY': return { xp: 100, gold: 25 };
-      case 'MEDIUM': return { xp: 200, gold: 50 };
-      case 'HARD': return { xp: 350, gold: 100 };
-      case 'EPIC': return { xp: 500, gold: 250 };
-      default: return { xp: 100, gold: 25 };
-    }
-  };
 
 
 
@@ -452,7 +426,7 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
             <label className="text-[10px] uppercase font-bold text-slate-400">Difficulty</label>
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as QuestDifficulty)}
+              onChange={(e) => setDifficulty(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs font-medium focus:border-indigo-500 outline-none"
             >
               {['TRIVIAL', 'EASY', 'MEDIUM', 'HARD', 'EPIC'].map(d => (
