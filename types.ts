@@ -198,7 +198,6 @@ export interface GameState {
   setAvatar: (avatarId: string) => void;
   setBackdrop: (backdropId: string | null) => void;
   equipItem: (slot: 'mainHand' | 'armor' | 'head' | 'accessory', itemId: string | null) => void;
-  useItem: (itemId: string) => { success: boolean; message: string };
 
   setHoveredNode: (node: any | null) => void;
   setVerificationNode?: (node: any | null) => void;

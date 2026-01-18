@@ -5,7 +5,6 @@ import { GameState, JournalEntry, Stats, GameSettings, Project, QuestDifficulty,
 import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/gameLogic';
 import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
-import { ITEM_EFFECTS } from '../src/utils/itemEffects';
 import { useToastStore } from './useToastStore';
 
 const INITIAL_STATS: Stats = {
@@ -526,53 +525,6 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      useItem: (itemId) => {
-        const { inventory, stats, activeBuffs } = get();
-        const itemIndex = inventory.findIndex(i => i.id === itemId);
-
-        if (itemIndex === -1) return { success: false, message: "Item not found" };
-
-        const item = inventory[itemIndex];
-        // If not loaded yet, require
-        // We need to dynamic import or just assume available. 
-        // We will move imports to top of file
-
-        const effectFn = ITEM_EFFECTS[itemId];
-        if (!effectFn) {
-          // Default behavior for consumables without specific logic: Just consume
-          const newInventory = [...inventory];
-          if (item.quantity > 1) {
-            newInventory[itemIndex] = { ...item, quantity: item.quantity - 1 };
-          } else {
-            newInventory.splice(itemIndex, 1);
-          }
-          set({ inventory: newInventory });
-          return { success: true, message: `${item.name} used.` };
-        }
-
-        // Execute Effect
-        // Pass complete state proxy
-        const result = effectFn(get());
-
-        if (result.success) {
-          const newInventory = [...inventory];
-          if (item.quantity > 1) {
-            newInventory[itemIndex] = { ...item, quantity: item.quantity - 1 };
-          } else {
-            newInventory.splice(itemIndex, 1);
-          }
-
-          // Merge updates
-          set((state) => ({
-            inventory: newInventory,
-            ...result.updates,
-            stats: { ...state.stats, ...(result.statsUpdates || {}) }
-          }));
-          return { success: true, message: result.message };
-        } else {
-          return { success: false, message: result.message };
-        }
-      },
 
       completeTask: (taskId) => {
         const { tasks, stats, inventory } = get();
