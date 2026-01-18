@@ -19,8 +19,8 @@ const Admin = () => {
     const unbanUser = useMutation(api.admin.unbanUser);
 
     // Guild Inspector
-    const allGuilds = useQuery(api.guilds.getAllGuildsAdmin) || [];
-    const disbandGuild = useMutation(api.guilds.disbandGuildByAdmin);
+    const allGuilds = useQuery(api.guilds.admin.getAll) || [];
+    const disbandGuild = useMutation(api.guilds.admin.disband);
 
     const handleDisbandGuild = async (guildId: any, name: string) => {
         if (!confirm(`DANGER: Are you sure you want to DISBAND "${name}"?\n\nThis will DELETE all data including members, projects, and activities.\nThis cannot be undone.`)) return;

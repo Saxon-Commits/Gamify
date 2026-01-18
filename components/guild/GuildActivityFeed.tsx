@@ -9,7 +9,7 @@ interface GuildActivityFeedProps {
 }
 
 export const GuildActivityFeed: React.FC<GuildActivityFeedProps> = ({ guildId }) => {
-    const guildActivity = useQuery(api.guilds.getGuildActivity, { guildId });
+    const guildActivity = useQuery(api.guilds.general.getActivity, { guildId });
 
     return (
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 h-full flex flex-col">
@@ -26,8 +26,8 @@ export const GuildActivityFeed: React.FC<GuildActivityFeedProps> = ({ guildId })
                     guildActivity.map((activity) => (
                         <div key={activity._id} className="flex items-start gap-2.5 text-xs">
                             <div className="w-6 h-6 bg-slate-700 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden mt-0.5">
-                                {activity.userPictureUrl ? (
-                                    <img src={activity.userPictureUrl} className="w-full h-full object-cover" />
+                                {activity.userAvatar ? (
+                                    <img src={activity.userAvatar} className="w-full h-full object-cover" />
                                 ) : (
                                     <span className="font-bold text-[10px] text-white uppercase">{activity.userName.substring(0, 2)}</span>
                                 )}

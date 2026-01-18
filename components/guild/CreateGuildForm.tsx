@@ -9,7 +9,7 @@ interface CreateGuildFormProps {
 }
 
 export const CreateGuildForm: React.FC<CreateGuildFormProps> = ({ onCancel, onSuccess }) => {
-    const createGuild = useMutation(api.guilds.createGuild);
+    const createGuild = useMutation(api.guilds.general.create);
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [isPublic, setIsPublic] = useState(true);

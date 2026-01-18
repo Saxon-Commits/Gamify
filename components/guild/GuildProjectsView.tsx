@@ -21,10 +21,10 @@ interface GuildProjectsViewProps {
 import { GuildProjectDetail } from './GuildProjectDetail';
 
 export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, isOfficer, forceCreate, onResetForceCreate, viewProjectId, onSelectProject, members, draftProject, setDraftProject }) => {
-    const projects = useQuery(api.guilds.getGuildProjects, { guildId });
-    const guildData = useQuery(api.guilds.getGuild, { guildId });
-    const createProject = useMutation(api.guilds.createProject);
-    const contribute = useMutation(api.guilds.contributeToProject);
+    const projects = useQuery(api.guilds.projects.getByGuild, { guildId });
+    const guildData = useQuery(api.guilds.general.get, { guildId });
+    const createProject = useMutation(api.guilds.projects.create);
+    const contribute = useMutation(api.guilds.projects.contribute);
 
     const [contributionAmount, setContributionAmount] = useState<Record<string, number>>({});
 
@@ -64,7 +64,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
 
     const treasury = guildData?.treasury || { gold: 0, gems: 0 };
 
-    const joinProject = useMutation(api.guilds.joinProject);
+    const joinProject = useMutation(api.guilds.projects.join);
     const addTasks = useGameStore(state => state.addTasks);
     // const tasks = useGameStore(state => state.tasks); // Unused
     // const completeTask = useGameStore(state => state.completeTask); // Unused
@@ -103,8 +103,8 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         setContributionAmount({ ...contributionAmount, [projectId]: 0 });
     };
 
-    const deleteProject = useMutation(api.guilds.deleteProject);
-    const updateProject = useMutation(api.guilds.updateProject);
+    const deleteProject = useMutation(api.guilds.projects.remove);
+    const updateProject = useMutation(api.guilds.projects.update);
 
     const handleDeleteProject = async (projectId: Id<"guildProjects">) => {
         try {
@@ -123,7 +123,7 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
         }
     };
 
-    const leaveProject = useMutation(api.guilds.leaveProject);
+    const leaveProject = useMutation(api.guilds.projects.leave);
 
     const handleLeaveProject = async (projectId: Id<"guildProjects">) => {
         try {

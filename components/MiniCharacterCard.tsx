@@ -8,7 +8,6 @@ interface MiniCharacterCardProps {
     avatarId: string;
     companionId?: string | null;
     backdropId?: string | null;
-    weaponId?: string | null;
     armorId?: string | null;
     className?: string;
 }
@@ -48,7 +47,6 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
     avatarId,
     companionId,
     backdropId,
-    weaponId,
     armorId,
     className = '',
 }) => {
@@ -171,18 +169,16 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
                 {/* DYNAMIC EQUIPMENT LAYER */}
                 {(() => {
                     const itemsToRender: { id: string, src: string, offset: any }[] = [];
-                    // Check Weapon & Armor from PROPS
-                    [weaponId, armorId].forEach(itemId => {
-                        if (!itemId) return;
-
+                    // Check Armor from PROPS
+                    if (armorId) {
                         let src = '';
-                        if (itemId === 'a_seraph_wings') src = '/items/seraph_wings.png';
+                        if (armorId === 'a_seraph_wings') src = '/items/seraph_wings.png';
 
                         if (!src) {
-                            const found = [...ALL_COSMETIC_ITEMS, ...STARTER_AVATARS].find(i => i.id === itemId);
+                            const found = [...ALL_COSMETIC_ITEMS, ...STARTER_AVATARS].find(i => i.id === armorId);
                             if (found) src = found.imageUrl || '';
                             else {
-                                const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+                                const shopItem = SHOP_ITEMS.find(i => i.id === armorId);
                                 if (shopItem) src = shopItem.imageUrl;
                             }
                         }
@@ -193,13 +189,13 @@ export const MiniCharacterCard: React.FC<MiniCharacterCardProps> = ({
                             if (avatarId.includes('cyber_knight')) configKey = 'hero_cyber_knight';
 
                             // Attempt exact match first, then fallback
-                            const config = EQUIPMENT_CONFIGS[itemId]?.[configKey] || EQUIPMENT_CONFIGS[itemId]?.[avatarId];
+                            const config = EQUIPMENT_CONFIGS[armorId]?.[configKey] || EQUIPMENT_CONFIGS[armorId]?.[avatarId];
 
                             if (config) {
-                                itemsToRender.push({ id: itemId, src, offset: config });
+                                itemsToRender.push({ id: armorId, src, offset: config });
                             }
                         }
-                    });
+                    }
 
                     return itemsToRender.map((item, idx) => (
                         <img

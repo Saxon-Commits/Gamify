@@ -15,13 +15,13 @@ interface GuildBountyBoardProps {
 }
 
 export const GuildBountyBoard: React.FC<GuildBountyBoardProps> = ({ guildId, role, userId, treasury }) => {
-    const bounties = useQuery(api.guilds.getGuildBounties, { guildId });
-    const claimBounty = useMutation(api.guilds.claimBounty);
-    const submitBounty = useMutation(api.guilds.submitBounty);
-    const approveBounty = useMutation(api.guilds.approveBounty);
-    const denyBounty = useMutation(api.guilds.denyBounty);
-    const cancelBounty = useMutation(api.guilds.cancelBounty);
-    const dropBounty = useMutation(api.guilds.dropBounty);
+    const bounties = useQuery(api.guilds.bounties.getByGuild, { guildId });
+    const claimBounty = useMutation(api.guilds.bounties.claim);
+    const submitBounty = useMutation(api.guilds.bounties.submit);
+    const approveBounty = useMutation(api.guilds.bounties.approve);
+    const denyBounty = useMutation(api.guilds.bounties.deny);
+    const cancelBounty = useMutation(api.guilds.bounties.cancel);
+    const dropBounty = useMutation(api.guilds.bounties.drop);
 
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [submitProofId, setSubmitProofId] = useState<Id<"guildBounties"> | null>(null);

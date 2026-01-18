@@ -40,7 +40,7 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
 
     const currentAvatarId = getAvatarIdFromPath(props.selectedAvatarPath);
     const equippedArmorId = stats.activeArmorId;
-    const equippedWeaponId = stats.activeMainHandId;
+
     const equippedAccessoryId = stats.activeAccessoryId;
 
     // Selection Logic for Rarity/Name
@@ -207,22 +207,21 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                                         />
                                     )
                                 ) : (
-                                    [equippedArmorId, equippedWeaponId].map(itemId => {
-                                        if (!itemId) return null;
+                                    equippedArmorId && (() => {
                                         const avatarId = availableAvatarId(props.selectedAvatarPath);
-                                        const config = EQUIPMENT_CONFIGS[itemId]?.[avatarId];
+                                        const config = EQUIPMENT_CONFIGS[equippedArmorId]?.[avatarId];
                                         if (!config) return null;
 
                                         let src = '';
-                                        if (itemId === 'a_seraph_wings') src = '/items/seraph_wings.png';
+                                        if (equippedArmorId === 'a_seraph_wings') src = '/items/seraph_wings.png';
                                         else {
-                                            const item = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS].find(i => i.id === itemId);
+                                            const item = [...SHOP_ITEMS, ...ALL_COSMETIC_ITEMS].find(i => i.id === equippedArmorId);
                                             if (item) src = item.imageUrl;
                                         }
                                         if (!src) return null;
                                         return (
                                             <img
-                                                key={itemId}
+                                                key={equippedArmorId}
                                                 src={src}
                                                 className="absolute pointer-events-none pixelated"
                                                 style={{
@@ -234,7 +233,7 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                                                 }}
                                             />
                                         )
-                                    })
+                                    })()
                                 )}
                             </>
                         )

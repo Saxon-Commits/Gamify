@@ -17,7 +17,7 @@ export const ProjectWinnerSelection: React.FC<ProjectWinnerSelectionProps> = ({ 
     const [thirdPlace, setThirdPlace] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const awardWinners = useMutation(api.guilds.awardContestWinners);
+    const awardWinners = useMutation(api.guilds.projects.awardWinners);
 
     const handleAward = async () => {
         if (!firstPlace) return; // At least 1st place required?

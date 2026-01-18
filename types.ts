@@ -130,7 +130,7 @@ export interface Stats {
   spirit: number;
   imageUrl?: string;
   activeAvatarId?: string; // New field
-  activeMainHandId?: string; // Weapon
+
   activeArmorId?: string;    // Chestpiece/Armor
   activeHeadId?: string;     // Helmet/Mask
   activeAccessoryId?: string; // Wings/Boots/etc

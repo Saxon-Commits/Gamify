@@ -11,7 +11,7 @@ interface CreateBountyModalProps {
 }
 
 export const CreateBountyModal: React.FC<CreateBountyModalProps> = ({ guildId, treasury, onClose }) => {
-    const createBounty = useMutation(api.guilds.createBounty);
+    const createBounty = useMutation(api.guilds.bounties.create);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [goldReward, setGoldReward] = useState(0);

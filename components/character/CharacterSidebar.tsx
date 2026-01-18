@@ -28,7 +28,6 @@ export const CharacterSidebar: React.FC<CharacterSidebarProps> = ({ className = 
                 avatarId={stats.activeAvatarId || 'starter_villager_male'}
                 backdropId={stats.activeBackdropId}
                 companionId={stats.activeCompanionId || stats.activeAccessoryId}
-                weaponId={stats.activeMainHandId}
                 armorId={stats.activeArmorId}
                 className="w-full shadow-2xl border border-slate-700/50"
             />

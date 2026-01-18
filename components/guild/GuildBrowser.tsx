@@ -11,8 +11,8 @@ interface GuildBrowserProps {
 }
 
 export const GuildBrowser: React.FC<GuildBrowserProps> = ({ onCreateClick, onJoinClick, myGuildIds = [] }) => {
-    const publicGuilds = useQuery(api.guilds.getPublicGuilds);
-    const joinGuild = useMutation(api.guilds.joinGuild);
+    const publicGuilds = useQuery(api.guilds.general.getPublic);
+    const joinGuild = useMutation(api.guilds.general.join);
     const [search, setSearch] = useState('');
     const [inviteCode, setInviteCode] = useState('');
     const navigate = useNavigate();

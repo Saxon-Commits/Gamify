@@ -526,7 +526,7 @@ export const useGameStore = create<GameState>()(
         set(state => {
           const newStats = { ...state.stats };
           switch (slot) {
-            case 'mainHand': newStats.activeMainHandId = itemId || undefined; break;
+
             case 'armor': newStats.activeArmorId = itemId || undefined; break;
             case 'head': newStats.activeHeadId = itemId || undefined; break;
             case 'accessory': newStats.activeAccessoryId = itemId || undefined; break;

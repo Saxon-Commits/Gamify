@@ -11,7 +11,6 @@ interface GuildMember {
     level: number;
     role: 'leader' | 'officer' | 'member';
     avatarId?: string;
-    weaponId?: string;
     armorId?: string;
     companionId?: string;
     backdropId?: string;
@@ -56,7 +55,7 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
     isLeaving,
     currentUserId
 }) => {
-    const createInvite = useMutation(api.guilds.createInvite);
+    const createInvite = useMutation(api.guilds.invites.create);
     const [inviteCode, setInviteCode] = useState<string | null>(null);
     const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
 
@@ -114,7 +113,6 @@ export const GuildMembersPanel: React.FC<GuildMembersPanelProps> = ({
                                     level: member.level,
                                     role: member.role === 'leader' ? 'Leader' : member.role === 'officer' ? 'Officer' : 'Member',
                                     avatarId: member.avatarId,
-                                    weaponId: member.weaponId,
                                     armorId: member.armorId,
                                     companionId: member.companionId,
                                     backdropId: member.backdropId

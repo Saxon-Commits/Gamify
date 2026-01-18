@@ -8,7 +8,6 @@ interface MemberLoadout {
     level: number;
     role: string;
     avatarId?: string;
-    weaponId?: string;
     armorId?: string;
     companionId?: string;
     backdropId?: string;
@@ -46,7 +45,6 @@ export const GuildMemberCard: React.FC<GuildMemberCardProps> = ({
                     avatarId={member.avatarId}
                     companionId={member.companionId}
                     backdropId={member.backdropId}
-                    weaponId={member.weaponId}
                     armorId={member.armorId}
                     className="w-full"
                 />

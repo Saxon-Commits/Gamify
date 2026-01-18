@@ -12,7 +12,7 @@ interface BountyBoardCardProps {
 }
 
 export const BountyBoardCard: React.FC<BountyBoardCardProps> = ({ guildId, isOfficer, onViewAll, onCreate }) => {
-    const bounties = useQuery(api.guilds.getGuildBounties, { guildId });
+    const bounties = useQuery(api.guilds.bounties.getByGuild, { guildId });
 
     const openBounties = bounties?.filter(b => b.status === "OPEN") || [];
 

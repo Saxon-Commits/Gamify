@@ -7,7 +7,7 @@ import { Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 export const InvitePage: React.FC = () => {
     const { code } = useParams<{ code: string }>();
     const navigate = useNavigate();
-    const joinGuildByCode = useMutation(api.guilds.joinGuildByCode);
+    const joinGuildByCode = useMutation(api.guilds.invites.join);
 
     const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
     const [errorMessage, setErrorMessage] = useState("");

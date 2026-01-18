@@ -19,7 +19,7 @@ export const ProjectsCard: React.FC<ProjectsCardProps> = ({
     onCreate,
     onProjectClick
 }) => {
-    const guildProjects = useQuery(api.guilds.getGuildProjects, guildId ? { guildId } : "skip");
+    const guildProjects = useQuery(api.guilds.projects.getByGuild, guildId ? { guildId } : "skip");
 
     return (
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 max-h-[600px] h-fit flex flex-col">

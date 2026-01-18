@@ -12,9 +12,9 @@ interface GuildSettingsProps {
 }
 
 const InviteManagement = ({ guildId }: { guildId: Id<"guilds"> }) => {
-    const invites = useQuery(api.guilds.getGuildInvites, { guildId }) || [];
-    const createInvite = useMutation(api.guilds.createInvite);
-    const revokeInvite = useMutation(api.guilds.revokeInvite);
+    const invites = useQuery(api.guilds.invites.getByGuild, { guildId }) || [];
+    const createInvite = useMutation(api.guilds.invites.create);
+    const revokeInvite = useMutation(api.guilds.invites.revoke);
     const [isCreating, setIsCreating] = useState(false);
 
     const handleCreate = async () => {
@@ -91,11 +91,11 @@ const InviteManagement = ({ guildId }: { guildId: Id<"guilds"> }) => {
 };
 
 export const GuildSettings: React.FC<GuildSettingsProps> = ({ guild, membership, members, onDisband }) => {
-    const updateGuild = useMutation(api.guilds.updateGuild);
-    const kickMember = useMutation(api.guilds.kickMember);
-    const promoteMember = useMutation(api.guilds.promoteMember);
-    const demoteMember = useMutation(api.guilds.demoteMember);
-    const disbandGuild = useMutation(api.guilds.disbandGuild);
+    const updateGuild = useMutation(api.guilds.general.update);
+    const kickMember = useMutation(api.guilds.members.kick);
+    const promoteMember = useMutation(api.guilds.members.promote);
+    const demoteMember = useMutation(api.guilds.members.demote);
+    const disbandGuild = useMutation(api.guilds.general.disband);
 
     const [name, setName] = useState(guild.name);
     const [description, setDescription] = useState(guild.description || "");

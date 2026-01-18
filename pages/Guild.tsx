@@ -34,7 +34,6 @@ interface MemberLoadout {
     level: number;
     role: 'Leader' | 'Officer' | 'Member';
     avatarId: string;
-    weaponId: string | null;
     armorId: string | null;
     companionId: string | null;
     backdropId: string | null;
@@ -42,7 +41,6 @@ interface MemberLoadout {
 
 // Get all available options for dropdowns
 const ALL_AVATARS = [...STARTER_AVATARS, ...ALL_COSMETIC_ITEMS.filter(i => i.type === 'AVATAR')];
-const ALL_WEAPONS = [...SHOP_ITEMS.filter(i => i.slots?.includes('WEAPON')), ...ALL_COSMETIC_ITEMS.filter(i => i.slots?.includes('WEAPON'))];
 const ALL_ARMORS = [...SHOP_ITEMS.filter(i => i.slots?.includes('ARMOR')), ...ALL_COSMETIC_ITEMS.filter(i => i.slots?.includes('ARMOR'))];
 const ALL_COMPANIONS = ALL_COSMETIC_ITEMS.filter(i => i.type === 'COMPANION' || i.slots?.includes('ACCESSORY'));
 const ALL_BACKDROPS = COSMETIC_SHOP_ITEMS.filter(i => i.type === 'THEME');
@@ -63,7 +61,7 @@ const ALL_BACKDROPS = COSMETIC_SHOP_ITEMS.filter(i => i.type === 'THEME');
 
 export const Guild: React.FC = () => {
     const { stats } = useGameStore();
-    const myGuilds = useQuery(api.guilds.getMyGuilds);
+    const myGuilds = useQuery(api.guilds.general.getMyGuilds);
     const [activeGuildId, setActiveGuildId] = useState<string | null>(null);
     const [view, setView] = useState<'dashboard' | 'browse' | 'create'>('dashboard');
     const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'bounties' | 'chat' | 'settings' | 'members'>('overview');
@@ -93,12 +91,12 @@ export const Guild: React.FC = () => {
 
     // Fetch members and activity only if we have an active guild
     const guildId = activeGuildConfig?.guild?._id;
-    const guildMembers = useQuery(api.guilds.getGuildMembers, guildId ? { guildId } : "skip");
+    const guildMembers = useQuery(api.guilds.members.getByGuild, guildId ? { guildId } : "skip");
 
 
 
     // Leave Guild System
-    const leaveGuild = useMutation(api.guilds.leaveGuild);
+    const leaveGuild = useMutation(api.guilds.general.leave);
     const [isLeaving, setIsLeaving] = useState(false);
 
     const handleLeave = async () => {
@@ -120,7 +118,7 @@ export const Guild: React.FC = () => {
     };
 
     // Treasury Donation
-    const donate = useMutation(api.guilds.donateToTreasury);
+    const donate = useMutation(api.guilds.general.donate);
     const [isDonating, setIsDonating] = useState(false);
 
     const handleDonate = async (amount: number, currency: 'gold' | 'gems') => {
@@ -213,7 +211,6 @@ export const Guild: React.FC = () => {
         level: stats.level || 1,
         role: membership.role === 'leader' ? 'Leader' : membership.role === 'officer' ? 'Officer' : 'Member',
         avatarId: stats.activeAvatarId || 'starter_villager_male',
-        weaponId: stats.activeMainHandId || null,
         armorId: stats.activeArmorId || null,
         companionId: stats.activeAccessoryId || null,
         backdropId: stats.activeBackdropId || null,

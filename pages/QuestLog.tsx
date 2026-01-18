@@ -838,7 +838,7 @@ export const QuestLog: React.FC = () => {
   };
 
   // Guild Contribution Hook
-  const contributeToProject = useMutation(api.guilds.contributeToProject);
+  const contributeToProject = useMutation(api.guilds.projects.contribute);
 
   const handleCompleteTask = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);

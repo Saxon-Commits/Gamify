@@ -48,12 +48,11 @@ export const AttributesPanel: React.FC = () => {
         // Active Avatar
         processItem(stats.activeAvatarId);
         // Active Gear
-        processItem(stats.activeMainHandId);
         processItem(stats.activeArmorId);
         processItem(stats.activeAccessoryId);
 
         return { xp, gold, luck, energy, discount };
-    }, [stats.activeAvatarId, stats.activeMainHandId, stats.activeArmorId, stats.activeAccessoryId]);
+    }, [stats.activeAvatarId, stats.activeArmorId, stats.activeAccessoryId]);
 
     const achievements = [
         { id: 'grindstone_guru', label: 'Grindstone Guru', desc: 'Log 100 hours in Grindstone', icon: Hammer, unlocked: false },
