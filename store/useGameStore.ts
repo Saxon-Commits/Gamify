@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import { GameState, JournalEntry, Stats, GameSettings, Project, QuestDifficulty, Task, InventoryItem, ActiveBuff } from '../types';
+import { GameState, JournalEntry, Stats, GameSettings, Project, Task, InventoryItem, ActiveBuff } from '../types';
 import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/gameLogic';
-import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
+import { FIXED_XP_REWARD, FIXED_GOLD_REWARD, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { useToastStore } from './useToastStore';
 
@@ -46,133 +46,133 @@ import { generateSkillTree } from '../src/utils/SkillTreeUtils';
 const { nodes: INITIAL_NODES, edges: INITIAL_EDGES } = generateSkillTree();
 
 export const INITIAL_PROJECTS: Project[] = [
-  { id: 'col-todo', name: 'To-Do', description: 'General Tasks.', completed: false, difficulty: 'EASY', hp: 500, maxHp: 500, icon: '/images/ui/heart_icon.png', backgroundImage: '/backgrounds/vitality_bg.png' },
-  { id: 'col-habit', name: 'Habits', description: 'Daily Routines.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100, backgroundImage: '/backgrounds/vault_bg.png' },
+  { id: 'col-todo', name: 'To-Do', description: 'General Tasks.', completed: false, hp: 500, maxHp: 500, icon: '/images/ui/heart_icon.png', backgroundImage: '/backgrounds/vitality_bg.png' },
+  { id: 'col-habit', name: 'Habits', description: 'Daily Routines.', completed: false, hp: 100, maxHp: 100, backgroundImage: '/backgrounds/vault_bg.png' },
 
   // Guild Column (Pseudo-Project)
-  { id: 'col-guild', name: "Guild", description: 'Community Tasks.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100, backgroundImage: '/backgrounds/castle_bg.png' },
+  { id: 'col-guild', name: "Guild", description: 'Community Tasks.', completed: false, hp: 100, maxHp: 100, backgroundImage: '/backgrounds/castle_bg.png' },
 
   // --- TYCOON PATHWAY PROJECTS (Legacy/Active) ---
-  { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false, difficulty: 'MEDIUM', hp: 300, maxHp: 300 },
-  { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
+  { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false, hp: 300, maxHp: 300 },
+  { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false, hp: 100, maxHp: 100 },
   // 3: Most Wanted (Bounty Hunter)
   // Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.
-  { id: 'p-most-wanted', name: 'Most Wanted', description: 'Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
-  { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false, difficulty: 'EASY', hp: 100, maxHp: 100 },
+  { id: 'p-most-wanted', name: 'Most Wanted', description: 'Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.', completed: false, hp: 100, maxHp: 100 },
+  { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false, hp: 100, maxHp: 100 },
   // Active Branch
-  { id: 'p-tycoon-4a', name: 'Skill Minting', description: 'Value Definition.', completed: false, difficulty: 'MEDIUM', hp: 200, maxHp: 200 },
-  { id: 'p-tycoon-5a', name: 'The Grand Offer', description: 'Offer Creation.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-6a', name: 'Signal Amplify', description: 'Distribution.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-7a', name: 'Archimedes Lever', description: 'Leverage.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-4a', name: 'Skill Minting', description: 'Value Definition.', completed: false, hp: 200, maxHp: 200 },
+  { id: 'p-tycoon-5a', name: 'The Grand Offer', description: 'Offer Creation.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-6a', name: 'Signal Amplify', description: 'Distribution.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-7a', name: 'Archimedes Lever', description: 'Leverage.', completed: false, hp: 500, maxHp: 500 },
   // Passive Branch
-  { id: 'p-tycoon-4b', name: 'Ticker Tape', description: 'Market Literacy.', completed: false, difficulty: 'MEDIUM', hp: 200, maxHp: 200 },
-  { id: 'p-tycoon-5b', name: 'Compound Engine', description: 'Index Investing.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-6b', name: 'Loophole Logic', description: 'Tax Efficiency.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-7b', name: 'Exotic Vault', description: 'Alternative Assets.', completed: false, difficulty: 'HARD', hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-4b', name: 'Ticker Tape', description: 'Market Literacy.', completed: false, hp: 200, maxHp: 200 },
+  { id: 'p-tycoon-5b', name: 'Compound Engine', description: 'Index Investing.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-6b', name: 'Loophole Logic', description: 'Tax Efficiency.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-7b', name: 'Exotic Vault', description: 'Alternative Assets.', completed: false, hp: 500, maxHp: 500 },
   // Apex
-  { id: 'p-tycoon-8', name: 'Midas Throne', description: 'Capital Sovereign.', completed: false, difficulty: 'EPIC', hp: 1000, maxHp: 1000 },
+  { id: 'p-tycoon-8', name: 'Midas Throne', description: 'Capital Sovereign.', completed: false, hp: 1000, maxHp: 1000 },
 ];
 
 export const INITIAL_TASKS: Task[] = [
-  { id: 't-1', projectId: 'col-todo', name: 'Track calories for 7 days', completed: false, xpReward: 200, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-2', projectId: 'col-todo', name: 'Drink 3L water daily (streak 1/3)', completed: false, xpReward: 100, goldReward: 20, energyCost: 5, type: 'main', difficulty: 'EASY' },
-  { id: 't-3', projectId: 'col-habit', name: 'Setup budget in Notion/Excel', completed: false, xpReward: 150, goldReward: 30, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-4', projectId: 'col-habit', name: 'Identify 3 unnecessary subscriptions', completed: false, xpReward: 50, goldReward: 100, energyCost: 5, type: 'main', difficulty: 'EASY' },
+  { id: 't-1', projectId: 'col-todo', name: 'Track calories for 7 days', completed: false, xpReward: 200, goldReward: 50, energyCost: 10, type: 'main' },
+  { id: 't-2', projectId: 'col-todo', name: 'Drink 3L water daily (streak 1/3)', completed: false, xpReward: 100, goldReward: 20, energyCost: 5, type: 'main' },
+  { id: 't-3', projectId: 'col-habit', name: 'Setup budget in Notion/Excel', completed: false, xpReward: 150, goldReward: 30, energyCost: 15, type: 'main' },
+  { id: 't-4', projectId: 'col-habit', name: 'Identify 3 unnecessary subscriptions', completed: false, xpReward: 50, goldReward: 100, energyCost: 5, type: 'main' },
   // Removed static tech tasks
 
 
   // --- HEALTH / TITAN PATHWAY (User Added) ---
   // Stabilization & Assessment
-  { id: 't-ti-1a', projectId: 'p-titan-1', name: '[Health] Get medical baseline (BP, BMI, Mobility)', completed: false, xpReward: 300, goldReward: 50, energyCost: 20, type: 'main', difficulty: 'HARD' },
-  { id: 't-ti-1b', projectId: 'p-titan-1', name: '[Health] Establish 7,000-step daily floor', completed: false, xpReward: 150, goldReward: 25, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ti-1c', projectId: 'p-titan-1', name: '[Health] Daily 10-min "Desk Worker" mobility routine', completed: false, xpReward: 100, goldReward: 10, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ti-1a', projectId: 'p-titan-1', name: '[Health] Get medical baseline (BP, BMI, Mobility)', completed: false, xpReward: 300, goldReward: 50, energyCost: 20, type: 'main' },
+  { id: 't-ti-1b', projectId: 'p-titan-1', name: '[Health] Establish 7,000-step daily floor', completed: false, xpReward: 150, goldReward: 25, energyCost: 15, type: 'main' },
+  { id: 't-ti-1c', projectId: 'p-titan-1', name: '[Health] Daily 10-min "Desk Worker" mobility routine', completed: false, xpReward: 100, goldReward: 10, energyCost: 10, type: 'main' },
 
   // Form & Foundation
-  { id: 't-ti-2a', projectId: 'p-titan-1', name: '[Health] Learn "Big 4" bodyweight movements', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ti-2b', projectId: 'p-titan-1', name: '[Health] 20 mins Zone 2 cardio (3x/week)', completed: false, xpReward: 250, goldReward: 50, energyCost: 25, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ti-2c', projectId: 'p-titan-1', name: '[Health] Fix ergonomic setup', completed: false, xpReward: 100, goldReward: 100, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ti-2a', projectId: 'p-titan-1', name: '[Health] Learn "Big 4" bodyweight movements', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main' },
+  { id: 't-ti-2b', projectId: 'p-titan-1', name: '[Health] 20 mins Zone 2 cardio (3x/week)', completed: false, xpReward: 250, goldReward: 50, energyCost: 25, type: 'main' },
+  { id: 't-ti-2c', projectId: 'p-titan-1', name: '[Health] Fix ergonomic setup', completed: false, xpReward: 100, goldReward: 100, energyCost: 10, type: 'main' },
 
   // Progressive Strength & Capacity
-  { id: 't-ti-3a', projectId: 'p-titan-1', name: '[Health] Begin weighted resistance training (3x/week)', completed: false, xpReward: 400, goldReward: 100, energyCost: 40, type: 'main', difficulty: 'HARD' },
-  { id: 't-ti-3b', projectId: 'p-titan-1', name: '[Health] Increase cardio to 150 mins/week', completed: false, xpReward: 350, goldReward: 75, energyCost: 30, type: 'main', difficulty: 'HARD' },
-  { id: 't-ti-3c', projectId: 'p-titan-1', name: '[Health] Track workouts (Progressive Overload)', completed: false, xpReward: 150, goldReward: 25, energyCost: 10, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ti-3a', projectId: 'p-titan-1', name: '[Health] Begin weighted resistance training (3x/week)', completed: false, xpReward: 400, goldReward: 100, energyCost: 40, type: 'main' },
+  { id: 't-ti-3b', projectId: 'p-titan-1', name: '[Health] Increase cardio to 150 mins/week', completed: false, xpReward: 350, goldReward: 75, energyCost: 30, type: 'main' },
+  { id: 't-ti-3c', projectId: 'p-titan-1', name: '[Health] Track workouts (Progressive Overload)', completed: false, xpReward: 150, goldReward: 25, energyCost: 10, type: 'main' },
 
   // High-Intensity & Recovery Mastery
-  { id: 't-ti-4a', projectId: 'p-titan-1', name: '[Health] 1 weekly HIIT/VO2 Max session', completed: false, xpReward: 300, goldReward: 50, energyCost: 35, type: 'main', difficulty: 'HARD' },
-  { id: 't-ti-4b', projectId: 'p-titan-1', name: '[Health] Establish dedicated "Active Recovery" day', completed: false, xpReward: 200, goldReward: 25, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ti-4c', projectId: 'p-titan-1', name: '[Health] Invest in coaching/program', completed: false, xpReward: 250, goldReward: 200, energyCost: 10, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ti-4a', projectId: 'p-titan-1', name: '[Health] 1 weekly HIIT/VO2 Max session', completed: false, xpReward: 300, goldReward: 50, energyCost: 35, type: 'main' },
+  { id: 't-ti-4b', projectId: 'p-titan-1', name: '[Health] Establish dedicated "Active Recovery" day', completed: false, xpReward: 200, goldReward: 25, energyCost: 15, type: 'main' },
+  { id: 't-ti-4c', projectId: 'p-titan-1', name: '[Health] Invest in coaching/program', completed: false, xpReward: 250, goldReward: 200, energyCost: 10, type: 'main' },
 
   // The Lifestyle Athlete
-  { id: 't-ti-5a', projectId: 'p-titan-1', name: '[Health] Integrate movement (rucking/sport)', completed: false, xpReward: 300, goldReward: 50, energyCost: 30, type: 'main', difficulty: 'HARD' },
-  { id: 't-ti-5b', projectId: 'p-titan-1', name: '[Health] Zero chronic pain (Mobility maintenance)', completed: false, xpReward: 500, goldReward: 100, energyCost: 20, type: 'main', difficulty: 'EPIC' },
-  { id: 't-ti-5c', projectId: 'p-titan-1', name: '[Health] Verify physical/mental energy alignment', completed: false, xpReward: 400, goldReward: 50, energyCost: 0, type: 'main', difficulty: 'EPIC' },
+  { id: 't-ti-5a', projectId: 'p-titan-1', name: '[Health] Integrate movement (rucking/sport)', completed: false, xpReward: 300, goldReward: 50, energyCost: 30, type: 'main' },
+  { id: 't-ti-5b', projectId: 'p-titan-1', name: '[Health] Zero chronic pain (Mobility maintenance)', completed: false, xpReward: 500, goldReward: 100, energyCost: 20, type: 'main' },
+  { id: 't-ti-5c', projectId: 'p-titan-1', name: '[Health] Verify physical/mental energy alignment', completed: false, xpReward: 400, goldReward: 50, energyCost: 0, type: 'main' },
 
   // --- DAILY BOUNTIES (Physical Protocol) ---
-  { id: 'b-steps', projectId: 'p-titan-1', name: 'Daily Steps Target', completed: false, xpReward: 100, goldReward: 25, energyCost: 15, type: 'daily', difficulty: 'MEDIUM' },
-  { id: 'b-stretch', projectId: 'p-titan-1', name: 'Daily Stretch Routine', completed: false, xpReward: 50, goldReward: 10, energyCost: 5, type: 'daily', difficulty: 'EASY' },
+  { id: 'b-steps', projectId: 'p-titan-1', name: 'Daily Steps Target', completed: false, xpReward: 100, goldReward: 25, energyCost: 15, type: 'daily' },
+  { id: 'b-stretch', projectId: 'p-titan-1', name: 'Daily Stretch Routine', completed: false, xpReward: 50, goldReward: 10, energyCost: 5, type: 'daily' },
 
 
   // --- TYCOON PATHWAY QUESTS ---
   // p-tycoon-1: Vault Inspection (Existing modified)
   // { id: 't-3', ... } // Already exists above (Account Audit)
-  { id: 't-ty-1a', projectId: 'p-tycoon-1', name: '[Audit] Calculate Net Worth', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ty-1a', projectId: 'p-tycoon-1', name: '[Audit] Calculate Net Worth', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main' },
 
   // p-tycoon-2: Burn Rate (1 Quest)
-  { id: 't-ty-2a', projectId: 'p-tycoon-2', name: '[Budget] Calculate Monthly Fixed Costs', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ty-2a', projectId: 'p-tycoon-2', name: '[Budget] Calculate Monthly Fixed Costs', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main' },
 
   // p-tycoon-3: Iron Reserve (3 Quests)
-  { id: 't-ty-3a', projectId: 'p-tycoon-3', name: '[Safety] Save $1,000 Emergency Fund', completed: false, xpReward: 200, goldReward: 100, energyCost: 20, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-3b', projectId: 'p-tycoon-3', name: '[Safety] Open HYSA', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-3c', projectId: 'p-tycoon-3', name: '[Safety] Automate Savings Transfer', completed: false, xpReward: 150, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ty-3a', projectId: 'p-tycoon-3', name: '[Safety] Save $1,000 Emergency Fund', completed: false, xpReward: 200, goldReward: 100, energyCost: 20, type: 'main' },
+  { id: 't-ty-3b', projectId: 'p-tycoon-3', name: '[Safety] Open HYSA', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
+  { id: 't-ty-3c', projectId: 'p-tycoon-3', name: '[Safety] Automate Savings Transfer', completed: false, xpReward: 150, goldReward: 50, energyCost: 10, type: 'main' },
 
   // Sprouts (1 Quest each)
-  { id: 't-ty-s1', projectId: 'p-tycoon-s1', name: '[Credit] Review Credit Report', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'EASY' },
-  { id: 't-ty-s2', projectId: 'p-tycoon-s2', name: '[Mindset] Read Negotiation Tactics Chapter', completed: false, xpReward: 100, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-s1', projectId: 'p-tycoon-s1', name: '[Credit] Review Credit Report', completed: false, xpReward: 100, goldReward: 50, energyCost: 10, type: 'main' },
+  { id: 't-ty-s2', projectId: 'p-tycoon-s2', name: '[Mindset] Read Negotiation Tactics Chapter', completed: false, xpReward: 100, goldReward: 50, energyCost: 15, type: 'main' },
 
   // Branch A: Active (4a - 7a)
   // 4a: Skill Minting (1 Quest)
-  { id: 't-ty-4a', projectId: 'p-tycoon-4a', name: '[Income] List Top 3 High-Value Skills', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-4a', projectId: 'p-tycoon-4a', name: '[Income] List Top 3 High-Value Skills', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
 
   // 5a: The Grand Offer (3 Quests)
-  { id: 't-ty-5a1', projectId: 'p-tycoon-5a', name: '[Offer] Draft Product/Service Offer', completed: false, xpReward: 250, goldReward: 100, energyCost: 25, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-5a2', projectId: 'p-tycoon-5a', name: '[Offer] Define Pricing Model', completed: false, xpReward: 200, goldReward: 75, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-5a3', projectId: 'p-tycoon-5a', name: '[Offer] Write Sales Headline', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-5a1', projectId: 'p-tycoon-5a', name: '[Offer] Draft Product/Service Offer', completed: false, xpReward: 250, goldReward: 100, energyCost: 25, type: 'main' },
+  { id: 't-ty-5a2', projectId: 'p-tycoon-5a', name: '[Offer] Define Pricing Model', completed: false, xpReward: 200, goldReward: 75, energyCost: 20, type: 'main' },
+  { id: 't-ty-5a3', projectId: 'p-tycoon-5a', name: '[Offer] Write Sales Headline', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
 
   // 6a: Signal Amplify (3 Quests)
-  { id: 't-ty-6a1', projectId: 'p-tycoon-6a', name: '[Marketing] Post Content', completed: false, xpReward: 200, goldReward: 100, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-6a2', projectId: 'p-tycoon-6a', name: '[Marketing] Draft Outreach Emails (5)', completed: false, xpReward: 250, goldReward: 100, energyCost: 30, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-6a3', projectId: 'p-tycoon-6a', name: '[Marketing] Identify Distribution Channels', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-6a1', projectId: 'p-tycoon-6a', name: '[Marketing] Post Content', completed: false, xpReward: 200, goldReward: 100, energyCost: 20, type: 'main' },
+  { id: 't-ty-6a2', projectId: 'p-tycoon-6a', name: '[Marketing] Draft Outreach Emails (5)', completed: false, xpReward: 250, goldReward: 100, energyCost: 30, type: 'main' },
+  { id: 't-ty-6a3', projectId: 'p-tycoon-6a', name: '[Marketing] Identify Distribution Channels', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
 
   // 7a: Archimedes Lever (3 Quests)
-  { id: 't-ty-7a1', projectId: 'p-tycoon-7a', name: '[Leverage] Hire Freelancer / Delegate', completed: false, xpReward: 300, goldReward: 0, energyCost: 10, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-7a2', projectId: 'p-tycoon-7a', name: '[Leverage] Automate 1 Process', completed: false, xpReward: 250, goldReward: 100, energyCost: 25, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-7a3', projectId: 'p-tycoon-7a', name: '[Leverage] Create SOP', completed: false, xpReward: 200, goldReward: 75, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-7a1', projectId: 'p-tycoon-7a', name: '[Leverage] Hire Freelancer / Delegate', completed: false, xpReward: 300, goldReward: 0, energyCost: 10, type: 'main' },
+  { id: 't-ty-7a2', projectId: 'p-tycoon-7a', name: '[Leverage] Automate 1 Process', completed: false, xpReward: 250, goldReward: 100, energyCost: 25, type: 'main' },
+  { id: 't-ty-7a3', projectId: 'p-tycoon-7a', name: '[Leverage] Create SOP', completed: false, xpReward: 200, goldReward: 75, energyCost: 20, type: 'main' },
 
   // Branch B: Passive (4b - 7b)
   // 4b: Ticker Tape (1 Quest)
-  { id: 't-ty-4b', projectId: 'p-tycoon-4b', name: '[Market] Read Financial News', completed: false, xpReward: 100, goldReward: 25, energyCost: 10, type: 'main', difficulty: 'EASY' },
+  { id: 't-ty-4b', projectId: 'p-tycoon-4b', name: '[Market] Read Financial News', completed: false, xpReward: 100, goldReward: 25, energyCost: 10, type: 'main' },
 
   // 5b: Compound Engine (3 Quests)
-  { id: 't-ty-5b1', projectId: 'p-tycoon-5b', name: '[Investing] Open Brokerage Account', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-5b2', projectId: 'p-tycoon-5b', name: '[Investing] Research S&P 500', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-5b3', projectId: 'p-tycoon-5b', name: '[Investing] Setup Auto-Invest', completed: false, xpReward: 250, goldReward: 100, energyCost: 15, type: 'main', difficulty: 'HARD' },
+  { id: 't-ty-5b1', projectId: 'p-tycoon-5b', name: '[Investing] Open Brokerage Account', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main' },
+  { id: 't-ty-5b2', projectId: 'p-tycoon-5b', name: '[Investing] Research S&P 500', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
+  { id: 't-ty-5b3', projectId: 'p-tycoon-5b', name: '[Investing] Setup Auto-Invest', completed: false, xpReward: 250, goldReward: 100, energyCost: 15, type: 'main' },
 
   // 6b: Loophole Logic (3 Quests)
-  { id: 't-ty-6b1', projectId: 'p-tycoon-6b', name: '[Tax] Categorize Deductions', completed: false, xpReward: 200, goldReward: 100, energyCost: 25, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-6b2', projectId: 'p-tycoon-6b', name: '[Tax] Review IRA/401k Limits', completed: false, xpReward: 150, goldReward: 50, energyCost: 10, type: 'main', difficulty: 'EASY' },
-  { id: 't-ty-6b3', projectId: 'p-tycoon-6b', name: '[Tax] Consult CPA/Tax Software', completed: false, xpReward: 300, goldReward: 100, energyCost: 20, type: 'main', difficulty: 'HARD' },
+  { id: 't-ty-6b1', projectId: 'p-tycoon-6b', name: '[Tax] Categorize Deductions', completed: false, xpReward: 200, goldReward: 100, energyCost: 25, type: 'main' },
+  { id: 't-ty-6b2', projectId: 'p-tycoon-6b', name: '[Tax] Review IRA/401k Limits', completed: false, xpReward: 150, goldReward: 50, energyCost: 10, type: 'main' },
+  { id: 't-ty-6b3', projectId: 'p-tycoon-6b', name: '[Tax] Consult CPA/Tax Software', completed: false, xpReward: 300, goldReward: 100, energyCost: 20, type: 'main' },
 
   // 7b: Exotic Vault (3 Quests)
-  { id: 't-ty-7b1', projectId: 'p-tycoon-7b', name: '[Alt] Research Crypto/Real Estate', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-7b2', projectId: 'p-tycoon-7b', name: '[Alt] Evaluate Risk Tolerance', completed: false, xpReward: 100, goldReward: 25, energyCost: 10, type: 'main', difficulty: 'EASY' },
-  { id: 't-ty-7b3', projectId: 'p-tycoon-7b', name: '[Alt] Read Whitepaper/Listing', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main', difficulty: 'MEDIUM' },
+  { id: 't-ty-7b1', projectId: 'p-tycoon-7b', name: '[Alt] Research Crypto/Real Estate', completed: false, xpReward: 150, goldReward: 50, energyCost: 15, type: 'main' },
+  { id: 't-ty-7b2', projectId: 'p-tycoon-7b', name: '[Alt] Evaluate Risk Tolerance', completed: false, xpReward: 100, goldReward: 25, energyCost: 10, type: 'main' },
+  { id: 't-ty-7b3', projectId: 'p-tycoon-7b', name: '[Alt] Read Whitepaper/Listing', completed: false, xpReward: 200, goldReward: 50, energyCost: 20, type: 'main' },
 
   // APEX: Midas Throne (5 Quests)
-  { id: 't-ty-8a', projectId: 'p-tycoon-8', name: '[Apex] Review Asset Allocation', completed: false, xpReward: 300, goldReward: 100, energyCost: 20, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-8b', projectId: 'p-tycoon-8', name: '[Apex] Update Net Worth Target', completed: false, xpReward: 300, goldReward: 100, energyCost: 15, type: 'main', difficulty: 'MEDIUM' },
-  { id: 't-ty-8c', projectId: 'p-tycoon-8', name: '[Apex] Rebalance Portfolio', completed: false, xpReward: 500, goldReward: 200, energyCost: 30, type: 'main', difficulty: 'EPIC' },
-  { id: 't-ty-8d', projectId: 'p-tycoon-8', name: '[Apex] 5-Year Vision Draft', completed: false, xpReward: 400, goldReward: 100, energyCost: 40, type: 'main', difficulty: 'HARD' },
-  { id: 't-ty-8e', projectId: 'p-tycoon-8', name: '[Apex] Celebrate Milestone', completed: false, xpReward: 1000, goldReward: 500, energyCost: 50, type: 'main', difficulty: 'EPIC' },
+  { id: 't-ty-8a', projectId: 'p-tycoon-8', name: '[Apex] Review Asset Allocation', completed: false, xpReward: 300, goldReward: 100, energyCost: 20, type: 'main' },
+  { id: 't-ty-8b', projectId: 'p-tycoon-8', name: '[Apex] Update Net Worth Target', completed: false, xpReward: 300, goldReward: 100, energyCost: 15, type: 'main' },
+  { id: 't-ty-8c', projectId: 'p-tycoon-8', name: '[Apex] Rebalance Portfolio', completed: false, xpReward: 500, goldReward: 200, energyCost: 30, type: 'main' },
+  { id: 't-ty-8d', projectId: 'p-tycoon-8', name: '[Apex] 5-Year Vision Draft', completed: false, xpReward: 400, goldReward: 100, energyCost: 40, type: 'main' },
+  { id: 't-ty-8e', projectId: 'p-tycoon-8', name: '[Apex] Celebrate Milestone', completed: false, xpReward: 1000, goldReward: 500, energyCost: 50, type: 'main' },
 ];
 
 export const useGameStore = create<GameState>()(
@@ -544,8 +544,9 @@ export const useGameStore = create<GameState>()(
         }
         // ------------------------
 
-        // Economy Integration
-        let { gold, sp } = calculateRewards(task.difficulty, false, activePerks);
+        // Fixed Rewards (Phase 5)
+        let gold = FIXED_GOLD_REWARD;
+        let sp = 0; // Tasks never give skill points
 
         // --- GREED I SKILL NODE (branch_3-1) ---
         // +5% Gold from all Tasks
