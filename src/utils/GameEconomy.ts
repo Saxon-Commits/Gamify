@@ -1,12 +1,8 @@
-import { Task, QuestDifficulty, AvatarPerks, InventoryItem } from '../../types';
+import { Task, AvatarPerks, InventoryItem } from '../../types';
 
-export const GOLD_REWARDS: Record<QuestDifficulty, number> = {
-    TRIVIAL: 1,
-    EASY: 5,
-    MEDIUM: 15,
-    HARD: 40,
-    EPIC: 100
-};
+// Fixed rewards for all tasks
+export const FIXED_XP_REWARD = 100;
+export const FIXED_GOLD_REWARD = 25;
 
 export type ShopItem = Omit<InventoryItem, 'acquiredAt' | 'quantity'>;
 
@@ -26,26 +22,6 @@ export const SHOP_ITEMS: ShopItem[] = [
     }
 ];
 
-
-
-/**
- * Calculates rewards for a completed task.
- * Enforces:
- * - NO Skill Points for daily tasks (handled by caller passing isProject=false)
- * - Fixed Gold Rewards
- */
-export const calculateRewards = (difficulty: QuestDifficulty, isProject: boolean = false, perks?: AvatarPerks) => {
-    let gold = GOLD_REWARDS[difficulty];
-    let sp = isProject ? 2 : 0;
-
-    // Apply Perks
-    if (perks) {
-        if (perks.goldModifier) gold = Math.round(gold * (1 + perks.goldModifier));
-        // XP modifier is handled where XP is awarded
-    }
-
-    return { gold, sp };
-};
 
 export const calculateGambitChance = (successChance: number, perks?: AvatarPerks) => {
     let finalChance = successChance;
