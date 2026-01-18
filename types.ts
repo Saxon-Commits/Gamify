@@ -143,14 +143,6 @@ export interface GameSettings {
   theme?: 'light' | 'dark';
 }
 
-export interface VitalityData {
-  activityLevel: string;
-  fitnessGoal: string;
-  customFitnessGoal: string;
-  stepGoal: string;
-  stretchCommitment: boolean;
-  nutritionGoal?: string;
-}
 
 export type AvatarRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'MYSTIC' | 'LEGENDARY';
 export type EquipmentSlot = 'WEAPON' | 'ARMOR' | 'ACCESSORY';
@@ -187,7 +179,6 @@ export interface GameState {
   activeBuffs: ActiveBuff[];
   hoveredNode: any | null;
   verificationNode?: any | null;
-  vitality: VitalityData;
   isTutorialActive: boolean;
 
   mostWantedTaskId?: string; // ID of the task designated as Most Wanted (reset daily)
@@ -209,7 +200,6 @@ export interface GameState {
   equipItem: (slot: 'mainHand' | 'armor' | 'head' | 'accessory', itemId: string | null) => void;
   useItem: (itemId: string) => { success: boolean; message: string };
 
-  setVitalityData: (data: Partial<VitalityData>) => void;
   setHoveredNode: (node: any | null) => void;
   setVerificationNode?: (node: any | null) => void;
 

@@ -65,14 +65,14 @@ export const SyncManager: React.FC = () => {
                 // Let's manually pick the persistable parts to be safe and efficient.
                 const {
                     stats, settings, projects, tasks, skillNodes, skillEdges,
-                    vitality, isTutorialActive, journalEntries, inventory,
-                    cart, purchaseHistory, activityLog
+                    isTutorialActive, journalEntries, inventory,
+                    cart, purchaseHistory
                 } = state;
 
                 const payload = {
                     stats, settings, projects, tasks, skillNodes, skillEdges,
-                    vitality, isTutorialActive, journalEntries, inventory,
-                    cart, purchaseHistory, activityLog
+                    isTutorialActive, journalEntries, inventory,
+                    cart, purchaseHistory
                 };
 
                 console.log("☁️ Auto-Saving to Cloud...");

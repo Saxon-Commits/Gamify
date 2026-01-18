@@ -651,7 +651,7 @@ export const BountyColumn: React.FC<{
 export const QuestLog: React.FC = () => {
   const navigate = useNavigate();
   /* LEFT SIDEBAR - Character & Merchant */
-  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, vitality, createTask, moveTask, reorderTasks, addToCart, updateTask, mostWantedTaskId, setMostWantedTask, skillNodes } = useGameStore();
+  const { projects, tasks, completeTask, completeProject, stats, addTasks, addProjects, createTask, moveTask, reorderTasks, addToCart, updateTask, mostWantedTaskId, setMostWantedTask, skillNodes } = useGameStore();
   const { user } = useUser();
   const firstName = user?.firstName || stats.name;
 

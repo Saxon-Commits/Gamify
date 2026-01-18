@@ -113,6 +113,15 @@ Completed cleanup: [task name]
 - [Any observations or follow-up suggestions]
 ```
 
+**Update `.agent/MASTER_TESTING.md`:**
+```markdown
+### [Cleanup Name] - Modified by Gardener ([Date])
+- [x] Test that removed feature doesn't break app
+- [ ] Retest affected features: [list]
+```
+
+Ensures cleanup doesn't break existing functionality.
+
 ---
 
 ### 6. Update CURRENT_WORK.md

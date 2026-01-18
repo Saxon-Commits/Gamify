@@ -98,6 +98,16 @@ Implemented [feature name].
 Ready for review!
 ```
 
+**Update `.agent/MASTER_TESTING.md`:**
+```markdown
+### [Feature Name] - Added by Builder ([Date])
+- [ ] Test requirement 1
+- [ ] Test requirement 2
+- [ ] Test requirement 3
+```
+
+This ensures the pre-launch testing checklist stays current.
+
 ---
 
 ### 6. Clean Up

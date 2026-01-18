@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { get, set, del } from 'idb-keyval';
-import { GameState, JournalEntry, Stats, GameSettings, VitalityData, Project, QuestDifficulty, Task, InventoryItem, ActiveBuff } from '../types';
+import { GameState, JournalEntry, Stats, GameSettings, Project, QuestDifficulty, Task, InventoryItem, ActiveBuff } from '../types';
 import { calculateXpToNextLevel, calculateTotalXpForLevel } from '../src/utils/gameLogic';
 import { calculateRewards, calculateGambitChance, SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
@@ -32,13 +32,6 @@ const INITIAL_STATS: Stats = {
 
 // ... existing code ...
 
-const INITIAL_VITALITY: VitalityData = {
-  activityLevel: '',
-  fitnessGoal: '',
-  customFitnessGoal: '',
-  stepGoal: '',
-  stretchCommitment: false,
-};
 
 const INITIAL_SETTINGS: GameSettings = {
   musicVolume: 0.4,
@@ -193,7 +186,6 @@ export const useGameStore = create<GameState>()(
       tasks: INITIAL_TASKS,
       skillNodes: INITIAL_NODES,
       skillEdges: INITIAL_EDGES,
-      vitality: INITIAL_VITALITY,
       isTutorialActive: false,
       isSidePanelOpen: false,
       journalEntries: [],
@@ -1097,11 +1089,6 @@ export const useGameStore = create<GameState>()(
 
 
 
-      setVitalityData: (data) => {
-        set((state) => ({
-          vitality: { ...state.vitality, ...data }
-        }));
-      },
 
       setHoveredNode: (node) => set({ hoveredNode: node }),
 
