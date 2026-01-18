@@ -511,7 +511,6 @@ export const useGameStore = create<GameState>()(
       inventory: [],
       cart: [],
       purchaseHistory: [],
-      activityLog: [],
       activeBuffs: [],
       hoveredNode: null,
 
@@ -584,7 +583,7 @@ export const useGameStore = create<GameState>()(
       },
 
       completeTask: (taskId) => {
-        const { tasks, stats, activityLog, inventory } = get();
+        const { tasks, stats, inventory } = get();
         const task = tasks.find(t => t.id === taskId);
         if (!task || task.completed || stats.energy < task.energyCost) return;
 
@@ -733,15 +732,6 @@ export const useGameStore = create<GameState>()(
           skillPointsGained++;
         }
 
-        // Log Activity (Heatmap)
-        const today = new Date().toISOString().split('T')[0];
-        let newActivityLog = [...(activityLog || [])];
-        const existingLogIndex = newActivityLog.findIndex(l => l.date === today);
-        if (existingLogIndex >= 0) {
-          newActivityLog = newActivityLog.map((l, i) => i === existingLogIndex ? { ...l, xp: l.xp + xpGained } : l);
-        } else {
-          newActivityLog.push({ date: today, xp: xpGained });
-        }
 
         // Trigger Toasts (Staggered)
         const { addToast } = useToastStore.getState();
@@ -767,7 +757,6 @@ export const useGameStore = create<GameState>()(
             dailyTaskCount: (stats.dailyTaskCount || 0) + 1
           },
           tasks: tasks.map(t => t.id === taskId ? { ...t, completed: true, speedRunBonusClaimed: t.speedRunBonusClaimed || speedRunBonusApplied } : t),
-          activityLog: newActivityLog,
           taskCompletionHistory: newTaskHistory
         });
 
@@ -776,22 +765,13 @@ export const useGameStore = create<GameState>()(
       },
 
       completeProject: (projectId) => {
-        const { projects, stats, activityLog } = get();
+        const { projects, stats } = get();
 
         // Toast
         const { addToast } = useToastStore.getState();
         addToast({ type: 'gold', amount: 500, message: 'Project Complete' });
         addToast({ type: 'gems', amount: 2, message: 'Realm Shards' });
 
-        // Log Activity (Heatmap)
-        const today = new Date().toISOString().split('T')[0];
-        let newActivityLog = [...(activityLog || [])];
-        const existingLogIndex = newActivityLog.findIndex(l => l.date === today);
-        if (existingLogIndex >= 0) {
-          newActivityLog = newActivityLog.map((l, i) => i === existingLogIndex ? { ...l, xp: l.xp + 50 } : l);
-        } else {
-          newActivityLog.push({ date: today, xp: 50 });
-        }
 
         // Projects fixed reward: 2 SP, 500 Gold
         set({
@@ -800,8 +780,7 @@ export const useGameStore = create<GameState>()(
             ...stats,
             skillPoints: stats.skillPoints + 2,
             gold: stats.gold + 500
-          },
-          activityLog: newActivityLog
+          }
         });
       },
 
@@ -1235,7 +1214,7 @@ export const useGameStore = create<GameState>()(
         }
 
         set((state) => {
-          const { stats, activityLog } = state;
+          const { stats } = state;
 
           let updatedLevel = stats.level;
           let updatedXp = stats.xp + xpAmount;
@@ -1250,15 +1229,6 @@ export const useGameStore = create<GameState>()(
             skillPointsGained++;
           }
 
-          // Log Activity
-          const today = new Date().toISOString().split('T')[0];
-          let newActivityLog = [...(activityLog || [])];
-          const existingLogIndex = newActivityLog.findIndex(l => l.date === today);
-          if (existingLogIndex >= 0) {
-            newActivityLog = newActivityLog.map((l, i) => i === existingLogIndex ? { ...l, xp: l.xp + xpAmount } : l);
-          } else {
-            newActivityLog.push({ date: today, xp: xpAmount });
-          }
 
           return {
             stats: {
@@ -1268,8 +1238,7 @@ export const useGameStore = create<GameState>()(
               level: updatedLevel,
               xpToNext: updatedXpToNext,
               skillPoints: stats.skillPoints + skillPointsGained
-            },
-            activityLog: newActivityLog
+            }
           };
         });
       },

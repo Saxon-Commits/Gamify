@@ -239,9 +239,9 @@ export interface GameState {
   addItem: (itemId: string, quantity?: number) => void;
   // removeItem: (itemId: string) => void; // Potential future need
 
+
   purchaseHistory: { itemId: string; timestamp: string }[];
   taskCompletionHistory?: number[]; // Timestamps of accumulated task completions (for Haste skill)
-  activityLog: { date: string; xp: number }[]; // For Heatmap
 
 
   confirmHonorPledge: () => void;
