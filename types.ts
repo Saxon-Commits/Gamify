@@ -1,5 +1,5 @@
 
-export type QuestDifficulty = 'TRIVIAL' | 'EASY' | 'MEDIUM' | 'HARD' | 'EPIC';
+
 export type TaskType = 'main' | 'side' | 'daily' | 'guild';
 
 export interface Task {
@@ -8,7 +8,6 @@ export interface Task {
   name: string;
   description?: string; // Added description
   type: TaskType;
-  difficulty: QuestDifficulty;
   completed: boolean;
   xpReward: number;
   goldReward: number;
@@ -37,7 +36,6 @@ export interface Project {
   id: string;
   name: string;
   description: string;
-  difficulty: QuestDifficulty;
   completed: boolean;
   hp?: number;
   maxHp?: number;
