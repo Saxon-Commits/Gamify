@@ -145,7 +145,7 @@ export interface GameSettings {
 
 
 export type AvatarRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'MYSTIC' | 'LEGENDARY';
-export type EquipmentSlot = 'WEAPON' | 'ARMOR' | 'ACCESSORY';
+export type EquipmentSlot = 'ARMOR' | 'ACCESSORY';
 
 export interface InventoryItem {
   id: string;

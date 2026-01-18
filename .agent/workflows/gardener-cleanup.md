@@ -92,7 +92,8 @@ git commit -m "[Gardener] Remove unused prestigeLevel prop"
 
 ### 5. Handoff to Overseer
 
-**Update HANDOFF_NOTES.md:**
+**Update HANDOFF_NOTES.md:** ⚠️ **MANDATORY - DO NOT SKIP**
+
 ```markdown
 ## Gardener → Overseer ([Date])
 
@@ -111,6 +112,7 @@ Completed cleanup: [task name]
 
 **Notes:**
 - [Any observations or follow-up suggestions]
+- [Anything incomplete or deferred]
 ```
 
 **Update `.agent/MASTER_TESTING.md`:**
@@ -119,6 +121,8 @@ Completed cleanup: [task name]
 - [x] Test that removed feature doesn't break app
 - [ ] Retest affected features: [list]
 ```
+
+**⚠️ CRITICAL:** If you skip handoff notes, your work is INCOMPLETE. Overseer cannot review what they don't know about.
 
 Ensures cleanup doesn't break existing functionality.
 

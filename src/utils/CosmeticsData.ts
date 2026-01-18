@@ -25,7 +25,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         acquiredAt: '',
         quantity: 1,
         imageUrl: '/avatars/cyber_knight/base.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'dark_wizard',
@@ -38,7 +38,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 2000,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/dark_wizard_base.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'benevolent_wizard',
@@ -51,7 +51,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 800,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/benevolent_wizard.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'seraph_knight',
@@ -64,7 +64,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 2500,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/seraph_knight.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'warlord',
@@ -77,7 +77,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 1800,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/warlord.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'geisha_android',
@@ -90,7 +90,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 1200,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/geisha_android.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'xv_android',
@@ -103,7 +103,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 1000,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/xv_android.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'toxic_alchemist',
@@ -116,7 +116,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         premiumPrice: 900,
         currency: 'GEMS',
         imageUrl: '/avatars/premium/toxic_alchemist.png',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'grand_wizard',
@@ -133,7 +133,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         imageUrl: '/avatars/grand_wizard/grand_wizard_a_void_cloak.png',
         videoUrl: '/avatars/grand_wizard/idle.mp4',
         flavor: 'Unlimited power.',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
 
 
@@ -151,7 +151,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         quantity: 1, // Will be 0 until unlocked
         imageUrl: '/avatars/mastery/scribe_master.png',
         flavor: 'Written in stone.',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'avatar_master_blacksmith',
@@ -166,7 +166,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         quantity: 1,
         imageUrl: '/avatars/mastery/master_blacksmith.png',
         flavor: 'Strike while hot.',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
     {
         id: 'avatar_master_bounty_hunter',
@@ -181,7 +181,7 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
         quantity: 1,
         imageUrl: '/avatars/mastery/master_bounty_hunter.png',
         flavor: 'Paid in full.',
-        slots: ['WEAPON', 'ARMOR', 'ACCESSORY']
+        slots: ['ARMOR', 'ACCESSORY']
     },
 
 
@@ -405,76 +405,6 @@ export const COSMETIC_SHOP_ITEMS: InventoryItem[] = [
     }
 ] as InventoryItem[];
 
-export const NEW_WEAPONS: InventoryItem[] = [
-    // Weapons Orphaned/Hidden as per request
-    /*
-    {
-        id: 'weapon-iron-broadsword',
-        name: 'Iron Broadsword',
-        description: 'A sturdy blade for a reliable warrior.',
-        type: 'IN_GAME',
-        rarity: 'COMMON',
-        cost: 100,
-        currency: 'GOLD',
-        acquiredAt: '',
-        quantity: 1,
-        slots: ['WEAPON'],
-        imageUrl: '/items/iron broadsword.png',
-    },
-    {
-        id: 'weapon-oak-longbow',
-        name: 'Oak Longbow',
-        description: 'Crafted from the finest ancient oak.',
-        type: 'IN_GAME',
-        rarity: 'COMMON',
-        cost: 150,
-        currency: 'GOLD',
-        acquiredAt: '',
-        quantity: 1,
-        slots: ['WEAPON'],
-        imageUrl: '/items/oak longbow.png'
-    },
-    {
-        id: 'weapon-battle-axe',
-        name: 'Battle Axe',
-        description: 'Heavy hitter for heavy problems.',
-        type: 'IN_GAME',
-        rarity: 'UNCOMMON',
-        cost: 250,
-        currency: 'GOLD',
-        acquiredAt: '',
-        quantity: 1,
-        slots: ['WEAPON'],
-        imageUrl: '/items/battle axe.png',
-    },
-    {
-        id: 'weapon-crystal-staff',
-        name: 'Crystal Staff',
-        description: 'Channels raw arcane energy.',
-        type: 'IN_GAME',
-        rarity: 'RARE',
-        cost: 500,
-        currency: 'GOLD',
-        acquiredAt: '',
-        quantity: 1,
-        slots: ['WEAPON'],
-        imageUrl: '/items/crystal staff.png',
-    },
-    {
-        id: 'weapon-rogues-dagger',
-        name: "Rogue's Dagger",
-        description: 'Swift and silent.',
-        type: 'IN_GAME',
-        rarity: 'UNCOMMON',
-        cost: 200,
-        currency: 'GOLD',
-        acquiredAt: '',
-        quantity: 1,
-        slots: ['WEAPON'],
-        imageUrl: "/items/rogue's dagger.png",
-    },
-    */
-];
 
 export const NEW_COMPANIONS: InventoryItem[] = [
     // Timber Wolf Removed
@@ -682,4 +612,4 @@ export const STARTER_AVATARS: InventoryItem[] = [
     }
 ];
 
-export const ALL_COSMETIC_ITEMS = [...COSMETIC_SHOP_ITEMS, ...NEW_WEAPONS, ...NEW_COMPANIONS, ...STARTER_AVATARS];
+export const ALL_COSMETIC_ITEMS = [...COSMETIC_SHOP_ITEMS, ...NEW_COMPANIONS, ...STARTER_AVATARS];

@@ -18,12 +18,12 @@ This file tracks what each agent is ACTIVELY working on RIGHT NOW. Update this B
 
 ## 🌱 Gardener
 **Status:** ACTIVE  
-**Working on:** Phase 3 - Potion/Item Effects Deletion (LOW RISK)  
-**Files locked:** src/utils/itemEffects.ts, store/useGameStore.ts  
-**Started:** Jan 19, 10:21 AM  
-**Expected completion:** Jan 19, 10:45 AM
+**Working on:** Phase 4 - Shop Items + Weapon Zombie Code Cleanup (LOW RISK)  
+**Files locked:** src/utils/GameEconomy.ts, src/utils/CosmeticsData.ts, types.ts  
+**Started:** Jan 19, 10:35 AM  
+**Expected completion:** Jan 19, 11:15 AM
 
-**Notes:** Quick cleanup - item effects were never integrated into game logic
+**Notes:** Removing 8 unused potion items + weapon references. MUST add handoff notes when done.
 
 ---
 
