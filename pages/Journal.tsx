@@ -6,6 +6,7 @@ import { JournalEntry } from '../types';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
 import { JournalReader } from '../components/journal/JournalReader';
+import { JournalEditor } from '../components/journal/JournalEditor';
 
 const QuickLogWidget = () => {
     const { addJournalEntry } = useGameStore();
@@ -371,48 +372,14 @@ export const Journal: React.FC = () => {
                     <div className="absolute inset-0 pointer-events-none opacity-30 dark:opacity-10 bg-[url('https://www.transparenttextures.com/patterns/aged-paper.png')] mix-blend-multiply dark:mix-blend-overlay"></div>
 
                     {isEditing ? (
-                        <div className="relative z-10 flex flex-col h-full text-stone-900 dark:text-stone-300 font-serif">
-                            {/* Editing Header */}
-                            <div className="p-4 border-b-2 border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-black/20 flex justify-between items-center gap-2 lg:gap-4">
-                                <button
-                                    onClick={() => { setIsEditing(false); setSelectedEntry(null); }}
-                                    className="lg:hidden p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-lg text-stone-500"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <input
-                                    type="text"
-                                    placeholder="Entry Title"
-                                    value={editTitle}
-                                    onChange={(e) => setEditTitle(e.target.value)}
-                                    className="flex-1 bg-transparent text-3xl font-bold text-stone-900 dark:text-stone-100 outline-none placeholder:text-stone-400 dark:placeholder:text-stone-600"
-                                    autoFocus
-                                />
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={handleCancel}
-                                        className="p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-lg text-stone-500 transition-colors"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                    <button
-                                        onClick={handleSave}
-                                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold font-sans transition-colors"
-                                    >
-                                        <Save size={18} />
-                                        <span>Save</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Editor */}
-                            <div className="flex-1 overflow-hidden p-4">
-                                <RichTextEditor
-                                    value={editContent}
-                                    onChange={setEditContent}
-                                />
-                            </div>
-                        </div>
+                        <JournalEditor
+                            title={editTitle}
+                            content={editContent}
+                            onTitleChange={setEditTitle}
+                            onContentChange={setEditContent}
+                            onSave={handleSave}
+                            onCancel={handleCancel}
+                        />
                     ) : selectedEntry ? (
                         <JournalReader
                             entry={selectedEntry}
