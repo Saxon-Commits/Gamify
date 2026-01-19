@@ -36,8 +36,6 @@ export interface Project {
   name: string;
   description: string;
   completed: boolean;
-  hp?: number;
-  maxHp?: number;
   icon?: string; // Custom icon image path
   backgroundImage?: string; // For Foundations Carousel
   allowSubmissions?: boolean;

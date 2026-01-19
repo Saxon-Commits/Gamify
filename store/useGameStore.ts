@@ -39,31 +39,31 @@ import { generateSkillTree } from '../src/utils/SkillTreeUtils';
 const { nodes: INITIAL_NODES, edges: INITIAL_EDGES } = generateSkillTree();
 
 export const INITIAL_PROJECTS: Project[] = [
-  { id: 'col-todo', name: 'To-Do', description: 'General Tasks.', completed: false, hp: 500, maxHp: 500, icon: '/images/ui/heart_icon.png', backgroundImage: '/backgrounds/vitality_bg.png' },
-  { id: 'col-habit', name: 'Habits', description: 'Daily Routines.', completed: false, hp: 100, maxHp: 100, backgroundImage: '/backgrounds/vault_bg.png' },
+  { id: 'col-todo', name: 'To-Do', description: 'General Tasks.', completed: false, icon: '/images/ui/heart_icon.png', backgroundImage: '/backgrounds/vitality_bg.png' },
+  { id: 'col-habit', name: 'Habits', description: 'Daily Routines.', completed: false, backgroundImage: '/backgrounds/vault_bg.png' },
 
   // Guild Column (Pseudo-Project)
-  { id: 'col-guild', name: "Guild", description: 'Community Tasks.', completed: false, hp: 100, maxHp: 100, backgroundImage: '/backgrounds/castle_bg.png' },
+  { id: 'col-guild', name: "Guild", description: 'Community Tasks.', completed: false, backgroundImage: '/backgrounds/castle_bg.png' },
 
   // --- TYCOON PATHWAY PROJECTS (Legacy/Active) ---
-  { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false, hp: 300, maxHp: 300 },
-  { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false, hp: 100, maxHp: 100 },
+  { id: 'p-tycoon-3', name: 'Iron Reserve', description: 'Safety Net.', completed: false },
+  { id: 'p-tycoon-s1', name: 'Credit Hacker', description: 'Leveraging Score.', completed: false },
   // 3: Most Wanted (Bounty Hunter)
   // Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.
-  { id: 'p-most-wanted', name: 'Most Wanted', description: 'Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.', completed: false, hp: 100, maxHp: 100 },
-  { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false, hp: 100, maxHp: 100 },
+  { id: 'p-most-wanted', name: 'Most Wanted', description: 'Designate 1 Task as "Most Wanted". +10% XP for 24h on completion.', completed: false },
+  { id: 'p-tycoon-s2', name: 'Psych Eval', description: 'Negotiation Psychology.', completed: false },
   // Active Branch
-  { id: 'p-tycoon-4a', name: 'Skill Minting', description: 'Value Definition.', completed: false, hp: 200, maxHp: 200 },
-  { id: 'p-tycoon-5a', name: 'The Grand Offer', description: 'Offer Creation.', completed: false, hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-6a', name: 'Signal Amplify', description: 'Distribution.', completed: false, hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-7a', name: 'Archimedes Lever', description: 'Leverage.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-4a', name: 'Skill Minting', description: 'Value Definition.', completed: false },
+  { id: 'p-tycoon-5a', name: 'The Grand Offer', description: 'Offer Creation.', completed: false },
+  { id: 'p-tycoon-6a', name: 'Signal Amplify', description: 'Distribution.', completed: false },
+  { id: 'p-tycoon-7a', name: 'Archimedes Lever', description: 'Leverage.', completed: false },
   // Passive Branch
-  { id: 'p-tycoon-4b', name: 'Ticker Tape', description: 'Market Literacy.', completed: false, hp: 200, maxHp: 200 },
-  { id: 'p-tycoon-5b', name: 'Compound Engine', description: 'Index Investing.', completed: false, hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-6b', name: 'Loophole Logic', description: 'Tax Efficiency.', completed: false, hp: 500, maxHp: 500 },
-  { id: 'p-tycoon-7b', name: 'Exotic Vault', description: 'Alternative Assets.', completed: false, hp: 500, maxHp: 500 },
+  { id: 'p-tycoon-4b', name: 'Ticker Tape', description: 'Market Literacy.', completed: false },
+  { id: 'p-tycoon-5b', name: 'Compound Engine', description: 'Index Investing.', completed: false },
+  { id: 'p-tycoon-6b', name: 'Loophole Logic', description: 'Tax Efficiency.', completed: false },
+  { id: 'p-tycoon-7b', name: 'Exotic Vault', description: 'Alternative Assets.', completed: false },
   // Apex
-  { id: 'p-tycoon-8', name: 'Midas Throne', description: 'Capital Sovereign.', completed: false, hp: 1000, maxHp: 1000 },
+  { id: 'p-tycoon-8', name: 'Midas Throne', description: 'Capital Sovereign.', completed: false },
 ];
 
 export const INITIAL_TASKS: Task[] = [
