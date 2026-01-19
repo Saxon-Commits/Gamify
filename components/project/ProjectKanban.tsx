@@ -3,7 +3,7 @@ import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useS
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import { Task } from '../../types';
-import { SortableQuestCard } from '../../pages/QuestLog';
+import { SortableQuestCard } from '../questlog/QuestCard';
 import { useGameStore } from '../../store/useGameStore';
 
 interface KanbanColumnProps {
