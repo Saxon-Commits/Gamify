@@ -5,6 +5,7 @@ import { useToastStore } from '../store/useToastStore';
 import { JournalEntry } from '../types';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
+import { JournalReader } from '../components/journal/JournalReader';
 
 const QuickLogWidget = () => {
     const { addJournalEntry } = useGameStore();
@@ -413,66 +414,12 @@ export const Journal: React.FC = () => {
                             </div>
                         </div>
                     ) : selectedEntry ? (
-                        <div className="relative z-10 flex flex-col h-full text-stone-900 dark:text-stone-300 font-serif">
-                            {/* Header */}
-                            <div className="p-8 border-b-2 border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-black/20 flex justify-between items-start">
-                                <button
-                                    onClick={() => setSelectedEntry(null)}
-                                    className="lg:hidden absolute top-4 left-4 p-2 hover:bg-stone-200 dark:hover:bg-stone-800 rounded-lg text-stone-500 z-20"
-                                >
-                                    <ChevronLeft size={24} />
-                                </button>
-                                <div className="pt-8 lg:pt-0">
-                                    <div className="flex items-center gap-4 mb-4 text-stone-500 dark:text-stone-500 text-sm font-sans uppercase tracking-widest">
-                                        <span className="flex items-center gap-1.5">
-                                            <Calendar size={14} />
-                                            {new Date(selectedEntry.date).toLocaleString()}
-                                        </span>
-                                        <span className="w-1 h-1 bg-stone-400 rounded-full" />
-                                        <span className="flex items-center gap-1.5">
-                                            <Folder size={14} />
-                                            {selectedEntry.folder}
-                                        </span>
-                                    </div>
-                                    <h1 className="text-4xl font-bold text-stone-900 dark:text-stone-100 leading-tight">
-                                        {selectedEntry.title}
-                                    </h1>
-                                    {selectedEntry.tags.length > 0 && (
-                                        <div className="flex gap-2 mt-4">
-                                            {selectedEntry.tags.map(tag => (
-                                                <span key={tag} className="px-2 py-1 bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 rounded text-xs font-sans font-bold uppercase tracking-wider">
-                                                    #{tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={(e) => handleDelete(selectedEntry.id, e)}
-                                        className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg text-sm font-bold font-sans transition-colors flex items-center gap-2"
-                                    >
-                                        <Trash2 size={16} />
-                                        <span>Delete</span>
-                                    </button>
-                                    <button
-                                        onClick={() => handleEdit(selectedEntry)}
-                                        className="px-4 py-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-lg text-sm font-bold font-sans transition-colors flex items-center gap-2"
-                                    >
-                                        <FileText size={16} />
-                                        <span>Edit</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Content */}
-                            <div className="flex-1 overflow-hidden p-4">
-                                <RichTextEditor
-                                    value={selectedEntry.content}
-                                    readOnly={true}
-                                />
-                            </div>
-                        </div>
+                        <JournalReader
+                            entry={selectedEntry}
+                            onEdit={() => handleEdit(selectedEntry)}
+                            onDelete={(e) => handleDelete(selectedEntry.id, e)}
+                            onBack={() => setSelectedEntry(null)}
+                        />
                     ) : (
                         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-stone-400 p-8 text-center">
                             <Book size={64} className="mb-4 opacity-20" />
