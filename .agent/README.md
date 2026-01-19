@@ -1,7 +1,7 @@
 # Agent Coordination System
 **Last Updated:** January 19, 2026
 
-This folder coordinates work between 6 AI agents helping build XP Focus. Read this FIRST before starting any work.
+This folder coordinates work between 7 AI agents helping build XP Focus. Read this FIRST before starting any work.
 
 ## 📚 Quick Start
 
@@ -11,10 +11,11 @@ This folder coordinates work between 6 AI agents helping build XP Focus. Read th
 4. **Update CURRENT_WORK.md** - Log what you're doing
 5. **Leave HANDOFF_NOTES.md** - Tell next agent what you did
 
-## 🤖 The 6 Agents
+## 🤖 The 7 Agents
 
 | Agent | Role | Use When |
 |-------|------|----------|
+| **Architect** 🏗️ | Architecture analysis | Evaluating system structure, planning refactors |
 | **Builder** 🔨 | Feature development | Adding features, fixing bugs |
 | **Gardener** 🌱 | Code cleanup | Refactoring, documentation, debt |
 | **Overseer** 👁️ | Quality assurance | Reviews, audits, planning |
@@ -23,6 +24,10 @@ This folder coordinates work between 6 AI agents helping build XP Focus. Read th
 | **Growth Marketer** 📈 | Audience & marketing | Social media, launch, community |
 
 ## 📋 File Ownership (Primary Responsibility)
+
+**Architect owns:**
+- Architecture analysis reports in `brain/`
+- System design proposals
 
 **Builder owns:**
 - `pages/`, `components/`, `convex/`
