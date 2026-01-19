@@ -287,7 +287,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
       setIsExpanded(true);
       setName(initialData.name);
       setDescription(initialData.description || '');
-      setDifficulty(initialData.difficulty);
       setCategory(initialData.projectId as any);
       setFrequency(initialData.frequency || 'once');
       setDeadline(formatDeadline(initialData.deadline));
@@ -304,9 +303,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
   const frequencies = ['once', 'daily', 'weekly', 'monthly'];
 
   // Default rewards based on difficulty
-
-
-
   const addSubtask = () => {
     if (!newSubtask.trim()) return;
     setSubtasks([...subtasks, { id: crypto.randomUUID(), text: newSubtask, completed: false }]);
