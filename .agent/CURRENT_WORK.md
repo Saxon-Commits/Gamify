@@ -17,13 +17,13 @@ This file tracks what each agent is ACTIVELY working on RIGHT NOW. Update this B
 ---
 
 ## 🌱 Gardener
-**Status:** COMPLETE  
-**Working on:** Phase 4 - Shop Items + Weapon Zombie Code Cleanup (DONE)  
-**Files locked:** None  
-**Started:** Jan 19, 10:35 AM  
-**Expected completion:** Jan 19, 11:15 AM
+**Status:** ACTIVE  
+**Working on:** Phase 5 - Energy + Difficulty Removal (⚠️ HIGH RISK)  
+**Files locked:** types.ts, store/useGameStore.ts, src/utils/GameEconomy.ts, pages/QuestLog.tsx  
+**Started:** Jan 19, 10:54 AM  
+**Expected completion:** Jan 19, 1:00 PM
 
-**Notes:** Phase 4 complete - Weapon code deleted, shop items already cleaned. Adding handoff notes now.
+**Notes:** ⚠️ HIGHEST RISK PHASE - Core gameplay changes. Testing after EVERY change. Will STOP if anything breaks.
 
 ---
 

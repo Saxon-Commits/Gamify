@@ -196,7 +196,6 @@ export interface GameState {
   setHoveredNode: (node: any | null) => void;
   setVerificationNode?: (node: any | null) => void;
 
-  resetEnergy: () => void;
   updateSettings: (settings: Partial<GameSettings>) => void;
   setName: (name: string) => void;
   setMusicVolume: (volume: number) => void;
