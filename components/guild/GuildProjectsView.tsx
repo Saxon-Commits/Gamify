@@ -83,7 +83,6 @@ export const GuildProjectsView: React.FC<GuildProjectsViewProps> = ({ guildId, i
                     projectId: projectId,
                     completed: false,
                     type: 'guild',
-                    energyCost: 10
                 }));
                 addTasks(mappedTasks);
                 alert("Joined Project! Tasks added to your Quest Log.");

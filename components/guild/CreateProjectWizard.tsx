@@ -22,7 +22,6 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({ guildI
         title: '',
         description: '',
         targetTasks: 10,
-        difficulty: 'MEDIUM',
 
         // Treasury / Rewards
         rewardType: 'FLAT' as 'FLAT' | 'RANKED',
@@ -174,7 +173,6 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({ guildI
                                     <label className="block text-sm font-bold text-slate-400 mb-2">Difficulty</label>
                                     <select
                                         value={formData.difficulty}
-                                        onChange={e => setFormData({ ...formData, difficulty: e.target.value })}
                                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
                                     >
                                         <option value="EASY">Easy</option>
