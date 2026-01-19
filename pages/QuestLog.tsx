@@ -319,8 +319,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
 
     setIsSubmitting(true);
 
-    const rewards = getRewards(difficulty);
-
     // Add subtasks bonus? Optional: increase reward based on subtasks count
 
     const taskData: any = {
@@ -329,10 +327,8 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
       name,
       description,
       type: frequency !== 'once' ? 'daily' : (category === 'col-guild' ? 'guild' : 'main'),
-      difficulty,
-      xpReward: rewards.xp,
-      goldReward: rewards.gold,
-      energyCost: initialData?.energyCost || 0,
+      xpReward: 100,
+      goldReward: 25,
       completed: initialData?.completed || false,
       frequency: frequency !== 'once' ? frequency : undefined,
       deadline: deadline ? new Date(deadline).toISOString() : undefined,
@@ -417,19 +413,6 @@ const CreateBountyCard = ({ projectId, onCreate, initialData, onCancel, defaultE
 
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Difficulty */}
-          <div className="space-y-1">
-            <label className="text-[10px] uppercase font-bold text-slate-400">Difficulty</label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-1.5 px-2 text-xs font-medium focus:border-indigo-500 outline-none"
-            >
-              {['TRIVIAL', 'EASY', 'MEDIUM', 'HARD', 'EPIC'].map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </div>
 
           {/* Recurrence */}
           <div className="space-y-1">

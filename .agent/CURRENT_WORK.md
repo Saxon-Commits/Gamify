@@ -17,13 +17,13 @@ This file tracks what each agent is ACTIVELY working on RIGHT NOW. Update this B
 ---
 
 ## 🌱 Gardener
-**Status:** COMPLETE  
-**Working on:** Phase 5 - Energy + Difficulty Removal (DONE)  
-**Files locked:** None  
-**Started:** Jan 19, 10:54 AM  
-**Expected completion:** Jan 19, 1:00 PM
+**Status:** ACTIVE  
+**Working on:** Phase 6 - Final Cleanup (LOW-MEDIUM RISK)  
+**Files locked:** types.ts, store/useGameStore.ts, pages/Guild.tsx, components/guild/*  
+**Started:** Jan 19, 11:29 AM  
+**Expected completion:** Jan 19, 12:45 PM
 
-**Notes:** ⚠️ HIGH RISK PHASE COMPLETE - All energy/difficulty removed. Fixed rewards (100 XP, 25 Gold) implemented. Adding handoff notes now.
+**Notes:** LAST PRUNING PHASE! Removing Five Attributes, Guild Activity Feed, Project HP, Phase 5 remnants. Will complete all pruning work.
 
 ---
 

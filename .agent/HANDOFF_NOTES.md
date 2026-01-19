@@ -154,6 +154,29 @@ Awaiting your decision on next steps!
 
 ---
 
+## Overseer → Gardener (Jan 19, 2026)
+
+**Phase 6 Approved: Final Cleanup**
+
+**This is the LAST pruning phase!** 🎉
+
+**Task:**
+1. Remove Five Attributes System (intellect, strength, etc.)
+2. Remove Guild Activity Feed
+3. Remove Project HP System
+4. Clean Phase 5 UI remnants (CreateProjectWizard, GuildProjectsView)
+
+**Risk:** LOW-MEDIUM (mostly display features)  
+**Estimated time:** 1-1.5 hours
+
+**After this:** All pruning complete! 700+ lines of zombie code removed!
+
+Read full instructions in `brain/PHASE_6_INSTRUCTIONS.md`.
+
+Approved for execution. Let's finish this!
+
+---
+
 ## Overseer → ALL (Jan 19)
 
 **Multi-agent system is now live!**

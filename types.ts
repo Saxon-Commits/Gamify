@@ -113,11 +113,6 @@ export interface Stats {
   lastStreakIncrement?: string; // ISO Date for daily streak increments
   lastRoyaltiesClaimed?: string; // For Royalties skill (Branch 1-5)
 
-  intellect: number;
-  strength: number;
-  vigor: number;
-  discipline: number;
-  spirit: number;
   imageUrl?: string;
   activeAvatarId?: string; // New field
 

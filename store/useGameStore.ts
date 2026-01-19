@@ -20,11 +20,6 @@ const INITIAL_STATS: Stats = {
 
   gems: 0,
   streak: 0,
-  intellect: 1,
-  strength: 1,
-  vigor: 1,
-  discipline: 1,
-  spirit: 1,
 };
 
 // ... existing code ...
