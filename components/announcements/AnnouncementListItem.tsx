@@ -1,6 +1,13 @@
 import React from 'react';
 import { Megaphone, Pencil, Trash2, Heart } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Id } from '../../convex/_generated/dataModel';
+
+// Security: Configure DOMPurify to only allow safe HTML tags
+const sanitizeConfig = {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ol', 'ul', 'li', 'a', 'h1', 'h2', 'h3', 'blockquote', 'span'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+};
 
 interface AnnouncementListItemProps {
     announcement: {
@@ -67,7 +74,7 @@ export const AnnouncementListItem: React.FC<AnnouncementListItemProps> = ({
                     <div className="ql-snow announcement-reader compact">
                         <div
                             className="ql-editor max-h-full overflow-hidden line-clamp-3"
-                            dangerouslySetInnerHTML={{ __html: announcement.content }}
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(announcement.content, sanitizeConfig) }}
                         />
                     </div>
                     <div className="flex items-center justify-between mt-1 text-[9px] text-slate-600">
