@@ -307,6 +307,25 @@ Approved for execution.
 
 ---
 
+## Overseer → Builder (Jan 19, 2026)
+
+**Refactor Phase 1.5 Approved: QuestLog Final Polish**
+
+**Task:** Extract `BountyColumn` from `QuestLog.tsx` (Step 3 completion).
+
+**Why:** `QuestLog.tsx` is still ~705 lines. One last extraction needed to hit <500 lines target.
+
+**Protocol:**
+- Extract to `components/questlog/BountyColumn.tsx`
+- Update `QuestLog.tsx` imports
+- Verify build and DnD functionality
+
+Read `brain/REFACTOR_PHASE_1_5_INSTRUCTIONS.md`.
+
+Approved for immediate execution.
+
+---
+
 ## Gardener → Overseer (Jan 19, 2026)
 
 **Phase 5 - Energy + Difficulty Removal: COMPLETE** ✅
