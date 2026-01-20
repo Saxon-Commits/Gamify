@@ -4,44 +4,32 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, CheckCircle, X, AlertTriangle } from 'lucide-react';
-import { useUser } from '@clerk/clerk-react';
+import { ArrowRight, CheckCircle, X } from 'lucide-react';
 
 export const TutorialOverlay: React.FC = () => {
     const { isTutorialActive, completeTutorial } = useGameStore();
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
-    const { isSignedIn } = useUser(); // Check if user is authenticated
-
     // Username State
     const [desiredUsername, setDesiredUsername] = useState("");
     const [usernameError, setUsernameError] = useState("");
 
     const setUsernameMutation = useMutation(api.users.setUsername);
-    const checkUsernameQuery = useQuery(
-        api.users.checkUsername,
-        isSignedIn ? { username: desiredUsername } : "skip"
-    );
+    const checkUsernameQuery = useQuery(api.users.checkUsername, { username: desiredUsername });
 
     if (!isTutorialActive) return null;
 
-    // Skip identity step for demo users
     const steps = [
-        ...(!isSignedIn ? [] : [
-            {
-                title: "Identity Initialization",
-                content: "Before we begin, establish your unique identity in the system.",
-                target: null,
-                isIdentityStep: true
-            }
-        ]),
         {
-            title: isSignedIn ? "Welcome, Traversal" : "Welcome to Demo Mode",
-            content: isSignedIn
-                ? "You have just initialized the Game of Life. This system is designed to visualize your potential and track your growth."
-                : "You're in demo mode! Your progress is saved locally in your browser. Sign up to unlock cloud sync, guilds, and cross-device access.",
-            target: "/",
-            isDemoWarning: !isSignedIn
+            title: "Identity Initialization",
+            content: "Before we begin, establish your unique identity in the system.",
+            target: null,
+            isIdentityStep: true
+        },
+        {
+            title: "Welcome, Traversal",
+            content: "You have just initialized the Game of Life. This system is designed to visualize your potential and track your growth.",
+            target: "/"
         },
         {
             title: "The Dashboard",
@@ -68,8 +56,8 @@ export const TutorialOverlay: React.FC = () => {
     const currentStep = steps[step];
 
     const handleNext = async () => {
-        // Special Logic for Identity Step (only for signed-in users)
-        if (currentStep.isIdentityStep && isSignedIn) {
+        // Special Logic for Identity Step
+        if (currentStep.isIdentityStep) {
             if (!desiredUsername || desiredUsername.length < 3) {
                 setUsernameError("Username must be at least 3 characters.");
                 return;
@@ -130,22 +118,6 @@ export const TutorialOverlay: React.FC = () => {
                     <p className="text-slate-300 leading-relaxed text-lg">
                         {currentStep.content}
                     </p>
-
-                    {/* DEMO MODE WARNING */}
-                    {currentStep.isDemoWarning && (
-                        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
-                            <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={20} />
-                            <div className="text-sm text-amber-200 space-y-1">
-                                <p className="font-bold">Demo Limitations:</p>
-                                <ul className="list-disc list-inside text-xs text-amber-300/80 space-y-0.5">
-                                    <li>Data saved in browser only (lost if you clear cache)</li>
-                                    <li>Cannot join or create guilds</li>
-                                    <li>No cross-device sync</li>
-                                </ul>
-                                <p className="text-xs mt-2 text-amber-400 font-semibold">Sign up for free to unlock all features!</p>
-                            </div>
-                        </div>
-                    )}
 
                     {/* IDENTITY INPUT */}
                     {currentStep.isIdentityStep && (

@@ -4,7 +4,6 @@ import { SignInButton, SignUpButton, useUser } from '@clerk/clerk-react';
 import { Shield, Zap, Trophy, Layout, Users, Star, ArrowRight, Check, Sparkles } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-    const { isSignedIn } = useUser();
     const navigate = useNavigate();
 
     // Redirect if already signed in is handled by App.tsx routing, 
@@ -67,9 +66,6 @@ export const LandingPage: React.FC = () => {
                                 Start Your Journey Free
                             </button>
                         </SignUpButton>
-                        <Link to="/app" className="w-full sm:w-auto px-8 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 border border-slate-700 transition-colors flex items-center justify-center gap-2">
-                            Try Demo Mode
-                        </Link>
                     </div>
 
                     {/* Hero Image / Placeholder */}
