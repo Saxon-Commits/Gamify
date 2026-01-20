@@ -20,9 +20,10 @@ export const SyncManager: React.FC = () => {
 
         const currentUserId = user?.id || null;
 
-        // If user ID changed (including logout: user -> null, or new account: null -> user)
-        if (lastUserIdRef.current !== null && lastUserIdRef.current !== currentUserId) {
-            console.log('🔄 User changed! Clearing old local data...', {
+        // ONLY clear when switching between TWO DIFFERENT logged-in users
+        // (NOT on logout scenarios - those rely on cloud sync naturally)
+        if (lastUserIdRef.current !== null && currentUserId !== null && lastUserIdRef.current !== currentUserId) {
+            console.log('🔄 User switched! Clearing old user data...', {
                 old: lastUserIdRef.current,
                 new: currentUserId
             });
@@ -30,7 +31,7 @@ export const SyncManager: React.FC = () => {
             // Clear IndexedDB storage
             import('idb-keyval').then(({ del }) => {
                 del('life-rpg-storage').then(() => {
-                    console.log('✅ IndexedDB cleared');
+                    console.log('✅ IndexedDB cleared for account switch');
 
                     // Reset zustand store to initial state
                     useGameStore.getState().resetGame();
