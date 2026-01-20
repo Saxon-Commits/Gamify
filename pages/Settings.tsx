@@ -111,39 +111,6 @@ export const Settings: React.FC = () => {
 
         <ProfileSettings currentUsername={user?.username} />
 
-        {/* DEBUG: Role Status */}
-        <section className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Shield className="text-amber-500" size={18} />
-            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Debug: Access Level</h2>
-          </div>
-          <div className="space-y-2 font-mono text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Current Role:</span>
-              <span className={`font-bold ${user?.role === 'admin' ? 'text-green-500' : 'text-amber-500'}`}>
-                {user?.role || 'undefined'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Admin Access:</span>
-              <span className={`font-bold ${user?.role === 'admin' ? 'text-green-500' : 'text-red-500'}`}>
-                {user?.role === 'admin' ? '✅ GRANTED' : '❌ DENIED'}
-              </span>
-            </div>
-            {user?.role !== 'admin' && (
-              <div className="mt-4 p-3 bg-slate-900 dark:bg-slate-950 rounded text-xs text-slate-400">
-                <p className="mb-2 font-bold text-amber-400">To fix admin access:</p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Go to Convex Dashboard</li>
-                  <li>Open "users" table</li>
-                  <li>Find your user</li>
-                  <li>Set role = "admin"</li>
-                </ol>
-              </div>
-            )}
-          </div>
-        </section>
-
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
           <div className="flex items-center space-x-3 mb-6">
             <Info className="text-indigo-500 dark:text-indigo-400" size={18} />
