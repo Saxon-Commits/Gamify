@@ -46,7 +46,7 @@ export async function logGuildActivity(ctx: any, guildId: Id<"guilds">, userId: 
         userId,
         type,
         data,
-        createdAt: Date.now(),
+        timestamp: Date.now(),
     });
 }
 export const MAX_GUILD_MEMBERS = 50;
