@@ -11,7 +11,39 @@ export const SyncManager: React.FC = () => {
     const cloudState = useQuery(api.gameState.load);
 
     const hasLoadedRef = useRef(false);
+    const lastUserIdRef = useRef<string | null>(null); // Track user ID changes
     const addToast = useToastStore(state => state.addToast);
+
+    // 0. User Change Detection - Clear local data when user changes
+    useEffect(() => {
+        if (!isUserLoaded) return;
+
+        const currentUserId = user?.id || null;
+
+        // If user ID changed (including logout: user -> null, or new account: null -> user)
+        if (lastUserIdRef.current !== null && lastUserIdRef.current !== currentUserId) {
+            console.log('🔄 User changed! Clearing old local data...', {
+                old: lastUserIdRef.current,
+                new: currentUserId
+            });
+
+            // Clear IndexedDB storage
+            import('idb-keyval').then(({ del }) => {
+                del('life-rpg-storage').then(() => {
+                    console.log('✅ IndexedDB cleared');
+
+                    // Reset zustand store to initial state
+                    useGameStore.getState().resetGame();
+                    hasLoadedRef.current = false;
+
+                    // Force reload to ensure clean state
+                    window.location.reload();
+                });
+            });
+        }
+
+        lastUserIdRef.current = currentUserId;
+    }, [user?.id, isUserLoaded]);
 
     // 1. Hydration (Initial Load)
     useEffect(() => {
