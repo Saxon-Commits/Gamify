@@ -108,51 +108,6 @@ export const Settings: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="grid grid-cols-1 gap-6">
 
-        {/* MEMBERSHIP CARD */}
-        <section className="relative overflow-hidden bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 rounded-2xl p-6 group shadow-lg dark:shadow-none">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 dark:from-indigo-500/10 to-purple-50/50 dark:to-purple-500/10 opacity-50" />
-
-          <div className="relative flex justify-between items-start">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg">
-                <Shield className="text-indigo-500 dark:text-indigo-400" size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Status: {user?.subscription === 'lifetime' ? 'Lifetime Archetype' : 'Novice'}</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Current Access Level</p>
-              </div>
-            </div>
-            {user?.subscription === 'lifetime' && (
-              <div className="px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full text-xs font-bold text-green-400 uppercase tracking-widest flex items-center gap-2">
-                <Zap size={12} fill="currentColor" />
-                Active
-              </div>
-            )}
-          </div>
-
-          {user?.subscription !== 'lifetime' && (
-            <div className="relative mt-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">Unlock Lifetime Access</h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm">
-                    Get permanent access to Cloud Sync, Unlimited Journal Formatting, 3 Exclusive Avatars, and support future development.
-                  </p>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase">One-time payment</span>
-                    <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase">No subscriptions</span>
-                  </div>
-                </div>
-                <button
-                  onClick={handleUpgrade}
-                  className="px-8 py-4 bg-white text-indigo-950 rounded-xl font-black uppercase tracking-wider hover:bg-indigo-50 hover:scale-105 transition-all shadow-xl shadow-indigo-500/20"
-                >
-                  Get Access - $49
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
 
         <ProfileSettings currentUsername={user?.username} />
 

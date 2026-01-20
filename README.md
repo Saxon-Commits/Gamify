@@ -18,3 +18,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1v3AxhilhK432nFfi0SBjsC
 
 3. Run the app:
    `npm run dev`
+
+## Developer Workflow
+
+This project uses an automated **Notion logging system** to track development progress. The AI assistant can log sessions with token usage tracking via `.tools/logger.py` for Quick Saves and Deep Audits. See `.agent/skills/logging.md` for usage details.

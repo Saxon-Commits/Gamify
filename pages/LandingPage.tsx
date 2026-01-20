@@ -112,51 +112,6 @@ export const LandingPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Pricing Section */}
-            <section className="py-24 border-t border-white/5">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4">Simple, Transparent Pricing</h2>
-                        <p className="text-slate-400">Start for free, upgrade for cloud sync and unlimited power.</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        {/* Free Tier */}
-                        <div className="p-8 rounded-3xl bg-slate-900 border border-slate-800">
-                            <h3 className="text-xl font-bold mb-2">Novice</h3>
-                            <div className="text-4xl font-bold mb-6">$0</div>
-                            <ul className="space-y-4 mb-8 text-slate-400 text-sm">
-                                <li className="flex items-center gap-3"><Check size={16} className="text-green-500" /> Local Storage Only</li>
-                                <li className="flex items-center gap-3"><Check size={16} className="text-green-500" /> Minimal Skill Tree</li>
-                                <li className="flex items-center gap-3"><Check size={16} className="text-green-500" /> Basic Quests</li>
-                            </ul>
-                            <Link to="/app" className="block w-full py-3 text-center bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold transition-colors">
-                                Play Demo
-                            </Link>
-                        </div>
-
-                        {/* Pro Tier */}
-                        <div className="p-8 rounded-3xl bg-indigo-600/10 border border-indigo-500/50 relative">
-                            <div className="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl">
-                                MOST POPULAR
-                            </div>
-                            <h3 className="text-xl font-bold mb-2 text-white">Guild Master</h3>
-                            <div className="text-4xl font-bold mb-6 text-white">$9<span className="text-lg text-indigo-200 font-normal">/mo</span></div>
-                            <ul className="space-y-4 mb-8 text-indigo-100 text-sm">
-                                <li className="flex items-center gap-3"><Check size={16} className="text-indigo-300" /> Cloud Sync (Cross-Device)</li>
-                                <li className="flex items-center gap-3"><Check size={16} className="text-indigo-300" /> Unlimited Journal History</li>
-                                <li className="flex items-center gap-3"><Check size={16} className="text-indigo-300" /> Advanced Analytics</li>
-                                <li className="flex items-center gap-3"><Check size={16} className="text-indigo-300" /> Priority Support</li>
-                            </ul>
-                            <SignUpButton mode="modal">
-                                <button className="block w-full py-3 text-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-indigo-500/25">
-                                    Get Pro
-                                </button>
-                            </SignUpButton>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             {/* Footer */}
             <footer className="py-12 border-t border-white/5 bg-slate-950">
