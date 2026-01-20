@@ -13,12 +13,12 @@ const INITIAL_STATS: Stats = {
   level: 1,
   xp: 0,
   xpToNext: calculateXpToNextLevel(1),
-  gold: 0,
+  gold: 1000, // Starting gold
   hp: 100,
   maxHp: 100,
   skillPoints: 0,
 
-  gems: 0,
+  gems: 500, // Starting gems
   streak: 0,
 };
 

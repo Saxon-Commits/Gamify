@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
-import { User, Bot, Sword, Diamond, Monitor } from 'lucide-react';
+import { User, Bot, Sword, Diamond, Monitor, Construction } from 'lucide-react';
 
 import { MerchantCard, MerchantModal } from '../components/MerchantCard';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
@@ -210,6 +210,41 @@ export const Shop: React.FC = () => {
                         </ShopSection>
 
                     </div>
+                </div>
+            </div>
+
+            {/* COMING SOON OVERLAY */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm pointer-events-auto">
+                <div className="max-w-2xl mx-auto p-8 text-center space-y-6">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-500/10 border-2 border-amber-500/30 mb-4">
+                        <Construction className="text-amber-500" size={48} />
+                    </div>
+                    <h1 className="text-4xl font-black text-white uppercase tracking-wider">
+                        Shop Coming Soon
+                    </h1>
+                    <p className="text-xl text-slate-300 leading-relaxed">
+                        We're hard at work crafting an incredible shopping experience for you.
+                    </p>
+                    <div className="p-6 bg-slate-900/50 border border-slate-700 rounded-xl space-y-3 text-left">
+                        <p className="text-sm text-slate-400 font-semibold">What to expect:</p>
+                        <ul className="space-y-2 text-sm text-slate-300">
+                            <li className="flex items-start gap-3">
+                                <span className="text-indigo-400 mt-0.5">✦</span>
+                                <span><strong className="text-white">Premium Avatars</strong> - Unique character skins priced by rarity</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-indigo-400 mt-0.5">✦</span>
+                                <span><strong className="text-white">Companions & Themes</strong> - Loyal allies and stunning backdrops</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                                <span className="text-indigo-400 mt-0.5">✦</span>
+                                <span><strong className="text-white">Gem Packs</strong> - Premium currency to unlock exclusive content</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <p className="text-sm text-slate-500 italic">
+                        In the meantime, keep completing quests and leveling up!
+                    </p>
                 </div>
             </div>
 
