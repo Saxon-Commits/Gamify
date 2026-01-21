@@ -4,28 +4,31 @@ import { Id } from "../_generated/dataModel";
 import { cleanText } from "../textSafety";
 import { getCurrentUserId, hasPermission, logGuildActivity } from "./common";
 
-// Helper to award funds to user
+// Helper to award funds to user via pending rewards queue
+// This ensures SyncManager picks up the rewards and shows toast notifications
 async function awardUser(ctx: any, userId: Id<"users">, gold: number, gems: number) {
     const user = await ctx.db.get(userId);
     if (!user) return;
 
-    // User is keyed by tokenIdentifier. GameState is keyed by userId (Convex ID) OR token subject?
-    // We must mirror logic: clerkId = user.tokenIdentifier.split('|')[1]
-    const clerkId = user.tokenIdentifier.split('|')[1];
+    // Queue gold reward if > 0
+    if (gold > 0) {
+        await ctx.db.insert("pendingRewards", {
+            userId: userId,
+            type: "gold",
+            amount: gold,
+            description: "Guild Bounty Reward",
+            createdAt: Date.now(),
+        });
+    }
 
-    const userState = await ctx.db.query("gameState").withIndex("by_user", (q: any) => q.eq("userId", clerkId)).first();
-
-    if (userState && userState.state && userState.state.stats) {
-        const stats = userState.state.stats;
-        await ctx.db.patch(userState._id, {
-            state: {
-                ...userState.state,
-                stats: {
-                    ...stats,
-                    gold: (stats.gold || 0) + gold,
-                    gems: (stats.gems || 0) + gems
-                }
-            }
+    // Queue gems reward if > 0
+    if (gems > 0) {
+        await ctx.db.insert("pendingRewards", {
+            userId: userId,
+            type: "gems",
+            amount: gems,
+            description: "Guild Bounty Reward",
+            createdAt: Date.now(),
         });
     }
 }

@@ -476,7 +476,7 @@ export const awardWinners = mutation({
         // 1. Distribute Prizes
         const winners: { place: number, userId: any, rewards: any }[] = [];
 
-        // Helper to process winner
+        // Helper to process winner - uses pendingRewards queue for real-time delivery
         const processWinner = async (uid: Id<"users"> | undefined, rank: 'firstPlace' | 'secondPlace' | 'thirdPlace', placeVal: number) => {
             if (!uid) return;
 
@@ -484,30 +484,38 @@ export const awardWinners = mutation({
             if (!reward) return;
 
             const user = await ctx.db.get(uid);
-            if (!user) return; // Users might disappear?
+            if (!user) return;
 
-            // Standardize reward addition
-            const clerkId = user.tokenIdentifier.split('|')[1];
-            if (!clerkId) return;
-
-            const gameState = await ctx.db
-                .query("gameState")
-                .withIndex("by_user", (q) => q.eq("userId", clerkId))
-                .first();
-
-            if (gameState) {
-                const newState = { ...gameState.state };
-                if (!newState.stats) newState.stats = {};
-                newState.stats.gold = (newState.stats.gold || 0) + (reward.gold || 0);
-                newState.stats.xp = (newState.stats.xp || 0) + (reward.xp || 0);
-
-                await ctx.db.patch(gameState._id, { state: newState });
+            // Queue rewards via pendingRewards system
+            if (reward.gold && reward.gold > 0) {
+                await ctx.db.insert("pendingRewards", {
+                    userId: uid,
+                    type: "gold",
+                    amount: reward.gold,
+                    description: `${project.title} - ${placeVal === 1 ? '1st' : placeVal === 2 ? '2nd' : '3rd'} Place`,
+                    createdAt: Date.now(),
+                });
             }
 
-            // Update Gems on User Table
             if (reward.gems && reward.gems > 0) {
-                await ctx.db.patch(uid, {
-                    gems: (user.gems || 0) + reward.gems
+                await ctx.db.insert("pendingRewards", {
+                    userId: uid,
+                    type: "gems",
+                    amount: reward.gems,
+                    description: `${project.title} - ${placeVal === 1 ? '1st' : placeVal === 2 ? '2nd' : '3rd'} Place`,
+                    createdAt: Date.now(),
+                });
+            }
+
+            // XP is handled differently - need to add to pendingRewards or handle separately
+            // For now, we'll add XP via pendingRewards too
+            if (reward.xp && reward.xp > 0) {
+                await ctx.db.insert("pendingRewards", {
+                    userId: uid,
+                    type: "xp",
+                    amount: reward.xp,
+                    description: `${project.title} - ${placeVal === 1 ? '1st' : placeVal === 2 ? '2nd' : '3rd'} Place`,
+                    createdAt: Date.now(),
                 });
             }
 
