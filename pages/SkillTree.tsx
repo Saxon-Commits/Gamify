@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { ReactFlow, Background, Controls, MiniMap } from '@xyflow/react';
 import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { CustomSkillNode } from '../components/CustomSkillNode';
 import { BRANCH_CONFIGS } from '../src/utils/SkillTreeUtils';
 import { Info, Lock, Unlock, AlertCircle } from 'lucide-react';
@@ -14,8 +15,9 @@ const nodeTypes = {
 };
 
 export const SkillTree: React.FC = () => {
-  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats, settings, syncSkillTree } = useGameStore();
-  const isDark = settings.theme === 'dark';
+  const { skillNodes, skillEdges, hoveredNode, setVerificationNode, stats, syncSkillTree } = useGameStore();
+  const theme = useSettingsStore(state => state.theme);
+  const isDark = theme === 'dark';
 
   // Sync latest node definitions on load (fixes stale cache)
   React.useEffect(() => {

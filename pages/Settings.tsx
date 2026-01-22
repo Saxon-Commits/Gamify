@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useClerk } from "@clerk/clerk-react";
 import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { Database, Trash2, Download, Info, Unlock, Coins, Volume2, BookOpen, CheckCircle, Edit2, X, RefreshCw, User as UserIcon } from 'lucide-react';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
@@ -10,6 +11,7 @@ import { useQuery, useAction, useMutation } from 'convex/react';
 import { api } from '../convex/_generated/api';
 import { Shield, Zap, Info as InfoIcon, Sun } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { useUser } from '@clerk/clerk-react';
 
 const LIFETIME_PRICE_ID = 'price_1SlpqyLQXrapzCX8bubgyJ0C';
 
@@ -90,17 +92,80 @@ const ProfileSettings: React.FC<{ currentUsername?: string }> = ({ currentUserna
 
 export const Settings: React.FC = () => {
   const { signOut } = useClerk();
-  const settings = useGameStore(state => state.settings);
+  const { user: clerkUser } = useUser();
   const user = useQuery(api.users.getMe);
   const pay = useAction(api.pay.createCheckoutSession);
+  const deleteAccountMutation = useMutation(api.users.deleteAccount);
+
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const handleUpgrade = async () => {
     try {
       const url = await pay({ priceId: LIFETIME_PRICE_ID });
       if (url) window.location.href = url;
-    } catch (error) {
-      console.error("Payment Error:", error);
-      alert("Failed to initiate checkout. See console.");
+    } catch (e) {
+      console.error(e);
+      alert('Failed to create checkout session');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    // Double confirmation
+    const confirmed = window.confirm(
+      "⚠️ WARNING: This will PERMANENTLY delete your account and ALL data including:\n\n" +
+      "• All game progress (level, XP, stats)\n" +
+      "• All items and inventory\n" +
+      "• Journal entries\n" +
+      "• Guild memberships and owned guilds\n" +
+      "• Everything else\n\n" +
+      "This action CANNOT be undone. Are you absolutely sure?"
+    );
+
+    if (!confirmed) return;
+
+    // Second confirmation
+    const reallyConfirmed = window.confirm(
+      "This is your FINAL warning. Click OK to permanently delete your account."
+    );
+
+    if (!reallyConfirmed) return;
+
+    setIsDeleting(true);
+
+    try {
+      // 1. Delete all Convex data first
+      console.log("Deleting Convex data...");
+      await deleteAccountMutation();
+
+      // 2. Try to delete Clerk account (may fail if email unverified)
+      console.log("Attempting to delete Clerk account...");
+      if (clerkUser) {
+        try {
+          await clerkUser.delete();
+          console.log("✅ Account fully deleted (Convex + Clerk)");
+        } catch (clerkError: any) {
+          console.warn("Clerk deletion failed (likely unverified email), but Convex data deleted:", clerkError);
+
+          // Sign out manually since Clerk delete failed
+          await signOut();
+
+          alert(
+            "Your game data has been deleted, but your login account still exists.\n\n" +
+            "To fully delete your account:\n" +
+            "1. Verify your email in Clerk settings\n" +
+            "2. Or contact support\n\n" +
+            "You've been signed out."
+          );
+        }
+      } else {
+        // No Clerk user, just sign out
+        await signOut();
+      }
+
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete account: " + (error.message || "Unknown error"));
+      setIsDeleting(false);
     }
   };
 
@@ -123,13 +188,6 @@ export const Settings: React.FC = () => {
           <div className="p-4 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-500">
             Version 1.3.0 - "Sovereign Update"
           </div>
-          <button
-            onClick={() => useGameStore.getState().setTutorialActive(true)}
-            className="mt-4 flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors"
-          >
-            <BookOpen size={14} />
-            <span>Replay Tutorial</span>
-          </button>
 
           <div className="mt-6 flex gap-4 text-xs text-slate-500">
             <Link to="/privacy" className="hover:text-indigo-400 underline decoration-slate-700 underline-offset-4 transition-colors">
@@ -165,7 +223,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">Background Music Volume</span>
                 <span className="text-indigo-500 dark:text-indigo-400 text-xs font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded">
-                  {Math.round((settings.musicVolume !== undefined ? settings.musicVolume : 0.4) * 100)}%
+                  {Math.round(useSettingsStore.getState().musicVolume * 100)}%
                 </span>
               </div>
               <input
@@ -173,8 +231,8 @@ export const Settings: React.FC = () => {
                 min="0"
                 max="1"
                 step="0.05"
-                value={settings.musicVolume !== undefined ? settings.musicVolume : 0.4}
-                onChange={(e) => useGameStore.getState().setMusicVolume(parseFloat(e.target.value))}
+                value={useSettingsStore.getState().musicVolume}
+                onChange={(e) => useSettingsStore.getState().setMusicVolume(parseFloat(e.target.value))}
               />
             </div>
 
@@ -182,7 +240,7 @@ export const Settings: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-slate-600 dark:text-slate-400 text-sm font-medium">Sound Effects Volume</span>
                 <span className="text-indigo-500 dark:text-indigo-400 text-xs font-mono bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded">
-                  {Math.round((settings.sfxVolume !== undefined ? settings.sfxVolume : 0.4) * 100)}%
+                  {Math.round(useSettingsStore.getState().sfxVolume * 100)}%
                 </span>
               </div>
               <input
@@ -190,8 +248,8 @@ export const Settings: React.FC = () => {
                 min="0"
                 max="1"
                 step="0.05"
-                value={settings.sfxVolume !== undefined ? settings.sfxVolume : 0.4}
-                onChange={(e) => useGameStore.getState().setSfxVolume(parseFloat(e.target.value))}
+                value={useSettingsStore.getState().sfxVolume}
+                onChange={(e) => useSettingsStore.getState().setSfxVolume(parseFloat(e.target.value))}
                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
               />
             </div>
@@ -233,6 +291,26 @@ export const Settings: React.FC = () => {
             </button>
           </div>
         </section>
+
+        {/* Account Danger Zone */}
+        <section className="bg-red-950/20 dark:bg-red-950/40 border-2 border-red-500/30 rounded-2xl p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <Trash2 className="text-red-500" size={18} />
+            <h2 className="text-sm font-bold uppercase tracking-widest text-red-500">Danger Zone</h2>
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white font-bold rounded-xl uppercase tracking-widest shadow-lg transition-all flex items-center gap-2"
+          >
+            <Trash2 size={16} />
+            {isDeleting ? 'Deleting...' : 'Delete Account'}
+          </button>
+        </section>
+
       </div>
     </div>
   );

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Shield, CheckCircle } from 'lucide-react';
-import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export const HonorPledgeModal: React.FC = () => {
-    const { settings, confirmHonorPledge } = useGameStore();
+    const { honorSystemAgreed, confirmHonorPledge } = useSettingsStore();
     const [step, setStep] = useState(1);
 
-    if (settings.honorSystemAgreed) return null;
+    if (honorSystemAgreed) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-6">

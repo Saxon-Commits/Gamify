@@ -5,7 +5,7 @@ export default {
             applicationID: "convex",
         },
         {
-            domain: "https://clerk.paraxp.com",
+            domain: "https://clerk.xpfocus.com",
             applicationID: "convex",
         },
     ],

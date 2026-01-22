@@ -117,7 +117,6 @@ const ResourceItem: React.FC<{ icon?: React.ElementType; imageUrl?: string; valu
 );
 
 import { HonorPledgeModal } from './HonorPledgeModal';
-import { TutorialOverlay } from './TutorialOverlay';
 import { RewardToastContainer } from './ui/RewardToastContainer';
 
 import { StarterSelectionModal } from './StarterSelectionModal';
@@ -232,7 +231,6 @@ export const Layout: React.FC = () => {
       )}
 
       <HonorPledgeModal />
-      <TutorialOverlay />
       <RewardToastContainer />
       {needsStarter && <StarterSelectionModal onComplete={() => { }} />}
 

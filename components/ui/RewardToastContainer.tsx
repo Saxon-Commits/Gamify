@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore, ToastMessage, RewardType } from '../../store/useToastStore';
-import { useGameStore } from '../../store/useGameStore';
+import { useSettingsStore } from '../../store/useSettingsStore';
 import { Sparkles, Coins, Zap, Diamond, Package, Crown, CheckCircle2, Star } from 'lucide-react';
 
 const icons: Record<RewardType, any> = {
@@ -27,12 +27,12 @@ const colors: Record<RewardType, string> = {
 const RewardToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
     const Icon = icons[toast.type] || Sparkles;
     const gradient = colors[toast.type] || colors.xp;
-    const sfxVolume = useGameStore((state) => state.settings.sfxVolume);
+    const sfxVolume = useSettingsStore((state) => state.sfxVolume);
 
     // Play Sound on Mount
     React.useEffect(() => {
         const audio = new Audio('/notification sound.wav');
-        audio.volume = sfxVolume !== undefined ? sfxVolume : 0.4;
+        audio.volume = sfxVolume;
         audio.play().catch(e => console.log("Audio play failed (interaction needed first?)", e));
     }, [sfxVolume]);
 

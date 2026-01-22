@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as documents from "../documents.js";
+import type * as domainMigration from "../domainMigration.js";
 import type * as gameState from "../gameState.js";
 import type * as grindstone from "../grindstone.js";
 import type * as guildChat from "../guildChat.js";
@@ -36,6 +37,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   documents: typeof documents;
+  domainMigration: typeof domainMigration;
   gameState: typeof gameState;
   grindstone: typeof grindstone;
   guildChat: typeof guildChat;

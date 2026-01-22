@@ -168,3 +168,168 @@ export const setUsername = mutation({
         return { success: true, username: normalized };
     },
 });
+
+// Delete all user data from Convex (called before deleting Clerk account)
+export const deleteAccount = mutation({
+    args: {},
+    handler: async (ctx) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Not authenticated");
+
+        const userId = identity.subject;
+
+        // Find user record
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .first();
+
+        if (!user) {
+            console.warn("User not found in database, nothing to delete");
+            return;
+        }
+
+        console.log(`🗑️  Starting comprehensive account deletion for user ${user._id} (${user.username || user.email})`);
+
+        // 1. Delete gameState
+        const gameState = await ctx.db
+            .query("gameState")
+            .withIndex("by_user", (q) => q.eq("userId", userId))
+            .first();
+        if (gameState) {
+            await ctx.db.delete(gameState._id);
+            console.log("✓ Deleted gameState");
+        }
+
+        // 2. Delete journal entries
+        const journals = await ctx.db
+            .query("journalEntries")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+        for (const journal of journals) {
+            await ctx.db.delete(journal._id);
+        }
+        console.log(`✓ Deleted ${journals.length} journal entries`);
+
+        // 3. Delete pending rewards
+        const rewards = await ctx.db
+            .query("pendingRewards")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+        for (const reward of rewards) {
+            await ctx.db.delete(reward._id);
+        }
+        console.log(`✓ Deleted ${rewards.length} pending rewards`);
+
+        // 4. Delete project documents
+        const docs = await ctx.db
+            .query("projectDocuments")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+        for (const doc of docs) {
+            await ctx.db.delete(doc._id);
+        }
+        console.log(`✓ Deleted ${docs.length} project documents`);
+
+        // 5. Delete daily stats
+        const stats = await ctx.db
+            .query("dailyStats")
+            .filter((q) => q.eq(q.field("userId"), user._id))
+            .collect();
+        for (const stat of stats) {
+            await ctx.db.delete(stat._id);
+        }
+        console.log(`✓ Deleted ${stats.length} daily stats entries`);
+
+        // 6. Delete focus sessions
+        const sessions = await ctx.db
+            .query("focusSessions")
+            .filter((q) => q.eq(q.field("userId"), user._id))
+            .collect();
+        for (const session of sessions) {
+            await ctx.db.delete(session._id);
+        }
+        console.log(`✓ Deleted ${sessions.length} focus sessions`);
+
+        // 7. Leave all guilds (delete membership records)
+        const memberships = await ctx.db
+            .query("guildMembers")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+        for (const membership of memberships) {
+            await ctx.db.delete(membership._id);
+        }
+        console.log(`✓ Left ${memberships.length} guilds`);
+
+        // 8. Delete guild invites (sent to this user)
+        const invites = await ctx.db
+            .query("guildInvites")
+            .filter((q) => q.eq(q.field("invitedUserId"), user._id))
+            .collect();
+        for (const invite of invites) {
+            await ctx.db.delete(invite._id);
+        }
+        console.log(`✓ Deleted ${invites.length} guild invites`);
+
+        // 9. Delete guild activities (created by this user)
+        const activities = await ctx.db
+            .query("guildActivities")
+            .filter((q) => q.eq(q.field("userId"), user._id))
+            .collect();
+        for (const activity of activities) {
+            await ctx.db.delete(activity._id);
+        }
+        console.log(`✓ Deleted ${activities.length} guild activities`);
+
+        // 10. Delete guild messages
+        const messages = await ctx.db
+            .query("guildMessages")
+            .filter((q) => q.eq(q.field("userId"), user._id))
+            .collect();
+        for (const message of messages) {
+            await ctx.db.delete(message._id);
+        }
+        console.log(`✓ Deleted ${messages.length} guild messages`);
+
+        // 11. Delete guild bounties (created or claimed by this user)
+        const bounties = await ctx.db
+            .query("guildBounties")
+            .filter((q) =>
+                q.or(
+                    q.eq(q.field("createdBy"), user._id),
+                    q.eq(q.field("claimedBy"), user._id)
+                )
+            )
+            .collect();
+        for (const bounty of bounties) {
+            await ctx.db.delete(bounty._id);
+        }
+        console.log(`✓ Deleted ${bounties.length} guild bounties`);
+
+        // 12. Delete guilds where user is the leader
+        const ownedGuilds = await ctx.db
+            .query("guilds")
+            .withIndex("by_leader", (q) => q.eq("leaderId", user._id))
+            .collect();
+        for (const guild of ownedGuilds) {
+            // Delete all related guild data first
+            const guildProjects = await ctx.db
+                .query("guildProjects")
+                .withIndex("by_guild", (q) => q.eq("guildId", guild._id))
+                .collect();
+            for (const project of guildProjects) {
+                await ctx.db.delete(project._id);
+            }
+
+            // Then delete the guild itself
+            await ctx.db.delete(guild._id);
+        }
+        console.log(`✓ Deleted ${ownedGuilds.length} owned guilds and their projects`);
+
+        // 13. Delete user record (last)
+        await ctx.db.delete(user._id);
+        console.log("✓ Deleted user record");
+
+        console.log(`✅ Complete deletion finished for ${user.username || user.email}`);
+    },
+});

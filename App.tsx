@@ -25,6 +25,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 import { Volume2, VolumeX, Music } from 'lucide-react';
 import { useGameStore } from './store/useGameStore';
+import { useSettingsStore } from './store/useSettingsStore';
 import { BackgroundMusicPlayer } from './components/BackgroundMusicPlayer';
 import { Layout } from './components/Layout';
 // Dashboard removed
@@ -50,6 +51,30 @@ import { useMutation, useConvexAuth } from "convex/react";
 import { api } from "./convex/_generated/api";
 import { SyncManager } from './components/SyncManager';
 import { usePostHog } from 'posthog-js/react';
+
+// Protected Route Wrapper - ensures user is authenticated before accessing app pages
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isSignedIn, isLoaded } = useUser();
+
+  // Wait for Clerk to load
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-400 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to landing page if not signed in
+  if (!isSignedIn) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App: React.FC = () => {
   // Sync User to Convex
@@ -87,7 +112,7 @@ const App: React.FC = () => {
 
   // Initial Theme Sync
   useEffect(() => {
-    const theme = useGameStore.getState().settings.theme;
+    const theme = useSettingsStore.getState().theme;
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
@@ -174,7 +199,7 @@ const App: React.FC = () => {
         } />
 
         {/* Protected App Routes */}
-        <Route path="/app" element={<Layout />}>
+        <Route path="/app" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<QuestLog />} />
           <Route path="skills" element={<SkillTree />} />
           <Route path="shop" element={<Shop />} />

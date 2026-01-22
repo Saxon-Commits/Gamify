@@ -156,7 +156,6 @@ export interface InventoryItem {
 
 export interface GameState {
   stats: Stats;
-  settings: GameSettings;
   projects: Project[];
   tasks: Task[];
   skillNodes: any[];
@@ -166,7 +165,6 @@ export interface GameState {
   activeBuffs: ActiveBuff[];
   hoveredNode: any | null;
   verificationNode?: any | null;
-  isTutorialActive: boolean;
 
   mostWantedTaskId?: string; // ID of the task designated as Most Wanted (reset daily)
   setMostWantedTask: (taskId: string) => void;
@@ -189,12 +187,7 @@ export interface GameState {
   setHoveredNode: (node: any | null) => void;
   setVerificationNode?: (node: any | null) => void;
 
-  updateSettings: (settings: Partial<GameSettings>) => void;
   setName: (name: string) => void;
-  setMusicVolume: (volume: number) => void;
-  toggleMusicMute: () => void;
-  setSfxVolume: (volume: number) => void;
-  toggleTheme: () => void;
   addTasks: (newTasks: Task[]) => void;
   createTask: (task: Omit<Task, 'id' | 'completed'>) => void;
   deleteTask: (taskId: string) => void;
@@ -215,7 +208,6 @@ export interface GameState {
   taskCompletionHistory?: number[]; // Timestamps of accumulated task completions (for Haste skill)
 
 
-  confirmHonorPledge: () => void;
   resetGame: () => void;
   resetTaskHistory: () => void; // New Dev Tool
   resetLevel: () => void;
@@ -225,9 +217,6 @@ export interface GameState {
   dev_gainLevel: () => void;
 
 
-  // Tutorial System
-  setTutorialActive: (active: boolean) => void;
-  completeTutorial: () => void;
 
   // Journal
   journalEntries: JournalEntry[];

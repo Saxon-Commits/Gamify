@@ -1,10 +1,22 @@
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 export const ThemeToggle: React.FC = () => {
-    const { settings, toggleTheme } = useGameStore();
-    const isDark = settings.theme === 'dark';
+    const { theme, setTheme } = useSettingsStore();
+    const isDark = theme === 'dark';
+
+    const toggleTheme = () => {
+        const newTheme = isDark ? 'light' : 'dark';
+        setTheme(newTheme);
+
+        // Update DOM
+        if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    };
 
     return (
         <button

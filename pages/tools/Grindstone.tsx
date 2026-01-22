@@ -17,7 +17,7 @@ const FOCUS_OPTIONS = [
 export const Grindstone: React.FC = () => {
     const navigate = useNavigate();
     const { addRewards, addJournalEntry, completeTask, stats, skillNodes } = useGameStore();
-    const [earnedLoot, setEarnedLoot] = useState<{ type: 'VOID_SHARD' | 'ITEM' | null, item?: any } | null>(null);
+    // Removed: earnedLoot state (loot system removed)
 
     const [selectedOption, setSelectedOption] = useState(FOCUS_OPTIONS[1]);
 
@@ -31,6 +31,10 @@ export const Grindstone: React.FC = () => {
     const startSession = useMutation(api.grindstone.startSession);
     const completeSession = useMutation(api.grindstone.completeSession);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+    // Anti-Cheat: Tab Visibility & Fullscreen Detection
+    const [isFullscreenMode, setIsFullscreenMode] = useState(false);
+    const [tabSwitchDetected, setTabSwitchDetected] = useState(false);
 
     // Schematic State (Branch 2 Node 6)
     const [sessionGoal, setSessionGoal] = useState('');
@@ -48,6 +52,7 @@ export const Grindstone: React.FC = () => {
 
     const activeChainStep = CHAIN_STEPS[chainStep];
 
+    // Timer Loop
     useEffect(() => {
         let interval: NodeJS.Timeout;
 
@@ -61,6 +66,51 @@ export const Grindstone: React.FC = () => {
 
         return () => clearInterval(interval);
     }, [isActive, timeLeft]);
+
+    // ANTI-CHEAT: Page Visibility Detection (Tab Switching)
+    useEffect(() => {
+        if (!isActive) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.warn('⚠️ Tab switched during focus session');
+                setTabSwitchDetected(true);
+
+                // Fail the session immediately
+                setIsActive(false);
+                useToastStore.getState().addToast({
+                    type: 'error',
+                    message: 'Focus Broken: Tab Switch Detected',
+                    amount: 0
+                });
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [isActive]);
+
+    // ANTI-CHEAT: Fullscreen Mode Detection
+    useEffect(() => {
+        if (!isActive || !isFullscreenMode) return;
+
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                console.warn('⚠️ Exited fullscreen during focus session');
+
+                // Fail the session immediately
+                setIsActive(false);
+                useToastStore.getState().addToast({
+                    type: 'error',
+                    message: 'Focus Broken: Fullscreen Exited',
+                    amount: 0
+                });
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, [isActive, isFullscreenMode]);
 
     const activeDuration = isChainMode ? activeChainStep.duration : selectedOption.duration;
 
@@ -82,6 +132,19 @@ export const Grindstone: React.FC = () => {
     */
 
     const handleStart = async () => {
+        setTabSwitchDetected(false);
+
+        // Request fullscreen if fullscreen mode enabled
+        if (isFullscreenMode) {
+            try {
+                await document.documentElement.requestFullscreen();
+            } catch (err) {
+                console.error('Failed to enter fullscreen:', err);
+                useToastStore.getState().addToast({ type: 'error', message: 'Fullscreen mode unavailable', amount: 0 });
+                return; // Don't start if fullscreen failed
+            }
+        }
+
         setIsActive(true);
         setIsCompleted(false);
 
@@ -92,9 +155,18 @@ export const Grindstone: React.FC = () => {
                 setCurrentSessionId(result.sessionId);
                 console.log("🔒 Secure Session Started:", result.sessionId);
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to start secure session:", err);
-            useToastStore.getState().addToast({ type: 'error', message: 'Offline Mode: Rewards may not save.', amount: 0 });
+            setIsActive(false);
+
+            // Exit fullscreen if we entered it
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            // Show specific error message
+            const errorMessage = err.message || 'Failed to start session';
+            useToastStore.getState().addToast({ type: 'error', message: errorMessage, amount: 0 });
         }
     };
 
@@ -113,14 +185,19 @@ export const Grindstone: React.FC = () => {
 
             setIsActive(false);
             setTimeLeft(activeDuration * 60);
-            if (isChainMode) setChainStep(0); // Reset chain on give up
+            if (isChainMode) setChainStep(0);
+
+            // Exit fullscreen if active
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
         }
     };
 
     const handleComplete = () => {
         setIsActive(false);
         setIsCompleted(true);
-        setEarnedLoot(null);
+        // Removed: setEarnedLoot(null) - loot system removed
 
         // 1. Give Rewards
         // Check "Heat I" (branch_2-1) & "Heat II" (branch_2-4)
@@ -171,6 +248,13 @@ export const Grindstone: React.FC = () => {
                         // REVERT OPTIMISTIC REWARDS
                         useGameStore.getState().addRewards(-xpReward, -goldReward);
                         useToastStore.getState().addToast({ type: 'error', message: `Verification Failed: ${res.reason}`, amount: 0 });
+                    } else if (res.capped) {
+                        // Daily cap reached - show warning
+                        useToastStore.getState().addToast({
+                            type: 'error',
+                            message: `Daily Cap Reached! Remaining: ${res.remainingXP} XP, ${res.remainingGold} Gold`,
+                            amount: 0
+                        });
                     }
                 })
                 .catch(err => {
@@ -183,27 +267,8 @@ export const Grindstone: React.FC = () => {
                 });
         }
 
-        // 2. Roll for Loot
-        const multiplier = selectedOption.duration / 15;
-        const itemChance = 0.05 * multiplier;
-        const voidShardChance = 0.01 * multiplier;
-        const roll = Math.random();
-
-        if (roll < voidShardChance) {
-            const rareItems = SHOP_ITEMS.filter(i => (i as any).rarity === 'RARE' || (i as any).rarity === 'MYSTIC');
-            const wonItem = rareItems[Math.floor(Math.random() * rareItems.length)];
-            if (wonItem) {
-                useGameStore.getState().addItem(wonItem.id, 1);
-                setEarnedLoot({ type: 'ITEM', item: wonItem });
-            }
-        } else if (roll < itemChance + voidShardChance) {
-            const commonItems = SHOP_ITEMS.filter(i => !['AVATAR', 'BLACK_MARKET'].includes(i.type));
-            const wonItem = commonItems[Math.floor(Math.random() * commonItems.length)];
-            if (wonItem) {
-                useGameStore.getState().addItem(wonItem.id, 1);
-                setEarnedLoot({ type: 'ITEM', item: wonItem });
-            }
-        }
+        // REMOVED: Loot rolling system (lines 186-206)
+        // Users requested removal - was giving too much adaptive hood
 
         // 3. Log to Journal
         addJournalEntry({
@@ -225,6 +290,11 @@ export const Grindstone: React.FC = () => {
                 // Chain Complete!
                 useToastStore.getState().addToast({ type: 'xp', amount: 100, message: 'Chain Complete Bonus!' });
             }
+        }
+
+        // Exit fullscreen if active
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
         }
     };
 
@@ -300,9 +370,35 @@ export const Grindstone: React.FC = () => {
                     <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter mb-4">
                         The Grindstone
                     </h1>
-                    <p className="text-slate-400 text-lg max-w-md mx-auto">
+                    <p className="text-slate-400 text-lg max-w-md mx-auto mb-6">
                         Sharpen your mind against the wheel of time. Choose your duration and eliminate all distractions.
                     </p>
+
+                    {/* Timer Rules Info Box */}
+                    <div className="max-w-2xl mx-auto bg-slate-900/80 border border-slate-700 rounded-xl p-6 backdrop-blur-sm">
+                        <div className="flex items-center gap-2 mb-4">
+                            <AlertCircle className="text-amber-500" size={20} />
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-amber-500">Timer Rules</h3>
+                        </div>
+                        <div className="space-y-3 text-sm text-slate-300 text-left">
+                            <div className="flex items-start gap-3">
+                                <span className="text-red-400 font-bold">✗</span>
+                                <span><strong className="text-white">Tab Switching:</strong> Switching to another tab or app will instantly fail the session</span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <span className="text-amber-400 font-bold">⚡</span>
+                                <span><strong className="text-white">Fullscreen Mode:</strong> Optional lockdown prevents exiting fullscreen during session</span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <span className="text-purple-400 font-bold">📊</span>
+                                <span><strong className="text-white">Daily Caps:</strong> Max 3600 XP and 900 Gold per day from Grindstone</span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <span className="text-emerald-400 font-bold">✓</span>
+                                <span><strong className="text-white">Stay Focused:</strong> Complete the full timer duration to earn rewards</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -344,6 +440,22 @@ export const Grindstone: React.FC = () => {
                     >
                         <div className={`w-3 h-3 rounded-full ${isChainMode ? 'bg-emerald-500' : 'bg-slate-600'}`} />
                         Chain-Forging Protocol {isChainMode ? 'ACTIVE' : 'OFFLINE'}
+                    </button>
+                </div>
+            )}
+
+            {/* Fullscreen Mode Toggle */}
+            {!isActive && !isCompleted && (
+                <div className="mb-4 flex justify-center">
+                    <button
+                        onClick={() => setIsFullscreenMode(!isFullscreenMode)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-bold transition-all ${isFullscreenMode
+                            ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400'
+                            : 'bg-slate-900 border-slate-700 text-slate-500 hover:border-slate-500'
+                            }`}
+                    >
+                        <div className={`w-3 h-3 rounded-full ${isFullscreenMode ? 'bg-indigo-500' : 'bg-slate-600'}`} />
+                        Fullscreen Lockdown {isFullscreenMode ? 'ON' : 'OFF'}
                     </button>
                 </div>
             )}
@@ -394,7 +506,7 @@ export const Grindstone: React.FC = () => {
                         </div>
                     )}
                     {/* Circle Progress */}
-                    <div className="relative mb-12">
+                    <div className="relative mb-8">
                         <svg className="w-80 h-80 transform -rotate-90">
                             <circle
                                 cx="160"
@@ -424,9 +536,16 @@ export const Grindstone: React.FC = () => {
                         </div>
                     </div>
 
-                    <p className="text-amber-500/80 animate-pulse uppercase tracking-widest text-sm font-bold mb-8">
+                    <p className="text-amber-500/80 animate-pulse uppercase tracking-widest text-sm font-bold mb-2">
                         Focus in Progress
                     </p>
+
+                    {/* Active Session Warning */}
+                    <div className="max-w-md mx-auto mb-8 px-4 py-2 bg-red-900/20 border border-red-800/50 rounded-lg">
+                        <p className="text-xs text-red-300 font-medium">
+                            ⚠️ Don't switch tabs or close this window
+                        </p>
+                    </div>
 
                     {/* Reward Accumulation */}
                     <div className="grid grid-cols-2 gap-6 w-full max-w-sm mb-12">
@@ -507,26 +626,7 @@ export const Grindstone: React.FC = () => {
                         </div>
                     </div>
 
-                    {earnedLoot && earnedLoot.item && (
-                        <div className="animate-in slide-in-from-bottom-5 fade-in duration-700 delay-300 mx-auto max-w-sm mt-6">
-                            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-900/50 to-slate-900 border border-indigo-500/50 flex items-center gap-4 shadow-xl shadow-indigo-500/10">
-                                <div className="p-3 bg-slate-950 rounded-lg border border-slate-700">
-                                    {earnedLoot.item.imageUrl ? (
-                                        <img src={earnedLoot.item.imageUrl} alt={earnedLoot.item.name} className="w-10 h-10 object-contain" />
-                                    ) : (
-                                        <Gift className="text-indigo-400" size={24} />
-                                    )}
-                                </div>
-                                <div className="text-left">
-                                    <div className="text-xs text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1">
-                                        <Sparkles size={10} />
-                                        Bonus Loot!
-                                    </div>
-                                    <div className="font-bold text-white">{earnedLoot.item.name}</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Removed: Loot display UI (loot system removed) */}
 
                     <div className="flex gap-4 justify-center mt-8">
                         {isChainMode && chainStep < CHAIN_STEPS.length - 1 ? (

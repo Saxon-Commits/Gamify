@@ -1,13 +1,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { Sparkles, X, Check } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 
 export const MasteryUnlockModal: React.FC = () => {
-    const { masteryUnlock, closeMasteryUnlock, equipItem, setAvatar, settings } = useGameStore();
+    const { masteryUnlock, closeMasteryUnlock, setAvatar } = useGameStore();
+    const sfxVolume = useSettingsStore((state) => state.sfxVolume);
     const [isVisible, setIsVisible] = useState(false);
     const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
@@ -21,12 +23,12 @@ export const MasteryUnlockModal: React.FC = () => {
         if (masteryUnlock) {
             setIsVisible(true);
             const audio = new Audio('/audio/unlock_avatar.wav');
-            audio.volume = settings.sfxVolume ?? 0.5;
+            audio.volume = sfxVolume;
             audio.play().catch(e => console.error("Audio play failed", e));
         } else {
             setIsVisible(false);
         }
-    }, [masteryUnlock, settings.sfxVolume]);
+    }, [masteryUnlock, sfxVolume]);
 
     if (!masteryUnlock) return null;
 

@@ -175,6 +175,9 @@ export default defineSchema({
         calories: v.optional(v.number()),
         activeMinutes: v.optional(v.number()),
         goalMet: v.optional(v.boolean()),
+        // Grindstone daily caps
+        grindstoneXP: v.optional(v.number()), // XP earned from grindstone today
+        grindstoneGold: v.optional(v.number()), // Gold earned from grindstone today
     })
         .index("by_user_date", ["userId", "date"]),
     // Project Documents (Command Center)

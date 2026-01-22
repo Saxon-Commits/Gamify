@@ -11,100 +11,48 @@ export const SyncManager: React.FC = () => {
     const cloudState = useQuery(api.gameState.load);
 
     const hasLoadedRef = useRef(false);
-    const lastUserIdRef = useRef<string | null>(null); // Track user ID changes
     const addToast = useToastStore(state => state.addToast);
 
-    // 0. User Change Detection - Clear local data when user changes
-    useEffect(() => {
-        if (!isUserLoaded) return;
-
-        const currentUserId = user?.id || null;
-
-        // ONLY clear when switching between TWO DIFFERENT logged-in users
-        // (NOT on logout scenarios - those rely on cloud sync naturally)
-        if (lastUserIdRef.current !== null && currentUserId !== null && lastUserIdRef.current !== currentUserId) {
-            console.log('🔄 User switched! Clearing old user data...', {
-                old: lastUserIdRef.current,
-                new: currentUserId
-            });
-
-            // Clear IndexedDB storage
-            import('idb-keyval').then(({ del }) => {
-                del('life-rpg-storage').then(() => {
-                    console.log('✅ IndexedDB cleared for account switch');
-
-                    // Reset zustand store to initial state
-                    useGameStore.getState().resetGame();
-                    hasLoadedRef.current = false;
-
-                    // Force reload to ensure clean state
-                    window.location.reload();
-                });
-            });
-        }
-
-        lastUserIdRef.current = currentUserId;
-    }, [user?.id, isUserLoaded]);
-
-    // 1. Hydration (Initial Load)
+    // 1. Cloud Hydration (Initial Load) - Single Source of Truth
     useEffect(() => {
         // Only load if we have a user and cloud state exists, and we haven't loaded yet
         if (isUserLoaded && user && cloudState && !hasLoadedRef.current) {
-            console.log("☁️ Found Cloud Save, Hydrating Local Store...", cloudState);
+            console.log("☁️ Loading Cloud State (Single Source of Truth)...", cloudState);
 
-            // Zustand's setState can take a partial or full state.
-            // We assume cloudState is the full persist object or the state itself.
-            // Our store uses 'persist' middleware, but setState works on the store root.
-            // We need to be careful not to break functions. Zustand persist saves "state" part.
-            // The cloudState we saved is likely the full state object including data.
-            // Let's assume structure matches.
+            // Filter out old fields that no longer exist in GameState (e.g., settings)
+            const { settings, ...validState } = cloudState as any;
 
-            useGameStore.setState(cloudState);
-            // We use merge (default) to ensure methods defined in the store creator are preserved.
-            // cloudState contains only data, so this updates the data while keeping functions intact.
+            // Load cloud state into Zustand store
+            useGameStore.setState(validState);
 
             hasLoadedRef.current = true;
             addToast({ type: 'success', message: 'Cloud Save Loaded', amount: 0 });
         }
-    }, [cloudState, isUserLoaded, user]);
+    }, [cloudState, isUserLoaded, user, addToast]);
 
-    // 2. Auto-Save (Persistence)
+    // 2. Auto-Save to Cloud (Debounced)
     useEffect(() => {
         if (!isUserLoaded || !user) return;
 
-        // We subscribe to the store
-        // Use a ref to debounce
         let timeoutId: NodeJS.Timeout;
 
         const unsub = useGameStore.subscribe((state) => {
-            // Don't save if we haven't loaded yet (avoid overwriting cloud with empty local)
-            // UNLESS we are sure this is a new game.
-            // But typically we want to check for cloud existence first.
-
-            // Wait for cloud query to resolve at least once (undefined means loading, null means empty).
+            // Wait for cloud query to resolve at least once
             if (cloudState === undefined) return;
 
             // Debounce save
             clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
-                // Strip out functions if needed, but Convex usually handles JSON-serializable data.
-                // Zustand state includes functions in the object usually? No, just data if defined that way.
-                // Let's verify what we send.
-
-                // We can just send the whole state, Convex/V8 serialization will ignore functions.
-                // Ideally we pick only data fields: stats, tasks, projects, etc.
-                // Sending 'state' might send everything.
-
-                // Let's manually pick the persistable parts to be safe and efficient.
+                // Pick only persistable data fields
                 const {
-                    stats, settings, projects, tasks, skillNodes, skillEdges,
-                    isTutorialActive, journalEntries, inventory,
+                    stats, projects, tasks, skillNodes, skillEdges,
+                    journalEntries, inventory,
                     cart, purchaseHistory
                 } = state;
 
                 const payload = {
-                    stats, settings, projects, tasks, skillNodes, skillEdges,
-                    isTutorialActive, journalEntries, inventory,
+                    stats, projects, tasks, skillNodes, skillEdges,
+                    journalEntries, inventory,
                     cart, purchaseHistory
                 };
 
@@ -164,8 +112,6 @@ export const SyncManager: React.FC = () => {
                 processingRef.current.delete(reward._id);
             } catch (err) {
                 console.error("Failed to claim reward:", err);
-                // If failed, we might want to reload or retry?
-                // Ideally we let it retry on next render, but mapped check needs to be careful.
                 processingRef.current.delete(reward._id);
             }
         });

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, SkipForward, Music } from 'lucide-react';
 import { useGameStore } from '../store/useGameStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 const PLAYLIST = [
     '/XPFocus music/A cup of tea.mp3',
@@ -11,7 +12,8 @@ const PLAYLIST = [
 
 export const BackgroundMusicPlayer: React.FC = () => {
     const audioRef = useRef<HTMLAudioElement>(null);
-    const { settings, isSidePanelOpen } = useGameStore();
+    const { isSidePanelOpen } = useGameStore();
+    const { musicVolume, isMusicMuted } = useSettingsStore();
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(() => Math.floor(Math.random() * PLAYLIST.length));
     const [hasInteracted, setHasInteracted] = useState(false);
@@ -19,11 +21,10 @@ export const BackgroundMusicPlayer: React.FC = () => {
     // Sync Volume & Mute
     useEffect(() => {
         if (audioRef.current) {
-            const vol = settings.musicVolume ?? 0.4;
-            audioRef.current.volume = vol;
-            audioRef.current.muted = settings.isMusicMuted || false;
+            audioRef.current.volume = musicVolume;
+            audioRef.current.muted = isMusicMuted;
         }
-    }, [settings.musicVolume, settings.isMusicMuted]);
+    }, [musicVolume, isMusicMuted]);
 
     // Auto-play / Track Change
     useEffect(() => {
