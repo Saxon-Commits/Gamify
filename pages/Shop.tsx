@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
-import { User, Bot, Sword, Diamond, Monitor, Construction } from 'lucide-react';
+import { User, Bot, Sword, Diamond, Monitor, Construction, Coins } from 'lucide-react';
 
 import { MerchantCard, MerchantModal } from '../components/MerchantCard';
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
@@ -21,6 +21,36 @@ export const Shop: React.FC = () => {
     const [isMerchantModalOpen, setIsMerchantModalOpen] = useState(false);
     const [purchasedAvatar, setPurchasedAvatar] = useState<any>(null);
     const [previewItem, setPreviewItem] = useState<any>(null);
+
+    // Audio refs
+    const spaceshipSoundRef = useRef<HTMLAudioElement | null>(null);
+    const reactorSoundRef = useRef<HTMLAudioElement | null>(null);
+
+    // Play sounds on component mount
+    useEffect(() => {
+        // Spaceship entrance sound (plays once)
+        spaceshipSoundRef.current = new Audio('/mixkit-alien-spaceship-landing-slowly-2740.wav');
+        spaceshipSoundRef.current.volume = 0.3;
+        spaceshipSoundRef.current.play().catch(err => console.log('Spaceship audio play failed:', err));
+
+        // Electricity reactor ambient loop (plays continuously at low volume)
+        reactorSoundRef.current = new Audio('/mixkit-electricity-reactor-buzz-904.wav');
+        reactorSoundRef.current.volume = 0.15;
+        reactorSoundRef.current.loop = true;
+        reactorSoundRef.current.play().catch(err => console.log('Reactor audio play failed:', err));
+
+        // Cleanup on unmount
+        return () => {
+            if (spaceshipSoundRef.current) {
+                spaceshipSoundRef.current.pause();
+                spaceshipSoundRef.current = null;
+            }
+            if (reactorSoundRef.current) {
+                reactorSoundRef.current.pause();
+                reactorSoundRef.current = null;
+            }
+        };
+    }, []);
 
     // Payment Action
     const pay = useAction(api.pay.createCheckoutSession);
@@ -77,7 +107,43 @@ export const Shop: React.FC = () => {
         return Array.from(map.values());
     }, []);
 
-    // Currency Packs Data (Local to component or could be moved)
+    // Filter items by currency
+    const goldItems = ALL_ITEMS.filter(item =>
+        !item.premiumPrice && // No gem price
+        item.cost && // Has gold cost
+        item.type !== 'REAL_LIFE' &&
+        item.type !== 'SYSTEM'
+    );
+
+    const gemItems = ALL_ITEMS.filter(item =>
+        item.premiumPrice || // Has gem price
+        item.currency === 'GEMS'
+    );
+
+    // Group items by type
+    const groupItemsByType = (items: any[]) => {
+        const groups: { [key: string]: any[] } = {};
+        items.forEach(item => {
+            const type = item.type;
+            if (!groups[type]) groups[type] = [];
+            groups[type].push(item);
+        });
+        return groups;
+    };
+
+    const goldGroups = groupItemsByType(goldItems);
+    const gemGroups = groupItemsByType(gemItems);
+
+    // Type display names
+    const typeNames: { [key: string]: string } = {
+        'AVATAR': 'Avatars',
+        'COMPANION': 'Companions',
+        'IN_GAME': 'Equipment',
+        'BLACK_MARKET': 'Black Market',
+        'THEME': 'Backdrops'
+    };
+
+    // Currency Packs Data
     const currencyPacks = [
         { amount: 100, name: 'Pile of Gems', price: '$1.49', id: 'price_100_gems', color: 'cyan', popular: false, image: '/images/currency/pile of gems (100).png' },
         { amount: 500, name: 'Pouch of Gems', price: '$6.99', id: 'price_500_gems', color: 'blue', popular: true, image: '/images/currency/pouch of gems (500).png' },
@@ -87,6 +153,21 @@ export const Shop: React.FC = () => {
 
     return (
         <div className="max-w-[95%] mx-auto pb-32 space-y-8 relative">
+            {/* Shop Background Video */}
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="fixed inset-0 z-[-2] w-full h-full object-cover"
+                style={{
+                    objectPosition: 'center 30px',
+                }}
+            >
+                <source src="/shop background video.mp4" type="video/mp4" />
+            </video>
+            {/* Dark Overlay */}
+            <div className="fixed inset-0 z-[-1] bg-black/45" />
 
             {/* Layout Container */}
             <div className="flex flex-col lg:flex-row gap-8 mt-8">
@@ -105,148 +186,93 @@ export const Shop: React.FC = () => {
 
                 {/* RIGHT CONTENT - SHOP SECTIONS */}
                 <div className="flex-1 space-y-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
-                        {/* 1. AVATARS */}
-                        <ShopSection
-                            title="Avatars"
-                            description="Reward yourself with a unique avatar that represents your character in social guilds."
-                            icon={<User size={16} />}
-                            titleColorClass="text-pink-500"
-                        >
-                            <div className="grid grid-cols-2 gap-2">
-                                {ALL_COSMETIC_ITEMS.filter(i => i.type === 'AVATAR').map(item => (
-                                    <ShopItemCard
-                                        key={item.id}
-                                        item={item}
-                                        isOwned={inventory.some(i => i.id === item.id)}
-                                        onPreview={setPreviewItem}
-                                        onBuy={handleItemAction}
-                                        variant="default"
-                                    />
-                                ))}
+                    {/* GOLD OFFERINGS SECTION */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-amber-600/30 pb-3">
+                            <div className="p-2 rounded-lg bg-amber-600/20 border border-amber-600/40">
+                                <Coins size={20} className="text-amber-400" />
                             </div>
-                        </ShopSection>
-
-                        {/* 2. COMPANIONS */}
-                        <ShopSection
-                            title="Companions"
-                            description="Loyal allies to accompany you on your journey and provide unique bonuses."
-                            icon={<Bot size={16} />}
-                            titleColorClass="text-sky-500"
-                        >
-                            <div className="grid grid-cols-2 gap-2">
-                                {ALL_ITEMS.filter(i => (i.type === 'COMPANION' || i.slots?.includes('ACCESSORY')) && i.type !== 'AVATAR').map(item => (
-                                    <ShopItemCard
-                                        key={item.id}
-                                        item={item}
-                                        isOwned={inventory.some(i => i.id === item.id)}
-                                        onPreview={setPreviewItem}
-                                        onBuy={handleItemAction}
-                                        variant="default"
-                                    />
-                                ))}
+                            <div>
+                                <h2 className="text-2xl font-bold text-amber-400">Gold Offerings</h2>
+                                <p className="text-sm text-slate-400">Premium items available for gold</p>
                             </div>
-                        </ShopSection>
+                        </div>
 
-                        {/* 3. EQUIPMENT */}
-                        <ShopSection
-                            title="Equipment"
-                            description="Powerful gear to enhance your abilities and prepare you for any challenge."
-                            icon={<Sword size={16} />}
-                            titleColorClass="text-indigo-500"
-                        >
-                            <div className="grid grid-cols-1 gap-3">
-                                {ALL_ITEMS.filter(i => (i.type === 'IN_GAME' || i.type === 'BLACK_MARKET') && i.type !== 'AVATAR' && i.type !== 'THEME').map(item => (
-                                    <ShopItemCard
-                                        key={item.id}
-                                        item={item}
-                                        isOwned={inventory.some(i => i.id === item.id)}
-                                        onPreview={setPreviewItem}
-                                        onBuy={handleItemAction}
-                                        variant="list"
-                                    />
-                                ))}
-                            </div>
-                        </ShopSection>
-
-                        {/* 4. CURRENCY STORE */}
-                        <ShopSection
-                            title="Currency Store"
-                            description="Stock up on precious gems to unlock premium items and exclusive content."
-                            icon={<Diamond size={16} />}
-                            titleColorClass="text-cyan-400"
-                        >
-                            <div className="grid gap-3">
-                                {currencyPacks.map(pack => (
-                                    <CurrencyPackCard
-                                        key={pack.amount}
-                                        pack={pack}
-                                        onPurchase={handleGemPurchase}
-                                    />
-                                ))}
-                            </div>
-                        </ShopSection>
-
-                        {/* 5. AVATAR BACKDROPS */}
-                        <ShopSection
-                            title="Avatar Backdrop"
-                            description="Set the scene for your hero with stunning thematic backgrounds."
-                            icon={<Monitor size={16} />}
-                            titleColorClass="text-emerald-500"
-                        >
-                            <div className="grid grid-cols-1 gap-4">
-                                {COSMETIC_SHOP_ITEMS.filter(i => i.id.startsWith('theme-')).map(item => (
-                                    <ShopItemCard
-                                        key={item.id}
-                                        item={item}
-                                        isOwned={inventory.some(i => i.id === item.id)}
-                                        onPreview={setPreviewItem}
-                                        onBuy={handleItemAction}
-                                        variant="backdrop"
-                                    />
-                                ))}
-                            </div>
-                        </ShopSection>
-
+                        {/* Gold Items - Grouped by Type */}
+                        <div className="space-y-8">
+                            {Object.entries(goldGroups).map(([type, items]) => (
+                                <div key={type} className="space-y-3">
+                                    <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
+                                        {items.map(item => (
+                                            <ShopItemCard
+                                                key={item.id}
+                                                item={item}
+                                                isOwned={inventory.some(i => i.id === item.id)}
+                                                onPreview={setPreviewItem}
+                                                onBuy={handleItemAction}
+                                                variant="compact"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
+
+                    {/* GEM OFFERINGS SECTION */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 border-b border-cyan-600/30 pb-3">
+                            <div className="p-2 rounded-lg bg-cyan-600/20 border border-cyan-600/40">
+                                <Diamond size={20} className="text-cyan-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-cyan-400">Gem Offerings</h2>
+                                <p className="text-sm text-slate-400">Exclusive items and currency packs</p>
+                            </div>
+                        </div>
+
+                        {/* Gem Items - Grouped by Type */}
+                        <div className="space-y-8">
+                            {Object.entries(gemGroups).map(([type, items]) => (
+                                <div key={type} className="space-y-3">
+                                    <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
+                                        {items.map(item => (
+                                            <ShopItemCard
+                                                key={item.id}
+                                                item={item}
+                                                isOwned={inventory.some(i => i.id === item.id)}
+                                                onPreview={setPreviewItem}
+                                                onBuy={handleItemAction}
+                                                variant="compact"
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Currency Packs */}
+                            <div className="space-y-3">
+                                <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">Currency Packs</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {currencyPacks.map(pack => (
+                                        <CurrencyPackCard
+                                            key={pack.amount}
+                                            pack={pack}
+                                            onPurchase={handleGemPurchase}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            {/* COMING SOON OVERLAY */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm pointer-events-auto">
-                <div className="max-w-2xl mx-auto p-8 text-center space-y-6">
-                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-500/10 border-2 border-amber-500/30 mb-4">
-                        <Construction className="text-amber-500" size={48} />
-                    </div>
-                    <h1 className="text-4xl font-black text-white uppercase tracking-wider">
-                        Shop Coming Soon
-                    </h1>
-                    <p className="text-xl text-slate-300 leading-relaxed">
-                        We're hard at work crafting an incredible shopping experience for you.
-                    </p>
-                    <div className="p-6 bg-slate-900/50 border border-slate-700 rounded-xl space-y-3 text-left">
-                        <p className="text-sm text-slate-400 font-semibold">What to expect:</p>
-                        <ul className="space-y-2 text-sm text-slate-300">
-                            <li className="flex items-start gap-3">
-                                <span className="text-indigo-400 mt-0.5">✦</span>
-                                <span><strong className="text-white">Premium Avatars</strong> - Unique character skins priced by rarity</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <span className="text-indigo-400 mt-0.5">✦</span>
-                                <span><strong className="text-white">Companions & Themes</strong> - Loyal allies and stunning backdrops</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <span className="text-indigo-400 mt-0.5">✦</span>
-                                <span><strong className="text-white">Gem Packs</strong> - Premium currency to unlock exclusive content</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <p className="text-sm text-slate-500 italic">
-                        In the meantime, keep completing quests and leveling up!
-                    </p>
-                </div>
-            </div>
+
 
             {/* GLOBAL MODALS */}
             <ShopCart onAvatarUnlocked={handleUnlockAvatar} />

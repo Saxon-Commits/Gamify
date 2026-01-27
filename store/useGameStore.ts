@@ -337,9 +337,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
         gold: 0,
         gems: 0,
         skillPoints: 0
-      }
+      },
+      inventory: [] // Clear owned items/gear
     }));
-    useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Resources Wiped' });
+    useToastStore.getState().addToast({ type: 'success', amount: 0, message: 'Resources & Gear Wiped' });
   },
 
   dev_forceDailyReset: () => {

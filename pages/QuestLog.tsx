@@ -20,6 +20,9 @@ import { CharacterSidebar } from '../components/character/CharacterSidebar';
 import { CreateBountyCard } from '../components/questlog/CreateBountyCard';
 import { QuestCard, SortableQuestCard } from '../components/questlog/QuestCard';
 import { BountyColumn } from '../components/questlog/BountyColumn';
+import { NoticeBoard } from '../components/questlog/NoticeBoard';
+import { PurchaseModal } from '../components/questlog/PurchaseModal';
+import type { Offering } from '../components/questlog/OfferingCard';
 
 
 
@@ -42,6 +45,8 @@ export const QuestLog: React.FC = () => {
 
   const [isBountyModalOpen, setIsBountyModalOpen] = useState(false);
   const [isKanbanView, setIsKanbanView] = useState(false);
+  const [selectedOffering, setSelectedOffering] = useState<Offering | null>(null);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   // Robust wrapper to ensure delete functionality
   const handleDeleteTask = (taskId: string) => {
@@ -194,7 +199,19 @@ export const QuestLog: React.FC = () => {
       // Standard behavior: just update container/project ID
       // This is the Bounty Board View - Strictly Categorical
       if (activeTask.projectId !== overContainer) {
-        updateTask({ ...activeTask, projectId: overContainer });
+        const updates: Partial<Task> = { projectId: overContainer };
+
+        // Initialize habit count when moving TO habits column
+        if (overContainer === 'col-habit' && activeTask.habitCount === undefined) {
+          updates.habitCount = 0;
+        }
+
+        // Clear habit count when moving OUT of habits column
+        if (activeTask.projectId === 'col-habit' && overContainer !== 'col-habit') {
+          updates.habitCount = undefined;
+        }
+
+        updateTask({ ...activeTask, ...updates });
       }
     }
   };
@@ -221,6 +238,47 @@ export const QuestLog: React.FC = () => {
 
   const handleCreateBounty = (taskData: any) => {
     createTask(taskData);
+  };
+
+  const handleOfferingClick = (offering: Offering) => {
+    setSelectedOffering(offering);
+    setIsPurchaseModalOpen(true);
+  };
+
+  const handlePurchaseConfirm = (offering: Offering) => {
+    // Check if user has enough gold
+    if (stats.gold < offering.price) {
+      console.error('Insufficient gold');
+      return;
+    }
+
+    // Deduct gold
+    useGameStore.getState().addGold(-offering.price);
+
+    // Create bounty in appropriate column based on offering category
+    const projectId = offering.category === 'habit' ? 'col-habit' : 'col-todo';
+
+    const newBounty = {
+      name: offering.title,
+      description: offering.description,
+      type: 'main' as const,
+      projectId: projectId,
+      xpReward: offering.rewards.xp,
+      goldReward: offering.rewards.gold,
+      // Initialize habit counter for habits
+      ...(offering.category === 'habit' && { habitCount: 0 }),
+      // Add background image
+      backgroundImage: offering.imageUrl
+    };
+
+    createTask(newBounty);
+
+    // Close modal
+    setIsPurchaseModalOpen(false);
+    setSelectedOffering(null);
+
+    // Optional: Show success feedback
+    console.log('Bounty acquired:', offering.title);
   };
 
   // Disable old expansion logic
@@ -398,16 +456,24 @@ export const QuestLog: React.FC = () => {
         </div>
       )}
 
+      {/* Purchase Modal */}
+      <PurchaseModal
+        offering={selectedOffering}
+        isOpen={isPurchaseModalOpen}
+        onClose={() => {
+          setIsPurchaseModalOpen(false);
+          setSelectedOffering(null);
+        }}
+        onConfirm={handlePurchaseConfirm}
+        currentGold={stats.gold}
+      />
+
       <div className={`flex flex-col lg:flex-row gap-8 mt-8 transition-opacity duration-300 ${isQuestModalOpen ? 'opacity-20 pointer-events-none' : ''}`}>
 
-        {/* LEFT SIDEBAR - Character & Merchant */}
+
+        {/* LEFT SIDEBAR - Character */}
         <div className="w-full lg:w-48 flex-shrink-0 space-y-6 sticky top-4 h-fit self-start">
           <CharacterSidebar className="hidden lg:block w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500" />
-          <MerchantCard
-            description="The stars have shifted. I have opportunities for one with your talents."
-            onNewQuestClick={() => setIsQuestModalOpen(true)}
-            isModalOpen={isQuestModalOpen}
-          />
         </div>
 
         {/* RIGHT CONTENT (Main Column) */}
@@ -497,13 +563,9 @@ export const QuestLog: React.FC = () => {
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
                 {['col-todo', 'col-habit', 'col-guild'].map((pid) => {
-                  /* 
-                     We are effectively using these IDs as "Generic Containers" now, 
-                     orphaned from the actual Foundation Projects conceptually in the UI.
-                  */
                   const columnBounties = visibleBountiesMap[pid as any] || [];
 
-                  // Explicit titles, ignoring Project Names if we want to "orphan" them
+                  // Explicit titles
                   let title = {
                     'col-todo': 'To-Do',
                     'col-habit': 'Habits',
@@ -516,6 +578,16 @@ export const QuestLog: React.FC = () => {
                       'col-habit': 'In Progress',
                       'col-guild': 'Done'
                     }[pid] || 'Tasks';
+                  }
+
+                  // Notice Board replaces Guild column in standard view only
+                  if (pid === 'col-guild' && !isKanbanView) {
+                    return (
+                      <NoticeBoard
+                        key={pid}
+                        onOfferingClick={handleOfferingClick}
+                      />
+                    );
                   }
 
                   return (

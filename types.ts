@@ -24,6 +24,9 @@ export interface Task {
   dueDate?: string;
   deadline?: string; // ISO String for hard cutoff
 
+  habitCount?: number; // Track habit completion count (for habits column)
+  backgroundImage?: string; // Card art background image
+
   subtasks?: {
     id: string;
     text: string;
