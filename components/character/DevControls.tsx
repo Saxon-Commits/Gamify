@@ -183,8 +183,16 @@ export const DevControls: React.FC = () => {
                                 <input type="range" min="-180" max="180" step="1" value={devCompanionRotation} onChange={(e) => setDevCompanionRotation(parseFloat(e.target.value))} className="w-full accent-purple-500" />
                             </div>
                             <div className="pt-2 border-t border-slate-700">
-                                <button onClick={() => navigator.clipboard.writeText(`{ top: ${devCompanionTop}, right: ${devCompanionRight}, scale: ${devCompanionScale.toFixed(2)}, rot: ${devCompanionRotation} }`)} className="mb-1 text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded font-bold">Copy</button>
-                                <code className="text-[10px] text-green-400 bg-black/50 p-2 rounded block break-all">{`{ top: ${devCompanionTop}, right: ${devCompanionRight}, scale: ${devCompanionScale.toFixed(2)}, rot: ${devCompanionRotation} }`}</code>
+                                <button
+                                    onClick={() => {
+                                        const companionId = stats.activeCompanionId || stats.activeAccessoryId || 'COMPANION_ID';
+                                        navigator.clipboard.writeText(`'${companionId}': { top: ${devCompanionTop}, right: ${devCompanionRight}, scale: ${devCompanionScale.toFixed(2)}, rot: ${devCompanionRotation} },`);
+                                    }}
+                                    className="mb-1 text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded font-bold"
+                                >Copy</button>
+                                <code className="text-[10px] text-green-400 bg-black/50 p-2 rounded block break-all">
+                                    '{stats.activeCompanionId || stats.activeAccessoryId || 'COMPANION_ID'}': {`{ top: ${devCompanionTop}, right: ${devCompanionRight}, scale: ${devCompanionScale.toFixed(2)}, rot: ${devCompanionRotation} }`},
+                                </code>
                             </div>
                         </div>
                     )}

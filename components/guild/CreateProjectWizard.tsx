@@ -178,7 +178,6 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({ guildI
                                         <option value="EASY">Easy</option>
                                         <option value="MEDIUM">Medium</option>
                                         <option value="HARD">Hard</option>
-                                        <option value="EPIC">Epic</option>
                                     </select>
                                 </div>
                             </div>

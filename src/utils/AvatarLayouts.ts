@@ -31,7 +31,7 @@ export const BACKDROP_CONFIGS: Record<string, { scale: number; offsetX: number; 
     'theme-crystal-cavern': { scale: 116, offsetX: 0, offsetY: -32 },
     'theme-digital-city': { scale: 125, offsetX: 29, offsetY: -45 },
     'theme-frozen-tundra': { scale: 100, offsetX: 0, offsetY: 0 },
-    'theme-mushroom-grove': { scale: 98, offsetX: 0, offsetY: 25 },
+    'theme-mushroom-grove': { scale: 115, offsetX: 0, offsetY: 10 },
     'theme-ocean-depths': { scale: 100, offsetX: 0, offsetY: 0 },
     'theme-sakura-temple': { scale: 100, offsetX: 0, offsetY: 0 },
     'theme-space-station': { scale: 100, offsetX: 0, offsetY: 0 },
@@ -44,16 +44,26 @@ export const BACKDROP_CONFIGS: Record<string, { scale: number; offsetX: number; 
 // 3. COMPANION OFFSETS (Positioning relative to container %)
 // ------------------------------------------------------------------
 export const COMPANION_CONFIGS: Record<string, { top: number; right: number; scale: number; rot: number }> = {
-    'companion-data-serpent': { top: 68.5, right: 67, scale: 1.05, rot: 1 },
-    'companion-digital-ghost': { top: 41, right: 63, scale: 1.25, rot: -1 },
+    'companion-data-serpent': { top: 64, right: 64, scale: 1.55, rot: 0 },
+    'companion-digital-ghost': { top: 59.5, right: 64, scale: 1.65, rot: 0 },
     'companion-floating-grimoire': { top: 52.5, right: 64.5, scale: 1.05, rot: 20 },
-    'companion-medic-drone': { top: 38.5, right: 63, scale: 1.40, rot: -1 },
-    'companion-pebble-golem': { top: 64.5, right: 63.5, scale: 1.30, rot: 1 },
-    'companion-phoenix-hatchling': { top: 66.5, right: 66, scale: 1.20, rot: 1 },
-    'companion-holo-drone': { top: 41, right: 63, scale: 1.10, rot: -1 },
-    'acc_holo_drone': { top: 41, right: 63, scale: 1.10, rot: -1 },
-    'companion-void-whisp': { top: 38.5, right: 63, scale: 1.00, rot: 7 },
-    'active-protocol-droid': { top: 26, right: 53, scale: 1.2, rot: 0 }
+    'companion-medic-drone': { top: 30, right: 64, scale: 1.85, rot: 0 },
+    'companion-pebble-golem': { top: 61.5, right: 64, scale: 1.75, rot: 0 },
+    'companion-phoenix-hatchling': { top: 64, right: 64, scale: 1.55, rot: 0 },
+    'companion-holo-drone': { top: 30, right: 64, scale: 1.30, rot: 0 },
+    'companion-void-whisp': { top: 35.5, right: 64, scale: 1.55, rot: 0 },
+    'active-protocol-droid': { top: 26, right: 53, scale: 1.2, rot: 0 },
+    // New companions
+    'companion-astral-fox': { top: 63.5, right: 66.5, scale: 1.75, rot: 0 },
+    'companion-chrono-moth': { top: 11, right: 66.5, scale: 1.75, rot: 0 },
+    'companion-cyber-raven': { top: 11, right: 66.5, scale: 1.75, rot: 0 },
+    'companion-forest-spirit': { top: 59, right: 64, scale: 2.25, rot: 0 },
+    'companion-black-drake': { top: 60.5, right: 65, scale: 1.85, rot: 0 },
+    'companion-emerald-drake': { top: 60, right: 59.5, scale: 2.00, rot: 0 },
+    'companion-molten-golem': { top: 60, right: 59.5, scale: 2.00, rot: 0 },
+    'companion-nano-sentinel': { top: 60, right: 59.5, scale: 2.00, rot: 0 },
+    'companion-crimson-drake': { top: 60, right: 59.5, scale: 2.00, rot: 0 },
+    'companion-void-imp': { top: 60, right: 59.5, scale: 2.00, rot: 0 }
 };
 
 // ------------------------------------------------------------------

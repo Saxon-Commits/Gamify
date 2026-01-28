@@ -13,10 +13,7 @@ interface ShopItemCardProps {
 // Note: These differ slightly between usage in Monolith but I am standardizing them here.
 const RARITY_STYLES: Record<string, { border: string, bg: string, text: string, glow: string }> = {
     COMMON: { border: 'border-slate-200 dark:border-slate-700', bg: 'bg-white dark:bg-slate-900', text: 'text-slate-600 dark:text-slate-400', glow: 'from-slate-500/10' },
-    UNCOMMON: { border: 'border-slate-300 dark:border-slate-600', bg: 'bg-slate-50 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', glow: 'from-slate-400/10' },
     RARE: { border: 'border-blue-400/50 dark:border-blue-500/50', bg: 'bg-blue-50/50 dark:bg-slate-900', text: 'text-blue-600 dark:text-blue-400', glow: 'from-blue-500/20' },
-    EPIC: { border: 'border-purple-400/60 dark:border-purple-500/60', bg: 'bg-purple-50/50 dark:bg-[#1a0b2e]', text: 'text-purple-600 dark:text-purple-400', glow: 'from-purple-500/20' },
-    MYSTIC: { border: 'border-indigo-400/60 dark:border-indigo-500/60', bg: 'bg-indigo-50/50 dark:bg-[#0b1a2e]', text: 'text-indigo-600 dark:text-indigo-400', glow: 'from-indigo-500/20' },
     LEGENDARY: { border: 'border-amber-400/80 dark:border-amber-500/80', bg: 'bg-amber-50/50 dark:bg-[#2e1a0b]', text: 'text-amber-600 dark:text-amber-400', glow: 'from-amber-500/20' }
 };
 
@@ -120,6 +117,9 @@ export const ShopItemCard: React.FC<ShopItemCardProps> = ({ item, isOwned, onPre
     const isVoidPrice = item.currency === 'VOID_SHARD';
     const isPremium = !!item.premiumPrice;
 
+    // Detect skill tree avatars (cost: 0, no premiumPrice, avatar ID pattern)
+    const isSkillTreeAvatar = item.cost === 0 && !item.premiumPrice && item.id.startsWith('avatar_');
+
     return (
         <div
             onClick={() => onPreview(item)}
@@ -135,9 +135,10 @@ export const ShopItemCard: React.FC<ShopItemCardProps> = ({ item, isOwned, onPre
                 <div className="flex justify-between items-start">
                     <div>
                         <h4 className={`font-black uppercase tracking-wider text-[10px] ${style.text}`}>{item.name}</h4>
-                        <span className="text-[8px] font-mono opacity-70 tracking-widest">{rarity}</span>
+                        {/* Only show rarity for non-backdrop items */}
+                        {item.type !== 'THEME' && <span className="text-[8px] font-mono opacity-70 tracking-widest">{rarity}</span>}
                     </div>
-                    {(rarity === 'LEGENDARY' || rarity === 'MYSTIC' || rarity === 'EPIC') && <Sparkles size={14} className="text-amber-400 animate-pulse" />}
+                    {rarity === 'LEGENDARY' && <Sparkles size={14} className="text-amber-400 animate-pulse" />}
                 </div>
 
                 {/* Image Display - Compact */}
@@ -145,8 +146,7 @@ export const ShopItemCard: React.FC<ShopItemCardProps> = ({ item, isOwned, onPre
                     <img
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-full h-full object-cover object-top pixelated hover:scale-110 transition-transform duration-700"
-                        style={{ imageRendering: 'pixelated' }}
+                        className="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-700"
                     />
                 </div>
 
@@ -157,15 +157,21 @@ export const ShopItemCard: React.FC<ShopItemCardProps> = ({ item, isOwned, onPre
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        onBuy(item);
+                        if (!isSkillTreeAvatar) onBuy(item);
                     }}
-                    disabled={isOwned}
-                    className={`w-full py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all group-hover:bg-slate-900/5 dark:group-hover:bg-white/10 ${style.border} border ${isOwned ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isOwned || isSkillTreeAvatar}
+                    className={`w-full py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all group-hover:bg-slate-900/5 dark:group-hover:bg-white/10 ${style.border} border ${isOwned || isSkillTreeAvatar ? 'opacity-50 cursor-not-allowed' : ''} relative`}
+                    title={isSkillTreeAvatar ? 'Unlocked from the Skill Tree' : ''}
                 >
                     {isOwned ? (
                         <>
                             <CheckCircle2 size={10} className="text-green-500" />
                             <span className="text-green-500">Owned</span>
+                        </>
+                    ) : isSkillTreeAvatar ? (
+                        <>
+                            <Sparkles size={10} className="text-purple-400" />
+                            <span className="text-purple-300">???</span>
                         </>
                     ) : (
                         <>

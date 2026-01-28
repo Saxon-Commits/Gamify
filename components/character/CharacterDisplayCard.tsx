@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { useDevStore } from '../../store/useDevStore';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS } from '../../src/utils/CosmeticsData';
 import { SHOP_ITEMS } from '../../src/utils/GameEconomy';
 import { EQUIPMENT_CONFIGS } from '../../src/utils/EquipmentConfig';
 import { AVATAR_OFFSETS, BACKDROP_CONFIGS, COMPANION_CONFIGS } from '../../src/utils/AvatarLayouts';
+import { getEvolvedImagePath } from '../../src/utils/CompanionEvolutions';
 
 import { AVAILABLE_AVATARS, MASTERY_AVATARS } from './CharacterData';
 
@@ -29,6 +32,13 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
         isDevMode, devActiveItem, devOffset
     } = useDevStore();
 
+    const equippedAccessoryId = stats.activeAccessoryId;
+
+    // Check if equipped companion is evolved (must be at top level)
+    const isCompanionEvolved = useQuery(
+        api.companions.isCompanionEvolved,
+        equippedAccessoryId ? { companionId: equippedAccessoryId } : "skip"
+    );
 
     const getAvatarIdFromPath = (path: string) => {
         const found = AVAILABLE_AVATARS_LOCAL.find(a => a.path === path);
@@ -40,8 +50,6 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
 
     const currentAvatarId = getAvatarIdFromPath(props.selectedAvatarPath);
     const equippedArmorId = stats.activeArmorId;
-
-    const equippedAccessoryId = stats.activeAccessoryId;
 
     // Selection Logic for Rarity/Name
     const selectedShopItem = useMemo(() => {
@@ -61,7 +69,7 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
     const getRarityStyles = (rarity: string) => {
         switch (rarity) {
             case 'LEGENDARY': return { border: 'border-amber-500', bg: 'bg-amber-100 dark:bg-[#2e1a0b]', text: 'text-amber-600 dark:text-amber-400', glow: 'from-amber-500/20', badge: 'bg-amber-500 text-black' };
-            case 'MYSTIC': return { border: 'border-purple-500', bg: 'bg-purple-100 dark:bg-[#1a0b2e]', text: 'text-purple-600 dark:text-purple-400', glow: 'from-purple-500/20', badge: 'bg-purple-500 text-white' };
+            case 'LEGENDARY': return { border: 'border-purple-500', bg: 'bg-purple-100 dark:bg-[#1a0b2e]', text: 'text-purple-600 dark:text-purple-400', glow: 'from-purple-500/20', badge: 'bg-purple-500 text-white' };
             case 'RARE': return { border: 'border-blue-500', bg: 'bg-blue-50 dark:bg-slate-900', text: 'text-blue-600 dark:text-blue-400', glow: 'from-blue-500/20', badge: 'bg-blue-500 text-white' };
             default: return { border: 'border-slate-200 dark:border-slate-700', bg: 'bg-white dark:bg-slate-900', text: 'text-slate-500 dark:text-slate-400', glow: 'from-slate-500/10', badge: 'bg-slate-500 text-white' };
         }
@@ -242,14 +250,18 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                     {/* COMPANION OVERLAY */}
                     {activeAccessoryItem && (() => {
                         const config = COMPANION_CONFIGS[activeAccessoryItem.id];
-                        const useDev = props.devPanelOpen && props.devEditMode === 'companion';
+                        const useDev = devPanelOpen && devEditMode === 'companion';
 
-                        const top = useDev ? props.devCompanionTop : (config?.top ?? 0);
-                        const right = useDev ? props.devCompanionRight : (config?.right ?? 0);
-                        const scale = useDev ? props.devCompanionScale : (config?.scale ?? 1);
-                        const rot = useDev ? props.devCompanionRotation : (config?.rot ?? 0);
+                        const top = useDev ? devCompanionTop : (config?.top ?? 0);
+                        const right = useDev ? devCompanionRight : (config?.right ?? 0);
+                        const scale = useDev ? devCompanionScale : (config?.scale ?? 1);
+                        const rot = useDev ? devCompanionRotation : (config?.rot ?? 0);
 
                         if (!useDev && !config) return null;
+
+                        // Use the evolved image if companion is evolved
+                        const evolvedImage = getEvolvedImagePath(activeAccessoryItem.id);
+                        const companionImage = (isCompanionEvolved && evolvedImage) ? evolvedImage : activeAccessoryItem.imageUrl;
 
                         return (
                             <div className="absolute transition-all duration-500 hover:scale-110 group/pet w-[25%] aspect-square flex items-center justify-center"
@@ -261,7 +273,7 @@ export const CharacterDisplayCard: React.FC<CharacterDisplayCardProps> = (props)
                                 }}
                             >
                                 <div className="relative animate-bounce-slow w-full h-full">
-                                    <img src={activeAccessoryItem.imageUrl} className="relative w-full h-full object-contain pixelated z-10" />
+                                    <img src={companionImage} className="relative w-full h-full object-contain pixelated z-10" />
                                 </div>
                             </div>
                         );

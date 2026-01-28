@@ -4,7 +4,7 @@ import { SHOP_ITEMS } from '../src/utils/GameEconomy';
 import { COSMETIC_SHOP_ITEMS, ALL_COSMETIC_ITEMS } from '../src/utils/CosmeticsData';
 import { User, Bot, Sword, Diamond, Monitor, Construction, Coins } from 'lucide-react';
 
-import { MerchantCard, MerchantModal } from '../components/MerchantCard';
+
 import { CharacterSidebar } from '../components/character/CharacterSidebar';
 import { ShopCart } from '../components/shop/ShopCart';
 import { ShopItemCard } from '../components/shop/ShopItemCard';
@@ -18,13 +18,11 @@ import { api } from '../convex/_generated/api';
 
 export const Shop: React.FC = () => {
     const { addToCart, buyItem, inventory } = useGameStore();
-    const [isMerchantModalOpen, setIsMerchantModalOpen] = useState(false);
     const [purchasedAvatar, setPurchasedAvatar] = useState<any>(null);
     const [previewItem, setPreviewItem] = useState<any>(null);
 
     // Audio refs
     const spaceshipSoundRef = useRef<HTMLAudioElement | null>(null);
-    const reactorSoundRef = useRef<HTMLAudioElement | null>(null);
 
     // Play sounds on component mount
     useEffect(() => {
@@ -33,21 +31,11 @@ export const Shop: React.FC = () => {
         spaceshipSoundRef.current.volume = 0.3;
         spaceshipSoundRef.current.play().catch(err => console.log('Spaceship audio play failed:', err));
 
-        // Electricity reactor ambient loop (plays continuously at low volume)
-        reactorSoundRef.current = new Audio('/mixkit-electricity-reactor-buzz-904.wav');
-        reactorSoundRef.current.volume = 0.15;
-        reactorSoundRef.current.loop = true;
-        reactorSoundRef.current.play().catch(err => console.log('Reactor audio play failed:', err));
-
         // Cleanup on unmount
         return () => {
             if (spaceshipSoundRef.current) {
                 spaceshipSoundRef.current.pause();
                 spaceshipSoundRef.current = null;
-            }
-            if (reactorSoundRef.current) {
-                reactorSoundRef.current.pause();
-                reactorSoundRef.current = null;
             }
         };
     }, []);
@@ -110,24 +98,37 @@ export const Shop: React.FC = () => {
     // Filter items by currency
     const goldItems = ALL_ITEMS.filter(item =>
         !item.premiumPrice && // No gem price
-        item.cost && // Has gold cost
+        (item.cost !== undefined || item.currency === 'GOLD') && // Has cost or is gold currency
         item.type !== 'REAL_LIFE' &&
         item.type !== 'SYSTEM'
     );
 
-    const gemItems = ALL_ITEMS.filter(item =>
-        item.premiumPrice || // Has gem price
-        item.currency === 'GEMS'
-    );
+    const gemItems = ALL_ITEMS.filter(item => {
+        // Exclude skill tree avatars (they show as ??? in gold section)
+        const isSkillTreeAvatar = item.cost === 0 && !item.premiumPrice && item.id.startsWith('avatar_');
+        return !isSkillTreeAvatar && (item.premiumPrice || item.currency === 'GEMS');
+    });
 
-    // Group items by type
+    // Group items by type and sort by rarity
     const groupItemsByType = (items: any[]) => {
         const groups: { [key: string]: any[] } = {};
+        const rarityOrder = { 'COMMON': 0, 'RARE': 1, 'LEGENDARY': 2 };
+
         items.forEach(item => {
             const type = item.type;
             if (!groups[type]) groups[type] = [];
             groups[type].push(item);
         });
+
+        // Sort each group by rarity (COMMON first, LEGENDARY last)
+        Object.keys(groups).forEach(type => {
+            groups[type].sort((a, b) => {
+                const rarityA = rarityOrder[a.rarity as keyof typeof rarityOrder] ?? 999;
+                const rarityB = rarityOrder[b.rarity as keyof typeof rarityOrder] ?? 999;
+                return rarityA - rarityB;
+            });
+        });
+
         return groups;
     };
 
@@ -142,6 +143,9 @@ export const Shop: React.FC = () => {
         'BLACK_MARKET': 'Black Market',
         'THEME': 'Backdrops'
     };
+
+    // Define order for display
+    const typeOrder = ['AVATAR', 'COMPANION', 'IN_GAME', 'THEME', 'BLACK_MARKET'];
 
     // Currency Packs Data
     const currencyPacks = [
@@ -172,16 +176,9 @@ export const Shop: React.FC = () => {
             {/* Layout Container */}
             <div className="flex flex-col lg:flex-row gap-8 mt-8">
 
-                {/* LEFT SIDEBAR - MERCHANT */}
+                {/* LEFT SIDEBAR - CHARACTER */}
                 <div className="w-full lg:w-48 flex-shrink-0 space-y-6 sticky top-4 h-fit self-start">
                     <CharacterSidebar className="hidden lg:block w-full lg:w-48 flex-shrink-0 animate-in slide-in-from-left-4 duration-500" />
-                    <MerchantCard onNewQuestClick={() => setIsMerchantModalOpen(true)} isModalOpen={isMerchantModalOpen} />
-                    <MerchantModal
-                        isOpen={isMerchantModalOpen}
-                        onClose={() => setIsMerchantModalOpen(false)}
-                        inventory={SHOP_ITEMS}
-                        onAddItem={handleAddItem}
-                    />
                 </div>
 
                 {/* RIGHT CONTENT - SHOP SECTIONS */}
@@ -201,23 +198,25 @@ export const Shop: React.FC = () => {
 
                         {/* Gold Items - Grouped by Type */}
                         <div className="space-y-8">
-                            {Object.entries(goldGroups).map(([type, items]) => (
-                                <div key={type} className="space-y-3">
-                                    <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
-                                        {items.map(item => (
-                                            <ShopItemCard
-                                                key={item.id}
-                                                item={item}
-                                                isOwned={inventory.some(i => i.id === item.id)}
-                                                onPreview={setPreviewItem}
-                                                onBuy={handleItemAction}
-                                                variant="compact"
-                                            />
-                                        ))}
+                            {typeOrder
+                                .filter(type => goldGroups[type] && goldGroups[type].length > 0)
+                                .map(type => (
+                                    <div key={type} className="space-y-3">
+                                        <h3 className="text-sm font-bold text-amber-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
+                                            {goldGroups[type].map(item => (
+                                                <ShopItemCard
+                                                    key={item.id}
+                                                    item={item}
+                                                    isOwned={inventory.some(i => i.id === item.id)}
+                                                    onPreview={setPreviewItem}
+                                                    onBuy={handleItemAction}
+                                                    variant="compact"
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     </div>
 
@@ -235,23 +234,25 @@ export const Shop: React.FC = () => {
 
                         {/* Gem Items - Grouped by Type */}
                         <div className="space-y-8">
-                            {Object.entries(gemGroups).map(([type, items]) => (
-                                <div key={type} className="space-y-3">
-                                    <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
-                                        {items.map(item => (
-                                            <ShopItemCard
-                                                key={item.id}
-                                                item={item}
-                                                isOwned={inventory.some(i => i.id === item.id)}
-                                                onPreview={setPreviewItem}
-                                                onBuy={handleItemAction}
-                                                variant="compact"
-                                            />
-                                        ))}
+                            {typeOrder
+                                .filter(type => gemGroups[type] && gemGroups[type].length > 0)
+                                .map(type => (
+                                    <div key={type} className="space-y-3">
+                                        <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">{typeNames[type] || type}</h3>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 gap-3">
+                                            {gemGroups[type].map(item => (
+                                                <ShopItemCard
+                                                    key={item.id}
+                                                    item={item}
+                                                    isOwned={inventory.some(i => i.id === item.id)}
+                                                    onPreview={setPreviewItem}
+                                                    onBuy={handleItemAction}
+                                                    variant="compact"
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
 
                             {/* Currency Packs */}
                             <div className="space-y-3">

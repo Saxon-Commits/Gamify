@@ -9,6 +9,7 @@ import { LoadoutPanel } from '../components/character/LoadoutPanel';
 // import { DevControls } from '../components/character/DevControls';
 import { CharacterDisplayCard } from '../components/character/CharacterDisplayCard';
 import { MobileStatsPanel } from '../components/character/MobileStatsPanel';
+import { UpgradeCompanionButton } from '../components/character/UpgradeCompanionButton';
 
 import { AVAILABLE_AVATARS, MASTERY_AVATARS } from '../components/character/CharacterData';
 
@@ -36,18 +37,7 @@ export const Character: React.FC = () => {
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen pb-32 transition-colors duration-500 font-sans selection:bg-amber-100 dark:selection:bg-amber-900/30">
 
-            <div className="max-w-7xl mx-auto pt-0 md:pt-8 px-6 mb-0 md:mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="text-center md:text-left hidden md:block">
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase italic tracking-tighter mb-2">
-                        Character
-                    </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Customize your legend.</p>
-                </div>
-                <div className="flex gap-3 w-full md:w-auto justify-center hidden md:flex">
-                </div>
-            </div>
-
-            <div className="max-w-[1920px] mx-auto px-0 md:px-2 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-6 relative items-start">
+            <div className="max-w-[1920px] mx-auto px-0 md:px-2 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-2 lg:gap-6 relative items-start pt-0 md:pt-8">
 
                 {/* MOBILE LAYOUT: Split Top Section */}
                 <div className="flex md:hidden w-full gap-3">
@@ -75,6 +65,7 @@ export const Character: React.FC = () => {
                     <CharacterDisplayCard
                         selectedAvatarPath={selectedAvatarPath}
                     />
+                    <UpgradeCompanionButton />
                 </div>
 
                 {/* RIGHT COLUMN: LOADOUT (Shared but moved below on mobile) */}

@@ -134,7 +134,7 @@ export interface GameSettings {
 }
 
 
-export type AvatarRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'MYSTIC' | 'LEGENDARY';
+export type AvatarRarity = 'COMMON' | 'RARE' | 'LEGENDARY';
 export type EquipmentSlot = 'ARMOR' | 'ACCESSORY';
 
 export interface InventoryItem {
@@ -170,6 +170,7 @@ export interface GameState {
   verificationNode?: any | null;
 
   mostWantedTaskId?: string; // ID of the task designated as Most Wanted (reset daily)
+  evolvedCompanions?: string[]; // Array of companion IDs that have been evolved
   setMostWantedTask: (taskId: string) => void;
   checkDailyReset: () => void;
   incrementStreak: () => void;
